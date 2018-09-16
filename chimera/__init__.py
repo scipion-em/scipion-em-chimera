@@ -28,7 +28,7 @@ import os
 import pyworkflow.em
 from pyworkflow.em.viewers.chimera_utils import getEnviron
 
-_logo = "ChimeraLogoSmall.png"
+_logo = "chimera_logo.png"
 
 _references = ['Pettersen2004']
 
