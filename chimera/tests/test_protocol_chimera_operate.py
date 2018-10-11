@@ -28,14 +28,18 @@
 # operate to save pdbs and, optionally, volumes after carrying out different
 # manipulations with chimera
 
-from pyworkflow.em.packages.chimera.protocol_operate import ChimeraProtOperate
-from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
-    ProtImportVolumes
+from chimera.protocols import ChimeraProtOperate
+from pyworkflow.em.protocol.protocol_import import (ProtImportPdb,
+                                                    ProtImportVolumes)
+
+from pyworkflow.utils import importFromPlugin
+
+NMA_MASK_THRE = importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
+                                 'NMA_MASK_THRE', doRaise=True)
+XmippProtConvertToPseudoAtoms = importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms',
+                                                 'XmippProtConvertToPseudoAtoms')
+
 from pyworkflow.tests import *
-from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms_base \
-    import NMA_MASK_THRE
-from pyworkflow.em.packages.xmipp3.pdb.protocol_pseudoatoms import \
-    XmippProtConvertToPseudoAtoms
 import os.path
 
 

@@ -34,13 +34,19 @@ from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import Transform
 from pyworkflow.em.headers import Ccp4Header
 from pyworkflow.em.protocol import EMProtocol
-from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, getProgram, runChimeraProgram, \
-    chimeraPdbTemplateFileName, chimeraMapTemplateFileName, \
-    chimeraScriptFileName, sessionFile
-from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
-    StringParam
+
+from pyworkflow.em.viewers.chimera_utils import (createCoordinateAxisFile,
+                                                 runChimeraProgram,
+                                                 chimeraPdbTemplateFileName,
+                                                 sessionFile,
+                                                 chimeraMapTemplateFileName,
+                                                 chimeraScriptFileName)
+
+from pyworkflow.protocol.params import (MultiPointerParam, PointerParam,
+                                        StringParam)
 from pyworkflow.utils.properties import Message
+
+from chimera import Plugin
 
 
 class ChimeraProtBase(EMProtocol):
@@ -179,10 +185,10 @@ class ChimeraProtBase(EMProtocol):
 
         f.close()
 
-        self._log.info('Launching: ' + getProgram() + ' ' + args)
+        self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
 
         # run in the background
-        runChimeraProgram(getProgram(), args)
+        runChimeraProgram(Plugin.getProgram(), args)
 
     def createOutput(self):
         """ Copy the PDB structure and register the output object.
@@ -271,7 +277,7 @@ class ChimeraProtBase(EMProtocol):
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = getProgram()
+        program = Plugin.getProgram()
         if program is None:
             errors.append("Missing variable CHIMERA_HOME")
         elif not os.path.exists(program):
