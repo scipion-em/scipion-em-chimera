@@ -28,10 +28,11 @@
 from protocol_base import createScriptFile
 from pyworkflow.protocol.params import PointerParam, StringParam
 import os
-from pyworkflow.em.viewers.chimera_utils import \
-    runChimeraProgram,\
-    chimeraPdbTemplateFileName, chimeraMapTemplateFileName, \
-    chimeraScriptFileName, getProgram, sessionFile
+from pyworkflow.em.viewers.chimera_utils import (runChimeraProgram,
+                                                 chimeraPdbTemplateFileName,
+                                                 chimeraMapTemplateFileName,
+                                                 chimeraScriptFileName,
+                                                 getProgram, sessionFile)
 from protocol_base import ChimeraProtBase
 
 class ChimeraProtRestore(ChimeraProtBase):

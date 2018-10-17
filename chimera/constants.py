@@ -1,7 +1,6 @@
 # **************************************************************************
 # *
-# * Authors: Yunior C. Fonseca Reyna    (cfonseca@cnb.csic.es)
-# *
+# * Authors:    Yunior C. Fonseca Reyna (cfonseca@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -25,4 +24,8 @@
 # *
 # **************************************************************************
 
-from test_protocol_chimera_operate import *
+CHIMERA_HOME = 'CHIMERA_HOME'
+CHIMERA_HEADLESS_HOME = 'CHIMERA_HEADLESS_HOME'
+
+# Supported Versions
+V1_10_1 = 'V1_10_1'

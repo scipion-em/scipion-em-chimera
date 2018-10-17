@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:     Roberto Marabini (roberto@cnb.csic.es)
-# *
+# *              Yunior C. Fonseca Reyna (cfonseca@cnb.csic.es)
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -26,34 +26,68 @@
 import os
 
 import pyworkflow.em
-from pyworkflow.em.viewers.chimera_utils import getEnviron
+import pyworkflow.utils as pwutils
+
+
+from bibtex import _bibtex # Load bibtex dict with references
+
+from chimera.constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_10_1
 
 _logo = "chimera_logo.png"
 
 _references = ['Pettersen2004']
 
-CHIMERA_HOME = 'CHIMERA_HOME'
-CHIMERA_HEADLESS_HOME = 'CHIMERA_HEADLESS_HOME'
-
 # The following class is required for Scipion to detect this Python module
 # as a Scipion Plugin. It needs to specify the PluginMeta __metaclass__
 # Some function related to the underlying package binaries need to be
 # implemented
+
+
 class Plugin(pyworkflow.em.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
+    _supportedVersions = V1_10_1
+
 
     @classmethod
     def _defineVariables(cls):
         cls._defineEmVar(CHIMERA_HOME, 'chimera-1.10.1')
         cls._defineEmVar(CHIMERA_HEADLESS_HOME, 'chimera_headless')
 
-
     @classmethod
     def getEnviron(cls):
-        """ Setup the environment variables needed to launch Chimera. """
-        return getEnviron()
+        environ = pwutils.Environ(os.environ)
+        environ.update({'PATH': cls.getHome('bin'),
+                        'LD_LIBRARY_PATH': os.environ['REMOTE_MESA_LIB'],
+                        }, position=pwutils.Environ.BEGIN)
+        return environ
 
+    @classmethod
+    def runChimeraProgram(cls, program, args=""):
+        """ Internal shortcut function to launch chimera program. """
+        env = cls.getEnviron()
+        pwutils.runJob(None, program, args, env=env)
 
+    @classmethod
+    def getProgram(cls, progName="chimera"):
+        """ Return the program binary that will be used. """
+        cmd = cls.getHome('bin', progName)
+        return str(cmd)
+
+    @classmethod
+    def isVersionActive(cls):
+        return cls.getActiveVersion().startswith(V1_10_1)
+
+    @classmethod
+    def defineBinaries(cls, env):
+
+        SW_CH = env.getEmFolder()
+        chimera_1_10_1_command = [('./scipion_installer',
+                            '%s/chimera-1.10.1/bin/chimera' % SW_CH)]
+
+        env.addPackage('chimera', version='1.10.1',
+                       tar='chimera-1.10.1-linux_x86_64.tgz',
+                       commands=chimera_1_10_1_command,
+                       default=True)
 
 pyworkflow.em.Domain.registerPlugin(__name__)
