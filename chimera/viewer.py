@@ -28,11 +28,12 @@
 import os
 
 from pyworkflow.em.convert import ImageHandler
-from protocol_fit import ChimeraProtRigidFit
-from protocol_operate import ChimeraProtOperate
-from protocol_restore import ChimeraProtRestore
-from pyworkflow.em.viewers.chimera_utils import \
-    createCoordinateAxisFile, runChimeraProgram, getProgram, sessionFile
+from chimera.protocols.protocol_fit import ChimeraProtRigidFit
+from chimera.protocols.protocol_operate import ChimeraProtOperate
+from chimera.protocols.protocol_restore import ChimeraProtRestore
+from pyworkflow.em.viewers.viewer_chimera import (createCoordinateAxisFile,
+                                                  runProgram, getProgram,
+                                                  sessionFile)
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 
 
