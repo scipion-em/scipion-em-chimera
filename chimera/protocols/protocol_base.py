@@ -32,11 +32,10 @@ from pyworkflow.em import PdbFile
 from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import Transform
-from pyworkflow.em.headers import Ccp4Header
+from pyworkflow.em.convert.headers import Ccp4Header
 from pyworkflow.em.protocol import EMProtocol
 
-from pyworkflow.em.viewers.chimera_utils import (createCoordinateAxisFile,
-                                                 runChimeraProgram,
+from pyworkflow.em.viewers.viewer_chimera import (Chimera,
                                                  chimeraPdbTemplateFileName,
                                                  sessionFile,
                                                  chimeraMapTemplateFileName,
@@ -140,7 +139,7 @@ class ChimeraProtBase(EMProtocol):
             sampling = 1.
 
         tmpFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
-        createCoordinateAxisFile(dim,
+        Chimera.createCoordinateAxisFile(dim,
                                  bildFileName=tmpFileName,
                                  sampling=sampling)
         f.write("runCommand('open %s')\n" % tmpFileName)
@@ -188,7 +187,7 @@ class ChimeraProtBase(EMProtocol):
         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
 
         # run in the background
-        runChimeraProgram(Plugin.getProgram(), args)
+        Chimera.runProgram(Plugin.getProgram(), args)
 
     def createOutput(self):
         """ Copy the PDB structure and register the output object.
