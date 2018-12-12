@@ -35,9 +35,13 @@ from pyworkflow.em.data import Transform
 from pyworkflow.em.convert.headers import Ccp4Header
 from pyworkflow.em.protocol import EMProtocol
 
-from chimera.utils import (createCoordinateAxisFile, runChimeraProgram,
-                           chimeraPdbTemplateFileName, sessionFile,
-                           chimeraMapTemplateFileName, chimeraScriptFileName)
+from pyworkflow.em.viewers.viewer_chimera import (chimeraScriptFileName,
+                                                  sessionFile,
+                                                  chimeraMapTemplateFileName,
+                                                  chimeraScriptFileName,
+                                                  chimeraPdbTemplateFileName)
+
+from pyworkflow.em.viewers import Chimera
 
 from pyworkflow.protocol.params import (MultiPointerParam, PointerParam,
                                         StringParam)
@@ -212,7 +216,7 @@ class ChimeraProtBase(EMProtocol):
         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
 
         # run in the background
-        runChimeraProgram(Plugin.getProgram(), args)
+        Chimera.runProgram(Plugin.getProgram(), args)
 
     def createOutput(self):
         """ Copy the PDB structure and register the output object.
