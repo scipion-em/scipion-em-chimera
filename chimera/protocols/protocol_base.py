@@ -35,13 +35,12 @@ from pyworkflow.em.data import Transform
 from pyworkflow.em.convert.headers import Ccp4Header
 from pyworkflow.em.protocol import EMProtocol
 
-from pyworkflow.em.viewers.viewer_chimera import (chimeraScriptFileName,
+from pyworkflow.em.viewers.viewer_chimera import (Chimera,
+                                                  chimeraScriptFileName,
                                                   sessionFile,
                                                   chimeraMapTemplateFileName,
                                                   chimeraScriptFileName,
                                                   chimeraPdbTemplateFileName)
-
-from pyworkflow.em.viewers import Chimera
 
 from pyworkflow.protocol.params import (MultiPointerParam, PointerParam,
                                         StringParam)
@@ -144,7 +143,7 @@ class ChimeraProtBase(EMProtocol):
             sampling = 1.
 
         tmpFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
-        createCoordinateAxisFile(dim,
+        Chimera.createCoordinateAxisFile(dim,
                                  bildFileName=tmpFileName,
                                  sampling=sampling)
         f.write("runCommand('open %s')\n" % tmpFileName)
