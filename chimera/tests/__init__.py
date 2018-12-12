@@ -25,4 +25,6 @@
 # *
 # **************************************************************************
 
+from test_protocol_chimera_fit import *
 from test_protocol_chimera_operate import *
+from test_protocol_modeller_search import *
