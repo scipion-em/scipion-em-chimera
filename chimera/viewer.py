@@ -82,6 +82,7 @@ class ChimeraViewerBase(Viewer):
         fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
         f = open(fnCmd, 'w')
         f.write("open %s\n" % bildFileName)
+        f.write("cofr 0,0,0\n")  # set center of coordinates
 
         if _showVol is not None:
         # In case we have PDBs only, the _inputVol is None:
