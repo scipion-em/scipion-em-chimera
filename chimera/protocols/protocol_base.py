@@ -32,15 +32,11 @@ from pyworkflow.em import PdbFile
 from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import Transform
-from pyworkflow.em.headers import Ccp4Header
+from pyworkflow.em.convert.headers import Ccp4Header
 from pyworkflow.em.protocol import EMProtocol
 
-from pyworkflow.em.viewers.chimera_utils import (createCoordinateAxisFile,
-                                                 runChimeraProgram,
-                                                 chimeraPdbTemplateFileName,
-                                                 sessionFile,
-                                                 chimeraMapTemplateFileName,
-                                                 chimeraScriptFileName)
+from pyworkflow.em.viewers.viewer_chimera import Chimera, chimeraScriptFileName, \
+    chimeraPdbTemplateFileName, chimeraMapTemplateFileName, sessionFile
 
 from pyworkflow.protocol.params import (MultiPointerParam, PointerParam,
                                         StringParam)
@@ -52,19 +48,19 @@ from chimera import Plugin
 class ChimeraProtBase(EMProtocol):
     """Protocol to perform rigid fit using Chimera.
         Execute command *scipionwrite [model #n] [refmodel #p]
-        [saverefmodel 0|1]* from command line in order to transferm fitted
+        [saverefmodel 0|1]* from command line in order to transfer fitted
         pdb to scipion. Default values are model=#0,
         refmodel =#1 and saverefmodel 0 (false).
         model refers to the pdb file. refmodel to a 3Dmap"""
     _version = VERSION_1_2
 
     # --------------------------- DEFINE param functions --------------------
-    def _defineParams(self, form):
+    def _defineParams(self, form, doHelp=True):
         form.addSection(label='Input')
         form.addParam('inputVolume', PointerParam, pointerClass="Volume",
-                      label='Input Volume', allowsNull=True,
+                      label='Input Volume', allowsNull=True, important=True,
                       help="Volume to process")
-        form.addParam('pdbFileToBeRefined', PointerParam,
+        form.addParam('pdbFileToBeRefined', PointerParam, important=True,
                       pointerClass="PdbFile",
                       label='PDBx/mmCIF file',
                       help="PDBx/mmCIF file that you can save after operating "
@@ -80,21 +76,24 @@ class ChimeraProtBase(EMProtocol):
                       condition='False',
                       label='Extra commands for chimera viewer',
                       help="Add extra commands in cmd file. Use for testing")
-        form.addSection(label='Help')
-        form.addLine('''Execute command *scipionwrite [model #n] [refmodel #p] 
-        [saverefmodel 0|1]* from command line in order to transfer structures 
-        and 3D map volumes to SCIPION. 
-        In the particular case in which you have only a volume and a structure, 
-        default values are model #2, refmodel #1 and saverefmodel 0 (false). 
-        Model refers to the PDBx/mmCIF file, refmodel to a 3D map volume. 
-        If you have several structures and no volumes, you can save 
-        all of them by executing commands *scipionwrite [model #1]*, 
-        *scipionwrite [model #2]*, *scipionwrite [model #3]*, and so on.
-        When you use the command line scipionwrite, the Chimera session will 
-        be saved by default. Additionally, you can save the Chimera session 
-        whenever you want by executing the command *scipionss". You will be 
-        able to restore the saved session by using the protocol chimera restore 
-        session (SCIPION menu: Tools/Calculators/chimera restore session). ''')
+        if doHelp:
+            form.addSection(label='Help')
+            form.addLine('''Execute command *scipionwrite [model #n] [refmodel #p] 
+            [saverefmodel 0|1]* from command line in order to transfer structures 
+            and 3D map volumes to SCIPION. 
+            In the particular case in which you have only a volume and a structure, 
+            default values are model #2, refmodel #1 and saverefmodel 0 (false). 
+            Model refers to the PDBx/mmCIF file, refmodel to a 3D map volume. 
+            If you have several structures and no volumes, you can save 
+            all of them by executing commands *scipionwrite [model #1]*, 
+            *scipionwrite [model #2]*, *scipionwrite [model #3]*, and so on.
+            When you use the command line scipionwrite, the Chimera session will 
+            be saved by default. Additionally, you can save the Chimera session 
+            whenever you want by executing the command *scipionss". You will be 
+            able to restore the saved session by using the protocol chimera restore 
+            session (SCIPION menu: Tools/Calculators/chimera restore session). ''')
+
+        return form # DO NOT remove this return
 
     # --------------------------- INSERT steps functions --------------------
     def _insertAllSteps(self):
@@ -140,7 +139,7 @@ class ChimeraProtBase(EMProtocol):
             sampling = 1.
 
         tmpFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
-        createCoordinateAxisFile(dim,
+        Chimera.createCoordinateAxisFile(dim,
                                  bildFileName=tmpFileName,
                                  sampling=sampling)
         f.write("runCommand('open %s')\n" % tmpFileName)
@@ -188,7 +187,7 @@ class ChimeraProtBase(EMProtocol):
         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
 
         # run in the background
-        runChimeraProgram(Plugin.getProgram(), args)
+        Plugin.runChimeraProgram(Plugin.getProgram(), args)
 
     def createOutput(self):
         """ Copy the PDB structure and register the output object.
