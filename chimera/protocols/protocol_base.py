@@ -35,11 +35,9 @@ from pyworkflow.em.data import Transform
 from pyworkflow.em.convert.headers import Ccp4Header
 from pyworkflow.em.protocol import EMProtocol
 
-from pyworkflow.em.viewers.viewer_chimera import (Chimera,
-                                                 chimeraPdbTemplateFileName,
-                                                 sessionFile,
-                                                 chimeraMapTemplateFileName,
-                                                 chimeraScriptFileName)
+from chimera.utils import (createCoordinateAxisFile, runChimeraProgram,
+                           chimeraPdbTemplateFileName, sessionFile,
+                           chimeraMapTemplateFileName, chimeraScriptFileName)
 
 from pyworkflow.protocol.params import (MultiPointerParam, PointerParam,
                                         StringParam)
@@ -51,7 +49,7 @@ from chimera import Plugin
 class ChimeraProtBase(EMProtocol):
     """Protocol to perform rigid fit using Chimera.
         Execute command *scipionwrite [model #n] [refmodel #p]
-        [saverefmodel 0|1]* from command line in order to transfer fitted
+        [saverefmodel 0|1]* from command line in order to transferm fitted
         pdb to scipion. Default values are model=#0,
         refmodel =#1 and saverefmodel 0 (false).
         model refers to the pdb file. refmodel to a 3Dmap"""
@@ -61,9 +59,9 @@ class ChimeraProtBase(EMProtocol):
     def _defineParams(self, form, doHelp=True):
         form.addSection(label='Input')
         form.addParam('inputVolume', PointerParam, pointerClass="Volume",
-                      label='Input Volume', allowsNull=True, important=True,
+                      label='Input Volume', allowsNull=True,
                       help="Volume to process")
-        form.addParam('pdbFileToBeRefined', PointerParam, important=True,
+        form.addParam('pdbFileToBeRefined', PointerParam,
                       pointerClass="PdbFile",
                       label='PDBx/mmCIF file',
                       help="PDBx/mmCIF file that you can save after operating "
@@ -96,7 +94,7 @@ class ChimeraProtBase(EMProtocol):
             able to restore the saved session by using the protocol chimera restore 
             session (SCIPION menu: Tools/Calculators/chimera restore session). ''')
 
-        return form # DO NOT remove this return
+        return form #DO NOT remove this return
 
     # --------------------------- INSERT steps functions --------------------
     def _insertAllSteps(self):
@@ -142,10 +140,11 @@ class ChimeraProtBase(EMProtocol):
             sampling = 1.
 
         tmpFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
-        Chimera.createCoordinateAxisFile(dim,
+        createCoordinateAxisFile(dim,
                                  bildFileName=tmpFileName,
                                  sampling=sampling)
         f.write("runCommand('open %s')\n" % tmpFileName)
+        f.write("runCommand('cofr 0,0,0')\n")  # set center of coordinates
 
         # input vol with its origin coordinates
         pdbModelCounter = 1
@@ -167,6 +166,29 @@ class ChimeraProtBase(EMProtocol):
             x, y, z = (pdbFileToBeRefined.getOrigin().getShifts())
             f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
                     "coord #0')\n" % (x, y, z, pdbModelCounter))
+
+        # Alignment of sequence and structure
+        if (hasattr(self, 'inputSequence') and
+                hasattr(self, 'inputStructureChain')):
+            if (self.inputSequence.get() is not None and
+                    self.inputStructureChain.get() is not None):
+                models = self.structureHandler.getModelsChains()
+                if len(models) > 1:
+                    f.write("runCommand('select #%d.%s:.%s')\n"
+                            % (pdbModelCounter, str(self.selectedModel),
+                                str(self.selectedChain)))
+                else:
+                    f.write("runCommand('select #%d:.%s')\n"
+                            % (pdbModelCounter, str(self.selectedChain)))
+                # f.write("runCommand('sequence selection')\n") # To open
+                                                                # only the
+                                                                # sequence of
+                                                                # the selected
+                                                                # chain
+                if self._getOutFastaSequencesFile is not None:
+                    alignmentFile = self._getOutFastaSequencesFile()
+                    f.write("runCommand('open %s')\n" % alignmentFile)
+
         # other pdb files
         pdbModelCounter += 1
         for pdb in self.inputPdbFiles:
@@ -190,7 +212,7 @@ class ChimeraProtBase(EMProtocol):
         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
 
         # run in the background
-        Chimera.runProgram(Plugin.getProgram(), args)
+        runChimeraProgram(Plugin.getProgram(), args)
 
     def createOutput(self):
         """ Copy the PDB structure and register the output object.
@@ -380,7 +402,7 @@ chimeraScriptMain = '''
          f.write(e.message)
          f.close()
          
-     modelId = int(model[1:])# model to write  1
+     # modelId = int(model[1:])# model to write  1
      refModelId = int(refmodel[1:])# coordenate system refers to this model 0
 
      # get actual models
