@@ -28,12 +28,11 @@
 from protocol_base import createScriptFile
 from pyworkflow.protocol.params import PointerParam, StringParam
 import os
-from pyworkflow.em.viewers.viewer_chimera import (Chimera,
-                                                 chimeraPdbTemplateFileName,
-                                                 chimeraMapTemplateFileName,
-                                                 chimeraScriptFileName,
-                                                 sessionFile)
-from protocol_base import ChimeraProtBase
+from pyworkflow.em.viewers.chimera_utils import \
+    runChimeraProgram,\
+    chimeraPdbTemplateFileName, chimeraMapTemplateFileName, \
+    chimeraScriptFileName, getProgram, sessionFile
+from pyworkflow.em.packages.chimera.protocol_base import ChimeraProtBase
 
 class ChimeraProtRestore(ChimeraProtBase):
     """Protocol to perform rigid fit using Chimera.
@@ -104,11 +103,11 @@ class ChimeraProtRestore(ChimeraProtBase):
         else:
             args = " --script " + self._getTmpPath(chimeraScriptFileName)
         f.close()
-        program = Chimera.getProgram()
+        program = getProgram()
         self._log.info('Launching: ' + program + ' ' + args)
 
         # run in the background
-        Chimera.runProgram(program, args)
+        runChimeraProgram(program, args)
 
     def createOutput(self):
         super(ChimeraProtRestore, self).createOutput()

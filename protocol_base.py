@@ -32,38 +32,33 @@ from pyworkflow.em import PdbFile
 from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import Transform
-from pyworkflow.em.convert.headers import Ccp4Header
+from pyworkflow.em.headers import Ccp4Header
 from pyworkflow.em.protocol import EMProtocol
-
-from pyworkflow.em.viewers.viewer_chimera import (Chimera,
-                                                 chimeraPdbTemplateFileName,
-                                                 sessionFile,
-                                                 chimeraMapTemplateFileName,
-                                                 chimeraScriptFileName)
-
-from pyworkflow.protocol.params import (MultiPointerParam, PointerParam,
-                                        StringParam)
+from pyworkflow.em.viewers.chimera_utils import \
+    createCoordinateAxisFile, getProgram, runChimeraProgram, \
+    chimeraPdbTemplateFileName, chimeraMapTemplateFileName, \
+    chimeraScriptFileName, sessionFile
+from pyworkflow.protocol.params import MultiPointerParam, PointerParam, \
+    StringParam
 from pyworkflow.utils.properties import Message
-
-from chimera import Plugin
 
 
 class ChimeraProtBase(EMProtocol):
     """Protocol to perform rigid fit using Chimera.
         Execute command *scipionwrite [model #n] [refmodel #p]
-        [saverefmodel 0|1]* from command line in order to transfer fitted
+        [saverefmodel 0|1]* from command line in order to transferm fitted
         pdb to scipion. Default values are model=#0,
         refmodel =#1 and saverefmodel 0 (false).
         model refers to the pdb file. refmodel to a 3Dmap"""
     _version = VERSION_1_2
 
     # --------------------------- DEFINE param functions --------------------
-    def _defineParams(self, form, doHelp=True):
+    def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputVolume', PointerParam, pointerClass="Volume",
-                      label='Input Volume', allowsNull=True, important=True,
+                      label='Input Volume', allowsNull=True,
                       help="Volume to process")
-        form.addParam('pdbFileToBeRefined', PointerParam, important=True,
+        form.addParam('pdbFileToBeRefined', PointerParam,
                       pointerClass="PdbFile",
                       label='PDBx/mmCIF file',
                       help="PDBx/mmCIF file that you can save after operating "
@@ -79,24 +74,21 @@ class ChimeraProtBase(EMProtocol):
                       condition='False',
                       label='Extra commands for chimera viewer',
                       help="Add extra commands in cmd file. Use for testing")
-        if doHelp:
-            form.addSection(label='Help')
-            form.addLine('''Execute command *scipionwrite [model #n] [refmodel #p] 
-            [saverefmodel 0|1]* from command line in order to transfer structures 
-            and 3D map volumes to SCIPION. 
-            In the particular case in which you have only a volume and a structure, 
-            default values are model #2, refmodel #1 and saverefmodel 0 (false). 
-            Model refers to the PDBx/mmCIF file, refmodel to a 3D map volume. 
-            If you have several structures and no volumes, you can save 
-            all of them by executing commands *scipionwrite [model #1]*, 
-            *scipionwrite [model #2]*, *scipionwrite [model #3]*, and so on.
-            When you use the command line scipionwrite, the Chimera session will 
-            be saved by default. Additionally, you can save the Chimera session 
-            whenever you want by executing the command *scipionss". You will be 
-            able to restore the saved session by using the protocol chimera restore 
-            session (SCIPION menu: Tools/Calculators/chimera restore session). ''')
-
-        return form # DO NOT remove this return
+        form.addSection(label='Help')
+        form.addLine('''Execute command *scipionwrite [model #n] [refmodel #p] 
+        [saverefmodel 0|1]* from command line in order to transfer structures 
+        and 3D map volumes to SCIPION. 
+        In the particular case in which you have only a volume and a structure, 
+        default values are model #2, refmodel #1 and saverefmodel 0 (false). 
+        Model refers to the PDBx/mmCIF file, refmodel to a 3D map volume. 
+        If you have several structures and no volumes, you can save 
+        all of them by executing commands *scipionwrite [model #1]*, 
+        *scipionwrite [model #2]*, *scipionwrite [model #3]*, and so on.
+        When you use the command line scipionwrite, the Chimera session will 
+        be saved by default. Additionally, you can save the Chimera session 
+        whenever you want by executing the command *scipionss". You will be 
+        able to restore the saved session by using the protocol chimera restore 
+        session (SCIPION menu: Tools/Calculators/chimera restore session). ''')
 
     # --------------------------- INSERT steps functions --------------------
     def _insertAllSteps(self):
@@ -142,7 +134,7 @@ class ChimeraProtBase(EMProtocol):
             sampling = 1.
 
         tmpFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
-        Chimera.createCoordinateAxisFile(dim,
+        createCoordinateAxisFile(dim,
                                  bildFileName=tmpFileName,
                                  sampling=sampling)
         f.write("runCommand('open %s')\n" % tmpFileName)
@@ -187,10 +179,10 @@ class ChimeraProtBase(EMProtocol):
 
         f.close()
 
-        self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
+        self._log.info('Launching: ' + getProgram() + ' ' + args)
 
         # run in the background
-        Chimera.runProgram(Plugin.getProgram(), args)
+        runChimeraProgram(getProgram(), args)
 
     def createOutput(self):
         """ Copy the PDB structure and register the output object.
@@ -279,7 +271,7 @@ class ChimeraProtBase(EMProtocol):
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = Plugin.getProgram()
+        program = getProgram()
         if program is None:
             errors.append("Missing variable CHIMERA_HOME")
         elif not os.path.exists(program):

@@ -28,12 +28,11 @@
 import os
 
 from pyworkflow.em.convert import ImageHandler
-from chimera.protocols.protocol_fit import ChimeraProtRigidFit
-from chimera.protocols.protocol_operate import ChimeraProtOperate
-from chimera.protocols.protocol_restore import ChimeraProtRestore
-
-from pyworkflow.em.viewers.viewer_chimera import (Chimera,
-                                                  sessionFile)
+from protocol_fit import ChimeraProtRigidFit
+from protocol_operate import ChimeraProtOperate
+from protocol_restore import ChimeraProtRestore
+from pyworkflow.em.viewers.chimera_utils import \
+    createCoordinateAxisFile, runChimeraProgram, getProgram, sessionFile
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 
 
@@ -76,7 +75,7 @@ class ChimeraViewerBase(Viewer):
 
         bildFileName = os.path.abspath(self.protocol._getTmpPath(
             "axis_output.bild"))
-        Chimera.createCoordinateAxisFile(dim,
+        createCoordinateAxisFile(dim,
                                  bildFileName=bildFileName,
                                  sampling=sampling)
         fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
@@ -105,7 +104,7 @@ class ChimeraViewerBase(Viewer):
         f.close()
 
         # run in the background
-        Chimera.runProgram(Chimera.getProgram(), fnCmd+"&")
+        runChimeraProgram(getProgram(), fnCmd+"&")
         return []
 
 class ChimeraRestoreViewer(Viewer):
@@ -124,7 +123,7 @@ class ChimeraRestoreViewer(Viewer):
                 self.protocol.inputProtocol.get()._getExtraPath(), sessionFile)
             path = os.path.abspath(path2)
 
-        Chimera.runProgram(Chimera.getProgram(), path  + "&")
+        runChimeraProgram(getProgram(), path  + "&")
         return []
 
 
