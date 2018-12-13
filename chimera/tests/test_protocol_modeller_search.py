@@ -169,7 +169,28 @@ class TestChimeraModellerSearch(TestImportData):
     CHAIN1 = "[model: 0, chain: B, 148 residues]" # Protein
     CHAIN2 = "[model: 0, chain: A, 98 residues]" # Protein
     CHAIN3 = "[model: 7, chain: A, 134 residues]" # Protein
+    message = """*******************************************
+This test requires human intervention. By default is disabled
+so automatic checking do not fail but should be executed
+if you want to check chimera modeler search protocol.
 
+You may enable the protocol but setting
+
+    DISABLE_TEST = False
+    
+HOW TO RUN THE TEST:
+1) when chimera opens select (in sequence window)
+structure -> modeller (homology)
+2) a new pop up windows appears called 'comparative model with modeller'
+3) choose as target = seq...mutated
+4) choose as template the only offered option 
+5) you will need a key for modeller website
+6) press OK
+7) In main window you will see (botton) "porcentage of progress" wait untill is 100%
+8) In command line type:  scipionwrite model #2.1 ,enter>
+9) close chimera 
+************************************************"""
+    DISABLE_TEST = True
 
     def testImportChainFromStructureAndSequence1(self):
         """
@@ -186,7 +207,10 @@ class TestChimeraModellerSearch(TestImportData):
         prot1 = self.newProtocol(ChimeraModelFromTemplate, **args)
         prot1.setObjLabel('1_structure chain seq,\n and seq from '
                           'user file\n')
-        self.launchProtocol(prot1)
+        if self.DISABLE_TEST:
+            print self.message
+        else:
+            self.launchProtocol(prot1)
 
     def testImportChainFromStructureAndSequence2(self):
         """
@@ -204,7 +228,10 @@ class TestChimeraModellerSearch(TestImportData):
         prot2 = self.newProtocol(ChimeraModelFromTemplate, **args)
         prot2.setObjLabel('2_structure chain seq,\n and seq from '
                           'user file\n')
-        self.launchProtocol(prot2)
+        if self.DISABLE_TEST:
+            print self.message
+        else:
+            self.launchProtocol(prot2)
 
     def testImportChainFromStructureAndSequence3(self):
         """
@@ -218,7 +245,10 @@ class TestChimeraModellerSearch(TestImportData):
                 'inputStructureChain': self.CHAIN3,
                 'inputSequence': sequence3
                 }
-        prot1 = self.newProtocol(ChimeraModelFromTemplate, **args)
-        prot1.setObjLabel('3_structure chain seq,\n and seq from '
+        prot3 = self.newProtocol(ChimeraModelFromTemplate, **args)
+        prot3.setObjLabel('3_structure chain seq,\n and seq from '
                           'user file\n')
-        self.launchProtocol(prot1)
+        if self.DISABLE_TEST:
+            print self.message
+        else:
+            self.launchProtocol(prot3)
