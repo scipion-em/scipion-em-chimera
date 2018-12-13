@@ -12,8 +12,6 @@ https://github.com/I2PC/scipion/wiki/User-Documentation#tutorials
 INSTALLATION:
 see wiki (https://github.com/scipion-em/scipion-em-chimera/wiki)
 
-Build status:
-
 ![alt text](http://heisenberg.cnb.csic.es:9980/badges/chimera_devel.svg)
 
 Builbot_URL: http://heisenberg.cnb.csic.es:9980/#/builders/16
