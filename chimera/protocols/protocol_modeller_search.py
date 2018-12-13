@@ -30,11 +30,14 @@ from pyworkflow.em import *
 from pyworkflow import VERSION_1_2
 from chimera.protocols import ChimeraProtBase
 from pyworkflow.em.convert.atom_struct import AtomicStructHandler
-from pyworkflow.protocol.params import PointerParam, StringParam, \
-    MultiPointerParam
-from pyworkflow.em.convert.sequence import SequenceHandler, \
-    saveFileSequencesToAlign, alignClustalSequences, \
-    alignBioPairwise2Sequences, alignMuscleSequences
+from pyworkflow.protocol.params import (PointerParam,
+                                        StringParam,
+                                        MultiPointerParam)
+from pyworkflow.em.convert.sequence import (SequenceHandler,
+                                            saveFileSequencesToAlign,
+                                            alignClustalSequences,
+                                            alignBioPairwise2Sequences,
+                                            alignMuscleSequences)
 from collections import OrderedDict
 
 class ChimeraModelFromTemplate(ChimeraProtBase):
@@ -59,7 +62,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
     # --------------------------- DEFINE param functions --------------------
     def _defineParams(self, form, doHelp=False):
         formBase = super(ChimeraModelFromTemplate, self)._defineParams(form,
-                                                                doHelp=False)
+                                                                doHelp=True)
         param = form.getParam('pdbFileToBeRefined')
         param.label.set('PDBx/mmCIF file template')
         param.help.set("PDBx/mmCIF file template used as basic atomic "
@@ -139,9 +142,6 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                                   "for the first time by 'sudo apt install "
                                   "muscle'.")
 
-        # TODO: Error: This help section appears after the help section of
-        # base protocol
-        formBase.addSection('Help')
         formBase.addLine("Step 1:\nIn the sequence window your target "
                          "sequence (and other additional sequences that you "
                          "want to use in  the alignment) will appear aligned to "
