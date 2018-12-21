@@ -29,10 +29,10 @@ from protocol_base import createScriptFile
 from pyworkflow.protocol.params import PointerParam, StringParam
 import os
 from pyworkflow.em.viewers.viewer_chimera import (Chimera,
-                                                 chimeraPdbTemplateFileName,
-                                                 chimeraMapTemplateFileName,
-                                                 chimeraScriptFileName,
-                                                 sessionFile)
+                                                  chimeraScriptFileName,
+                                                  chimeraPdbTemplateFileName,
+                                                  chimeraMapTemplateFileName,
+                                                  sessionFile)
 from protocol_base import ChimeraProtBase
 
 class ChimeraProtRestore(ChimeraProtBase):
@@ -48,7 +48,9 @@ class ChimeraProtRestore(ChimeraProtBase):
         form.addSection(label='Input')
         form.addParam('inputProtocol', PointerParam,
                   label="Input protocols", important=True,
-                  pointerClass='ChimeraProtOperate, ChimeraProtRigidFit',
+                  pointerClass='ChimeraProtOperate, '
+                               'ChimeraProtRigidFit, '
+                               'ChimeraModelFromTemplate',
                   help="protocol to be reloaded")
 
         form.addParam('extraCommands', StringParam,
