@@ -28,7 +28,11 @@
 import os
 
 from pyworkflow import VERSION_1_2
-from pyworkflow.em import PdbFile
+try:
+    from pyworkflow.em.data import AtomStruct
+except:
+    from pyworkflow.em.data import PdbFile as AtomStruct
+
 from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import Transform
@@ -42,7 +46,8 @@ from pyworkflow.em.viewers.viewer_chimera import (Chimera,
                                                   chimeraScriptFileName,
                                                   chimeraPdbTemplateFileName)
 
-from pyworkflow.protocol.params import (MultiPointerParam, PointerParam,
+from pyworkflow.protocol.params import (MultiPointerParam,
+                                        PointerParam,
                                         StringParam)
 from pyworkflow.utils.properties import Message
 
@@ -65,12 +70,12 @@ class ChimeraProtBase(EMProtocol):
                       label='Input Volume', allowsNull=True,
                       help="Volume to process")
         form.addParam('pdbFileToBeRefined', PointerParam,
-                      pointerClass="PdbFile",
+                      pointerClass="AtomStruct",
                       label='PDBx/mmCIF file',
                       help="PDBx/mmCIF file that you can save after operating "
                            "with it.")
         form.addParam('inputPdbFiles', MultiPointerParam,
-                      pointerClass="PdbFile",
+                      pointerClass="AtomStruct",
                       label='Other PDBx/mmCIF files',
                       help="In case you need to load more PDBx/mmCIF files, "
                            "you can load them here and save them after "
@@ -288,7 +293,7 @@ class ChimeraProtBase(EMProtocol):
         for filename in sorted(os.listdir(directory)):
             if filename.endswith(".pdb") or filename.endswith(".cif"):
                 path = os.path.join(directory, filename)
-                pdb = PdbFile()
+                pdb = AtomStruct()
                 pdb.setFileName(path)
                 if vol is not None:
                     pdb.setVolume(vol)
