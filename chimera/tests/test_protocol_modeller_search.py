@@ -190,7 +190,7 @@ structure -> modeller (homology)
 8) In command line type:  scipionwrite model #2.1 ,enter>
 9) close chimera 
 ************************************************"""
-    DISABLE_TEST = True
+    DISABLE_TEST = True 
 
     def testImportChainFromStructureAndSequence1(self):
         """

@@ -179,7 +179,8 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
 
     def prerequisitesStep(self):
         # get pdb sequence
-        chainId = self.inputStructureChain.get() #  chain ID PDB
+        import json
+        chainIdDict = json.loads(self.inputStructureChain.get())
 
         # read PDB
         self.structureHandler = AtomicStructHandler()
@@ -188,10 +189,11 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         self.structureHandler.read(fileName)
 
         # get sequence of structure chain with id chainId (selected by the user)
-        self.selectedModel = chainId.split(',')[0].split(':')[1].strip()
-        self.selectedChain = chainId.split(',')[1].split(':')[1].strip()
-        print "Selected chain: %s from model: %s from structure: %s" \
-              % (self.selectedChain, self.selectedModel,
+        self.selectedModel = chainIdDict['model']
+        self.selectedChain = chainIdDict['chain']
+        # self.selectedModel = chainId.split(',')[0].split(':')[1].strip()
+        # self.selectedChain = chainId.split(',')[1].split(':')[1].strip()
+\              % (self.selectedChain, self.selectedModel,
                  os.path.basename(fileName))
 
         # Bio.Seq.Seq object
