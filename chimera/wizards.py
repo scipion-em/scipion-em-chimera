@@ -3,8 +3,7 @@
 # * Authors:     Pablo Conesa (pconesa@cnb.csic.es)
 #                Marta Martinez (mmmtnez@cnb.csic.es)
 # *              Roberto Marabini (roberto@cnb.csic.es)
-# *
-# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
+# * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
 # * it under the terms of the GNU General Public License as published by
@@ -28,6 +27,6 @@
 
 from pyworkflow.em.wizard import GetStructureChainsWizard
 from chimera.protocols import ChimeraModelFromTemplate
-
-class GetStructureChainsWizard2(GetStructureChainsWizard):
+class GetStructureChainsWizardChimera(GetStructureChainsWizard):
     _targets = [(ChimeraModelFromTemplate, ['inputStructureChain'])]
+

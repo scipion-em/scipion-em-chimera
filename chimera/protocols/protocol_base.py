@@ -28,7 +28,11 @@
 import os
 
 from pyworkflow import VERSION_1_2
-from pyworkflow.em import AtomStruct
+try:
+    from pyworkflow.em.data import AtomStruct
+except:
+    from pyworkflow.em.data import PdbFile as AtomStruct
+
 from pyworkflow.em import Volume
 from pyworkflow.em.convert import ImageHandler
 from pyworkflow.em.data import Transform

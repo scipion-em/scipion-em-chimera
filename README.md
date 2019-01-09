@@ -15,3 +15,4 @@ see wiki (https://github.com/scipion-em/scipion-em-chimera/wiki)
 ![alt text](http://heisenberg.cnb.csic.es:9980/badges/chimera_devel.svg)
 
 Builbot_URL: http://heisenberg.cnb.csic.es:9980/#/builders/16
+
