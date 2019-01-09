@@ -193,7 +193,8 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         self.selectedChain = chainIdDict['chain']
         # self.selectedModel = chainId.split(',')[0].split(':')[1].strip()
         # self.selectedChain = chainId.split(',')[1].split(':')[1].strip()
-\              % (self.selectedChain, self.selectedModel,
+        print "Selected chain: %s from model: %s from structure: %s" \
+              % (self.selectedChain, self.selectedModel,
                  os.path.basename(fileName))
 
         # Bio.Seq.Seq object
