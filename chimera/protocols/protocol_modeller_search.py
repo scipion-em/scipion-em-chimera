@@ -64,7 +64,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         formBase = super(ChimeraModelFromTemplate, self)._defineParams(form,
                                                                 doHelp=True)
         param = form.getParam('pdbFileToBeRefined')
-        param.label.set('PDBx/mmCIF file template')
+        param.label.set('Atomic structure used as template')
         param.help.set("PDBx/mmCIF file template used as basic atomic "
                        "structure to model your specific sequence.")
         param = form.getParam('inputVolume')

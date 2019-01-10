@@ -40,10 +40,10 @@ class ChimeraProtRigidFit(ChimeraProtBase):
     def _defineParams(self, form):
         super(ChimeraProtRigidFit, self)._defineParams(form)
         param = form.getParam('pdbFileToBeRefined')
-        param.label.set('PDBx/mmCIF file to be refined')
-        param.help.set('PDBx/mmCIF file to be refined. ')
+        param.label.set('Atomic structure to be fitted')
+        param.help.set('PDBx/mmCIF file to be fitted. ')
         param = form.getParam('inputPdbFiles')
-        param.label.set('Other reference PDBx/mmCIF files')
+        param.label.set('Other reference atomic structures')
         param.help.set('Other PDBx/mmCIF files used as reference.')
 
         # --------------------------- INSERT steps functions --------------------

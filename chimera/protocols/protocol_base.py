@@ -71,12 +71,12 @@ class ChimeraProtBase(EMProtocol):
                       help="Volume to process")
         form.addParam('pdbFileToBeRefined', PointerParam,
                       pointerClass="AtomStruct",
-                      label='PDBx/mmCIF file',
+                      label='Atomic structure',
                       help="PDBx/mmCIF file that you can save after operating "
                            "with it.")
         form.addParam('inputPdbFiles', MultiPointerParam,
                       pointerClass="AtomStruct",
-                      label='Other PDBx/mmCIF files',
+                      label='Other atomic structures',
                       help="In case you need to load more PDBx/mmCIF files, "
                            "you can load them here and save them after "
                            "operating with them.")
