@@ -51,7 +51,7 @@ class Plugin(pyworkflow.em.Plugin):
 
     @classmethod
     def _defineVariables(cls):
-        cls._defineEmVar(CHIMERA_HOME, 'chimera-1.10.1')
+        cls._defineEmVar(CHIMERA_HOME, 'chimera-1.13.1')
         cls._defineEmVar(CHIMERA_HEADLESS_HOME, 'chimera_headless')
 
     @classmethod
@@ -83,10 +83,10 @@ class Plugin(pyworkflow.em.Plugin):
 
         SW_CH = env.getEmFolder()
         chimera_1_10_1_command = [('./scipion_installer',
-                            '%s/chimera-1.10.1/bin/chimera' % SW_CH)]
+                            '%s/chimera-1.13.1/bin/chimera' % SW_CH)]
 
-        env.addPackage('chimera', version='1.10.1',
-                       tar='chimera-1.10.1-linux_x86_64.tgz',
+        env.addPackage('chimera', version='1.13.1',
+                       tar='chimera-1.13.1-linux_x86_64.tgz',
                        commands=chimera_1_10_1_command,
                        default=True)
 
