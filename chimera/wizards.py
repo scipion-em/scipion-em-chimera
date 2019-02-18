@@ -27,6 +27,26 @@
 
 from pyworkflow.em.wizard import GetStructureChainsWizard
 from chimera.protocols import ChimeraModelFromTemplate
+from editList import EntryGrid
+from chimera.protocols.protocol_contacts import \
+    ProtContacts
+from pyworkflow.wizard import Wizard
+
 class GetStructureChainsWizardChimera(GetStructureChainsWizard):
     _targets = [(ChimeraModelFromTemplate, ['inputStructureChain'])]
 
+class ProtContactsWizard(Wizard):
+    recibingAttribute = 'chainStructure'
+    _targets = [(ProtContacts, [recibingAttribute])
+                ]
+
+    def show(self, form):
+        cols = ['label']
+        chainWizard = GetStructureChainsWizard()
+        protocol = form.protocol
+        models = chainWizard.getModelsChainsStep(protocol)
+        rows = []
+        for chainID, lenResidues in sorted(models[0].iteritems()):
+            rows.append(str(chainID))
+
+        EntryGrid(cols, rows, form , self.recibingAttribute)
