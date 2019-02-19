@@ -17,6 +17,7 @@ from chimera import Plugin
 class ProtContacts(EMProtocol):
     _label = 'contacts'
     _program = ""
+    commandDropView = """DROP view IF EXISTS {viewName}"""
 
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -57,7 +58,6 @@ class ProtContacts(EMProtocol):
     def _insertAllSteps(self):
         # connect to database, delete table and recreate it
         #execute chimera findclash
-        self.commandDropView = """DROP view IF EXISTS {}"""
         self._insertFunctionStep('chimeraClashesStep')
         self._insertFunctionStep('postProcessStep')
         #self._insertFunctionStep('',
@@ -247,14 +247,14 @@ class ProtContacts(EMProtocol):
         # # Remove duplicate contacts
         # that is, given chains A,B
         # we have contact A.a-B.b and B.b-A.a
-        c.execute(self.commandDropView.format("view_ND_1"))
+        c.execute(self.commandDropView.format(viewName="view_ND_1"))
         c.execute(commandEliminateDuplicates.format("view_ND_1",
                                                         "contacts",
                                                         "contacts"))
 
         # remove duplicate contacts due to symmetry
         # h1-h1p, h1-h2p
-        c.execute(self.commandDropView.format("view_ND_2"))
+        c.execute(self.commandDropView.format(viewName="view_ND_2"))
         c.execute(commandEliminateDuplicates2.format("view_ND_2", "view_ND_1", "view_ND_1", "view_ND_1"))
 
 

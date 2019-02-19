@@ -1,4 +1,3 @@
-
 from pyworkflow.protocol.params import EnumParam, BooleanParam, \
     LabelParam
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
@@ -13,10 +12,9 @@ class ProtContactsViewer(ProtocolViewer):
     def __init__(self,  **kwargs):
         ProtocolViewer.__init__(self,  **kwargs)
         self.c, self.conn = self.protocol.prepareDataBase(drop=False)
-        #pairs of chains that interact
+        # compute all pairs of chains that interact
+        # this information is needed for the menu
         self.pairChains = self._displayPairChains()
-
-
 
     def _defineParams(self, form):
         form.addSection(label="Chains")
@@ -47,7 +45,6 @@ class ProtContactsViewer(ProtocolViewer):
         _open_cmd(self.getPairChainsFileNme(), self.getTkRoot())
 
     def _chainPair(self, e=None):
-        print "_chainPair", self.doInvert.get()
         if self.doInvert.get():
             commandDisplayInteractions = """
 SELECT count(*), protId_2, modelId_2, chainId_2,
@@ -102,30 +99,63 @@ ORDER BY protId_1, modelId_1, chainId_1,
 
 
     def _displayPairChains(self,):
-        choices = []
+        # auxiliary view name
+        viewPairChain = 'atoms_interacting_per_pair_of_chains'
+
+        # drop auxiliary view if exists
+        sqlCommand = self.protocol.commandDropView.\
+            format(viewName=viewPairChain)
+        self.c.execute(sqlCommand)
+
+        # create view with pair of chains
         commandDisplayPairChains="""
+CREATE VIEW {viewName} AS
 SELECT count(*) as AAs,  modelId_1, protId_1, chainId_1, modelId_2,  protId_2,  chainId_2
 FROM view_ND_2
 GROUP BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2
-ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
-"""
+-- ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
+""".format(viewName=viewPairChain)
         self.c.execute(commandDisplayPairChains)
-        self.all_pair_chains = self.c.fetchall()
-        formatted_row = '{:<4} {:>2} {:<11} {:<3} {:>4} {:<11} {:<3}\n'
-        f = open(self.getPairChainsFileNme(), 'w')
-        f.write("# atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2\n")
 
+        # remove duplicates and execute command
+        commandDisplayPairChainsNR="""
+SELECT *
+FROM {viewName}
+
+EXCEPT
+
+SELECT ca.*
+FROM {viewName} ca, {viewName} cb
+WHERE
+      ca.protId_1    = cb.protId_2
+  AND cb.protId_1    = ca.protId_2
+  AND ca.chainId_1   = cb.chainId_2
+  AND cb.chainId_1   = ca.chainId_2
+  AND ca.AAs  = cb.AAs
+  AND ca.protId_1 > cb.protId_1
+ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
+""".format(viewName=viewPairChain)
+        self.c.execute(commandDisplayPairChainsNR)
+        self.all_pair_chains = self.c.fetchall()
+
+        # create text file and list with pairs of chains
+        f = open(self.getPairChainsFileNme(), 'w')
+        formatted_row = '{:<4} {:>3} {:<11} {:<3} {:>4} {:<11} {:<3}\n'
+        f.write(        "# atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2\n")
+
+        choices = []
         for row in self.all_pair_chains:
             f.write(formatted_row.format(*row))
-            choices.append("{},{},{}:{},{},{}".format(row[1],
-                                                       row[2],
-                                                       row[3],
-                                                       row[4],
-                                                       row[5],
-                                                       row[6])
+            choices.append("{model_1},{prot_1},{chain_1}:"
+                           "{model_2},{prot_2},{chain_2}".format(model_1=row[1],
+                                                       prot_1=row[2],
+                                                       chain_1=row[3],
+                                                       model_2=row[4],
+                                                       prot_2=row[5],
+                                                       chain_2=row[6])
                            )
         f.close()
-        return choices
+        return choices # list with pairs of chains
 
     def getPairChainsFileNme(self):
         return self.protocol._getTmpPath('pairChainsFile.txt')
