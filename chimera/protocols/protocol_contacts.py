@@ -13,6 +13,7 @@ import collections
 import os
 from pyworkflow.em.viewers.viewer_chimera import Chimera
 from chimera import Plugin
+from pyworkflow.em.viewers.viewer_chimera import (sessionFile)
 
 class ProtContacts(EMProtocol):
     _label = 'contacts'
@@ -104,6 +105,10 @@ class ProtContacts(EMProtocol):
         f.write(
             """runCommand('echo {}')\nrunCommand('findclash  #0:{} test other savefile {} overlap -0.4 hbond 0.0 namingStyle simple')\n""".format(
                 chains, chains, outFile))
+        f.write(
+            """runCommand('save session {sessionFile}')\n""".format(
+                sessionFile=os.path.abspath(self._getExtraPath(sessionFile)))
+        )
 
         f.close()
         args = " --nogui --script " + self.getChimeraScriptFileName()
@@ -140,7 +145,7 @@ class ProtContacts(EMProtocol):
                 else:
                     info = line.split()  # ['#2', 'TYR', '851.B', 'CE1', '#0.7', 'PRO', '78.N', 'CA', '3.059', '0.581']
                     d1['modelId'] = "'" + info[0] + "'"  # '#2'
-                    d1['aaName'] = "'" + info[1] + "'"  # "'TYR'"
+                    d1['aaName'] = "'" + info[1][0] + info[1][1:].lower() + "'"  # "'TYR'"
                     info2 = info[2].split(".")  # ['851', 'B']
                     d1['aaNumber'] = info2[0]  # 851
                     d1['chainId'] = "'" + info2[1] + "'"  # B
@@ -148,7 +153,7 @@ class ProtContacts(EMProtocol):
                     d1['protId'] = "'" + labelDict[info2[1]] + "'"
 
                     d2['modelId'] = "'" + info[4] + "'"  # '#0.7'
-                    d2['aaName'] = "'" + info[5] + "'"  # PRO
+                    d2['aaName'] = "'" + info[5][0] + info[5][1:].lower() + "'"  # PRO
                     info2 = info[6].split(".")
                     d2['aaNumber'] = info2[0]  # 78
                     d2['chainId'] = "'" + info2[1] + "'"  # N
