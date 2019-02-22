@@ -1,5 +1,5 @@
 from pyworkflow.protocol.params import EnumParam, BooleanParam, \
-    LabelParam
+    LabelParam, IntParam
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 from chimera.protocols.protocol_contacts import ProtContacts
 from pyworkflow.gui.text import _open_cmd
@@ -21,12 +21,17 @@ class ProtContactsViewer(ProtocolViewer):
         form.addParam("doInvert", BooleanParam, label="swap chain columns",
                       default=False,
                       help="Set to TRUE to swap the first by the second chain.\n")
+        form.addParam('aaDistance', IntParam,
+                      label='Distance to group AAs',
+                      default=4,
+                      help='If two AAs are closer than this distance will be grouped')
         form.addParam('chainPair', EnumParam,
                       choices=self.pairChains,
                       default=1,
                       label="Chain Contacts",
-                      help="syntax: modelName1, complexName1, chainName1"
-                           "        modelName2, complexName2, chainName2"
+                      help="output format: modelName1, complexName1, chainName1"
+                           "               modelName2, complexName2, chainName2"
+                           "groups AA if they are not further appart than AA distance"
                       )
 
         form.addParam('displayPairChains', LabelParam,
@@ -92,8 +97,70 @@ ORDER BY protId_1, modelId_1, chainId_1,
         f = open(self.getInteractionFileName(), 'w')
         f.write("RESULTS for: {}\n".format(', '.join(str(s) for s in row)))
         f.write("# atoms, prot_1, model_1, chain_1, AA_1, prot_2, model_2, chain2, AA_2\n")
+        first = None
+        last = None
+        first2 = None
+        last2 = None
+        aaDistance = self.aaDistance.get()
         for row in all_rows:
+            AA_1 = row[4]
+            AA_1Int = int(AA_1[3:])
+            AA_2 = row[8]
+            AA_2Int = int(AA_2[3:])
+            if first is None:
+                first = AA_1
+                last = first
+                lastInt = AA_1Int
+
+                first2 = AA_2
+                firstInt2 = AA_2Int
+                last2 = first2
+                lastInt2 = AA_2Int
+            else:
+                if (AA_1Int - lastInt) > aaDistance:
+
+                    f.write(">>>> {first}".format(first=first))
+                    if last != first:
+                        f.write("_{last}".format(last=last))
+                    f.write(" ---- {first}".format(first=first2))
+                    if last2 != first2:
+                        f.write("_{last}".format(last=last2))
+                    if (lastInt2 - firstInt2) > 20:
+                        f.write("????\n\n")
+                    else:
+                        f.write("?\n\n")
+
+                    first = AA_1
+                    last = first
+                    lastInt = AA_1Int
+                    first2 = AA_2
+                    firstInt2 = AA_2Int
+                    last2 = AA_2
+                    lastInt2 = AA_2Int
+                else:
+                    last = AA_1
+                    lastInt = int(AA_1[3:])
+                    tmpLastInt2 = int(AA_2[3:])
+                    if lastInt2 < tmpLastInt2:
+                        last2 = AA_2
+                        lastInt2 = tmpLastInt2
+                    if firstInt2 > tmpLastInt2:
+                        first2 = AA_2
+                        firstInt2 = tmpLastInt2
+
             f.write(', '.join(str(s) for s in row) + "\n")
+            # print first, last, first2, last2, firstInt2, lastInt2
+        f.write(">>>> {first}".format(first=first))
+        if last != first:
+            f.write("_{last}".format(last=last))
+        f.write(" ---- {first}".format(first=first2))
+        if last2 != first2:
+            f.write("_{last}".format(last=last2))
+        if (lastInt2 - firstInt2) > 20:
+            f.write("????\n\n")
+        else:
+            f.write("?\n\n")
+
         f.close()
         _open_cmd(self.getInteractionFileName(), self.getTkRoot())
 
