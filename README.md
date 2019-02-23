@@ -1,10 +1,12 @@
 # scipion-em-chimera
-Plugin to use chimera programs within the Scipion framework 
+Plugin to use chimera programs within the Scipion framework: rigit fit, open chimera,
+model using an atomic struct reference and find contacts between atoms.
 
 TESTS:
 1. scipion test chimera.tests.test_protocol_chimera_operate
 1. scipion test chimera.tests.test_protocol_chimera_fit
 1. scipion test chimera.tests.test_protocol_modeller_search
+1. scipion test chimera.tests.test_protocol_contact
 
 TUTORIAL:
 https://github.com/I2PC/scipion/wiki/User-Documentation#tutorials
