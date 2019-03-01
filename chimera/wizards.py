@@ -25,7 +25,7 @@
 # *
 # **************************************************************************
 
-from pyworkflow.em.wizard import GetStructureChainsWizard
+from pyworkflow.em.wizards import GetStructureChainsWizard
 from chimera.protocols import ChimeraModelFromTemplate
 from editList import EntryGrid
 from chimera.protocols.protocol_contacts import \
