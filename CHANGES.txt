@@ -1,2 +1,3 @@
+14-February-2019 - Prepare beta for release
 20-August-2018 - New version of plugin version
 23-August-2018 - Validate installation, use Plugin.getHome()
