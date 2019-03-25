@@ -1,13 +1,13 @@
 from pyworkflow.protocol.params import EnumParam, BooleanParam, \
     LabelParam, IntParam
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
-from chimera.protocols.protocol_contacts import ProtContacts
+from chimera.protocols.protocol_contacts import ChimeraProtContacts
 from pyworkflow.gui.text import _open_cmd
 
-class ProtContactsViewer(ProtocolViewer):
+class ChimeraProtContactsViewer(ProtocolViewer):
     _label = 'Contacts Viewer'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
-    _targets = [ProtContacts]
+    _targets = [ChimeraProtContacts]
 
     def __init__(self,  **kwargs):
         ProtocolViewer.__init__(self,  **kwargs)

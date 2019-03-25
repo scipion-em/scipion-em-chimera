@@ -29,7 +29,7 @@ from pyworkflow.em.constants import (SYM_I222, SYM_I222r, SYM_In25, SYM_In25r,
                                      SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL,
                                      SYM_OCTAHEDRAL, SCIPION_SYM_NAME)
 
-from chimera.protocols import ProtContacts
+from chimera.protocols import ChimeraProtContacts
 from pyworkflow.tests import BaseTest, setupTestProject
 from pyworkflow.em.protocol.protocol_import import ProtImportPdb
 
@@ -69,7 +69,7 @@ class TestChimeraContact(TestImportBase):
                                   '"X": "x", "Y": "vi"}'
                 }
 
-        protContacts = self.newProtocol(ProtContacts, **args)
+        protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('chain pairs')
         self.launchProtocol(protContacts)
         # TODO: more test are needed may be with an smaller sample

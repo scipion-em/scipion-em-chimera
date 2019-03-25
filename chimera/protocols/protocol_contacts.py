@@ -15,7 +15,7 @@ from pyworkflow.em.viewers.viewer_chimera import Chimera
 from chimera import Plugin
 from pyworkflow.em.viewers.viewer_chimera import (sessionFile)
 
-class ProtContacts(EMProtocol):
+class ChimeraProtContacts(EMProtocol):
     _label = 'contacts'
     _program = ""
     commandDropView = """DROP view IF EXISTS {viewName}"""
@@ -105,11 +105,7 @@ class ProtContacts(EMProtocol):
         f.write(
             """runCommand('echo {}')\nrunCommand('findclash  #0:{} test other savefile {} overlap -0.4 hbond 0.0 namingStyle simple')\n""".format(
                 chains, chains, outFile))
-        f.write(
-            """runCommand('save session {sessionFile}')\n""".format(
-                sessionFile=os.path.abspath(self._getExtraPath(sessionFile)))
-        )
-
+        #f.write("runCommand('save %s')\n" % os.path.abspath(self._getExtraPath(sessionFile)))
         f.close()
         args = " --nogui --script " + self.getChimeraScriptFileName()
         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
