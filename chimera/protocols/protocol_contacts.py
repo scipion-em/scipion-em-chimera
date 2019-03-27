@@ -24,13 +24,18 @@ class ChimeraProtContacts(EMProtocol):
         form.addSection(label='Input')
         #pdbFileToBeRefined name is needed by the wizard. Do not change it
         form.addParam('pdbFileToBeRefined', PointerParam, pointerClass="AtomStruct",
-                       label='Atom Struct:', allowsNull=True,
+                       label='Atomic Structure:', allowsNull=True,
                        important=True,
                        help="Input atomic structure.")
         form.addParam('chainStructure', StringParam, default="",
-                      label='Map Chain Structure',
-                      help="Dictionary that maps chains to labels."
-                           "Example: {'A':'h1', 'B':'h1', 'E':'h2'}")
+                      label='Chain Labeling',
+                      help="Dictionary that maps chains to labels.\n"
+                           "Example: {'A':'h1', 'B':'h1', 'E':'h2'}\n"
+                           "Contacts are calculated between two chains with distinct "
+                           "labels. Two chains with the same label are considered as "
+                           "a group. Contacts will be computed between any chain included "
+                           "in this group and any other group/chain. However, no contacts "
+                           "among members of the group will be calculated.")
         form.addParam('symmetryGroup', EnumParam,
                       choices=[SCIPION_SYM_NAME[SYM_CYCLIC],
                                SCIPION_SYM_NAME[SYM_DIHEDRAL],
@@ -50,7 +55,7 @@ class ChimeraProtContacts(EMProtocol):
         form.addParam('symmetryOrder', IntParam, default=1,
                     condition='symmetryGroup<=%d' % SYM_DIHEDRAL,
         label='Symmetry Order',
-        help='Order of cyclic symmetry.')
+        help='Select the order of cyclic or dihedral symmetry.')
         # some empty space so if symmetryOrder can be seem
         # without resizing the window
         form.addLine('')
