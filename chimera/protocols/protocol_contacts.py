@@ -79,19 +79,33 @@ class ChimeraProtContacts(EMProtocol):
         labelDict = json.loads(self.chainStructure.get(),
                                object_pairs_hook=collections.OrderedDict)
         pdbFileName = self.pdbFileToBeRefined.get().getFileName()
-        sym = Chimera._symmetryMap[self.symmetryGroup.get()]
-        # first elemet of dictionary
+        self.sym = Chimera._symmetryMap[self.symmetryGroup.get()]
+        self.symOrder = self.symmetryOrder.get()
+        # first element of dictionary
         firstValue = labelDict[list(labelDict)[0]]
         outFiles = []
         f = open(self.getChimeraScriptFileName(), "w")
         f.write("from chimera import runCommand\n")
         f.write("runCommand('open {}')\n".format(pdbFileName))
-        f.write("runCommand('sym #0 group i,222r contact 3')\n")  # apply symmetry
-
+        # apply symmetry
+        if self.sym == "Cn" and self.symOrder != 1:
+            f.write("runCommand('sym #0 group C%d contact 3')\n" % self.symOrder)
+        elif self.sym == "Dn" and self.symOrder != 1:
+            f.write("runCommand('sym #0 group d%d contact 3')\n" % self.symOrder)
+        elif self.sym == "T":
+            f.write("runCommand('sym #0 group t contact 3')\n")
+        # TODO: Refine sym tetrahedral according orientation
+        # Look at: https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/sym.html
+        elif self.sym == "O":
+            f.write("runCommand('sym #0 group O contact 3')\n")
+        elif self.sym == "222" or self.sym =="222r" or self.sym == "n25" or self.sym =="n25r":
+            f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym)
         protId = firstValue
+        print "protId: ", protId
         chains = ""
         comma = ''
         for k, v in labelDict.iteritems():
+            print "k, v: ", k, v
             if protId == v:
                 chains += "{}.{}".format(comma, k)
                 comma = ','
@@ -144,25 +158,47 @@ class ChimeraProtContacts(EMProtocol):
                     # print "skip line", line
                     counter += 1
                 else:
-                    info = line.split()  # ['#2', 'TYR', '851.B', 'CE1', '#0.7', 'PRO', '78.N', 'CA', '3.059', '0.581']
-                    d1['modelId'] = "'" + info[0] + "'"  # '#2'
-                    d1['aaName'] = "'" + info[1][0] + info[1][1:].lower() + "'"  # "'TYR'"
-                    info2 = info[2].split(".")  # ['851', 'B']
-                    d1['aaNumber'] = info2[0]  # 851
-                    d1['chainId'] = "'" + info2[1] + "'"  # B
-                    d1['atomId'] = "'" + info[3] + "'"  # CE1
-                    d1['protId'] = "'" + labelDict[info2[1]] + "'"
+                    if self.sym == "Cn" and self.symOrder == 1:
+                        info = line.split() # ['HIS', '87.A', 'NE2', 'HEM', '1.A002', 'ND', '0.620', '2.660']
+                        print "info: ", info
+                        d1['modelId'] = "'" + "#0" + "'"
+                        d1['aaName'] = "'" + info[0] + info[0][1:].lower() + "'"  # "'HIS'"
+                        info2 = info[1].split(".")  # ['87', 'A']
+                        d1['aaNumber'] = info2[0]  # 87
+                        d1['chainId'] = "'" + info2[1] + "'"  # A
+                        d1['atomId'] = "'" + info[2] + "'"  # NE2
+                        d1['protId'] = "'" + labelDict[info2[1]] + "'"
 
-                    d2['modelId'] = "'" + info[4] + "'"  # '#0.7'
-                    d2['aaName'] = "'" + info[5][0] + info[5][1:].lower() + "'"  # PRO
-                    info2 = info[6].split(".")
-                    d2['aaNumber'] = info2[0]  # 78
-                    d2['chainId'] = "'" + info2[1] + "'"  # N
-                    d2['protId'] = "'" + labelDict[info2[1]] + "'"
-                    d2['atomId'] = "'" + info[7] + "'"  # CA
+                        d2['modelId'] = "'" + "#0" + "'"
+                        d2['aaName'] = "'" + info[3][0] + info[3][1:].lower() + "'"  # HEM
+                        info2 = info[4].split(".")
+                        d2['aaNumber'] = info2[0]  # 1
+                        d2['chainId'] = "'" + info2[1] + "'"  # A002
+                        d2['protId'] = "'" + labelDict[info2[1]] + "'"
+                        d2['atomId'] = "'" + info[5] + "'"  # ND
+                        d['overlap'] = info[6]  # 0.620
+                        d['distance'] = info[7]  # 2.660
 
-                    d['overlap'] = info[8]  # 3.059
-                    d['distance'] = info[9]  # 0.5
+                    else:
+                        info = line.split()  # ['#2', 'TYR', '851.B', 'CE1', '#0.7', 'PRO', '78.N', 'CA', '3.059', '0.581']
+                        d1['modelId'] = "'" + info[0] + "'"  # '#2'
+                        d1['aaName'] = "'" + info[1][0] + info[1][1:].lower() + "'"  # "'TYR'"
+                        info2 = info[2].split(".")  # ['851', 'B']
+                        d1['aaNumber'] = info2[0]  # 851
+                        d1['chainId'] = "'" + info2[1] + "'"  # B
+                        d1['atomId'] = "'" + info[3] + "'"  # CE1
+                        d1['protId'] = "'" + labelDict[info2[1]] + "'"
+
+                        d2['modelId'] = "'" + info[4] + "'"  # '#0.7'
+                        d2['aaName'] = "'" + info[5][0] + info[5][1:].lower() + "'"  # PRO
+                        info2 = info[6].split(".")
+                        d2['aaNumber'] = info2[0]  # 78
+                        d2['chainId'] = "'" + info2[1] + "'"  # N
+                        d2['protId'] = "'" + labelDict[info2[1]] + "'"
+                        d2['atomId'] = "'" + info[7] + "'"  # CA
+
+                        d['overlap'] = info[8]  # 3.059
+                        d['distance'] = info[9]  # 0.5
 
                     if d1['modelId'] == d2['modelId']:
                         if d1['protId'] <= d2['protId']:
