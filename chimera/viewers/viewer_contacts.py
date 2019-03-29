@@ -47,7 +47,7 @@ class ChimeraProtContactsViewer(ProtocolViewer):
 
     def _visualizeChainPairFile(self, e=None):
         """Show file with the chains that interact."""
-        _open_cmd(self.getPairChainsFileNme(), self.getTkRoot())
+        _open_cmd(self.getPairChainsFileName(), self.getTkRoot())
 
     def _chainPair(self, e=None):
         if self.doInvert.get():
@@ -83,16 +83,15 @@ ORDER BY protId_1, modelId_1, chainId_1,
          aaNumber_1, aaName_1,  aaNumber_2, aaName_2;
 """
         row = self.all_pair_chains[self.chainPair.get()]
-        comamnd = commandDisplayInteractions.format(row[1],
+        command = commandDisplayInteractions.format(row[1],
                                                     row[2],
                                                     row[3],
                                                     row[4],
                                                     row[5],
                                                     row[6]
                                                     )
-        #print comamnd
-
-        self.c.execute(comamnd)
+        #print command
+        self.c.execute(command)
         all_rows = self.c.fetchall()
         f = open(self.getInteractionFileName(), 'w')
         f.write("RESULTS for: {}\n".format(', '.join(str(s) for s in row)))
@@ -206,7 +205,7 @@ ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
         self.all_pair_chains = self.c.fetchall()
 
         # create text file and list with pairs of chains
-        f = open(self.getPairChainsFileNme(), 'w')
+        f = open(self.getPairChainsFileName(), 'w')
         formatted_row = '{:<4} {:>3} {:<11} {:<3} {:>4} {:<11} {:<3}\n'
         f.write(        "# atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2\n")
 
@@ -224,7 +223,7 @@ ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
         f.close()
         return choices # list with pairs of chains
 
-    def getPairChainsFileNme(self):
+    def getPairChainsFileName(self):
         return self.protocol._getTmpPath('pairChainsFile.txt')
 
     def getInteractionFileName(self):
