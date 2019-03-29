@@ -98,8 +98,8 @@ class ChimeraProtContacts(EMProtocol):
         # Look at: https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/sym.html
         elif self.sym == "O":
             f.write("runCommand('sym #0 group O contact 3')\n")
-        elif self.sym == "222" or self.sym =="222r" or self.sym == "n25" or self.sym =="n25r":
-            f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym)
+        elif self.sym == "I222" or self.sym =="I222r" or self.sym == "In25" or self.sym =="In25r":
+            f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym[1:])
         protId = firstValue
         chains = ""
         comma = ''
@@ -151,6 +151,7 @@ class ChimeraProtContacts(EMProtocol):
         for inFile in outFiles:
             print "processing file", inFile
             counter = 0
+            # parse contact files. Note that C1 symmetry file is different from the rest
             for line in open(inFile):
                 if counter < 8:
                     # print "skip line", line
