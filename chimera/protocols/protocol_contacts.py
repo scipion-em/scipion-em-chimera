@@ -98,8 +98,8 @@ class ChimeraProtContacts(EMProtocol):
         # Look at: https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/sym.html
         elif self.sym == "O":
             f.write("runCommand('sym #0 group O contact 3')\n")
-        elif self.sym == "I222" or self.sym =="I222r" or self.sym == "In25" or self.sym =="In25r":
-            f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym[1:])
+        elif self.sym == "222" or self.sym =="222r" or self.sym == "n25" or self.sym =="n25r":
+            f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym)
         protId = firstValue
         chains = ""
         comma = ''
