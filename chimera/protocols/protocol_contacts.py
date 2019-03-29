@@ -101,11 +101,9 @@ class ChimeraProtContacts(EMProtocol):
         elif self.sym == "222" or self.sym =="222r" or self.sym == "n25" or self.sym =="n25r":
             f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym)
         protId = firstValue
-        print "protId: ", protId
         chains = ""
         comma = ''
         for k, v in labelDict.iteritems():
-            print "k, v: ", k, v
             if protId == v:
                 chains += "{}.{}".format(comma, k)
                 comma = ','
@@ -160,9 +158,8 @@ class ChimeraProtContacts(EMProtocol):
                 else:
                     if self.sym == "Cn" and self.symOrder == 1:
                         info = line.split() # ['HIS', '87.A', 'NE2', 'HEM', '1.A002', 'ND', '0.620', '2.660']
-                        print "info: ", info
                         d1['modelId'] = "'" + "#0" + "'"
-                        d1['aaName'] = "'" + info[0] + info[0][1:].lower() + "'"  # "'HIS'"
+                        d1['aaName'] = "'" + info[0][0] + info[0][1:].lower() + "'"  # "'HIS'"
                         info2 = info[1].split(".")  # ['87', 'A']
                         d1['aaNumber'] = info2[0]  # 87
                         d1['chainId'] = "'" + info2[1] + "'"  # A
