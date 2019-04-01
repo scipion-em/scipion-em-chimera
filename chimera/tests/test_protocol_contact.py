@@ -70,7 +70,7 @@ class TestChimeraContact(TestImportData):
     # protocol to test the chimera computed contacts between pairs
     # of chains
 
-    def testContactsAsymetry(self):
+    def testContactsAsymetryC2(self):
         # import PDB; whole hemoglobin macromolecule with HEM groups as
         # independent chains
         pdb1 = self._importStructureFromFile('PDBx_mmCIF/5ni1_HEM.cif')
@@ -79,12 +79,11 @@ class TestChimeraContact(TestImportData):
                                   '"B": "chainB", "B002": "HEM_B", '
                                   '"C": "chainC", "C002": "HEM_C", '
                                   '"D": "chainD", "D002": "HEM_D"}',
-                'symmetryGroup': SYM_CYCLIC,
-                'symmetryOrder': 1
+                'typeOfMolecule': 1
                 }
 
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
-        protContacts.setObjLabel('5ni1_HEM\ncontacts')
+        protContacts.setObjLabel('5ni1_HEM\nno sym\ncontacts')
         self.launchProtocol(protContacts)
 
         c, conn = protContacts.prepareDataBase(drop=False)
@@ -100,13 +99,14 @@ class TestChimeraContact(TestImportData):
         pdb1 = self._importStructureFromFile('PDBx_mmCIF/5ni1_unit_cell_HEM.cif')
         args = {'pdbFileToBeRefined': pdb1,
                 'chainStructure': '{"A": "chainA", "A002": "HEM_A", '
-                                  '"B": "chainB", "B002": "HEM_B"}',
+                                   '"B": "chainB", "B002": "HEM_B"}',
+                'typeOfMolecule': 0,
                 'symmetryGroup': SYM_CYCLIC,
                 'symmetryOrder': 2
                 }
 
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
-        protContacts.setObjLabel('5ni1_unit_cell_HEM\ncontacts')
+        protContacts.setObjLabel('5ni1_unit_cell_HEM\nsym C2\ncontacts')
         self.launchProtocol(protContacts)
 
         c, conn = protContacts.prepareDataBase(drop=False)
@@ -115,6 +115,150 @@ class TestChimeraContact(TestImportData):
         c.execute(sqlCommand)
         row = c.fetchone()
         self.assertEqual(int(row[0]), 380)
+
+    def testContactsAsymetryD4(self):
+        # import PDB; whole molecule of thermosome from T. acidophilum (1a6d)
+        # 8 independent chains, sym D4
+        pdb1 = self._importStructureFromFile('PDBx_mmCIF/1a6d_whole.pdb')
+        args = {'pdbFileToBeRefined': pdb1,
+                'chainStructure': '{"A": "up", "B": "up", "C": "up", "D": "up", '
+                                  '"E": "up", "F": "down", "G": "down", "H": "down", '
+                                  '"I": "down", "J": "up", "K": "up", "L": "up", '
+                                  '"M": "down", "N": "down", "O": "down", "P": "down"}',
+                'typeOfMolecule': 1
+                }
+
+        protContacts = self.newProtocol(ChimeraProtContacts, **args)
+        protContacts.setObjLabel('1a6d_whole\nno sym\ncontacts')
+        self.launchProtocol(protContacts)
+
+        c, conn = protContacts.prepareDataBase(drop=False)
+        tableName = protContacts.getTableName()
+        sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
+        c.execute(sqlCommand)
+        row = c.fetchone()
+        self.assertEqual(int(row[0]), 9010)
+
+    def testContactsSymD4(self):
+        # import PDB; unit cell of thermosome from T. acidophilum (1a6d)
+        # 2 independent chains
+        pdb1 = self._importStructureFromPDBId('1a6d')
+        args = {'pdbFileToBeRefined': pdb1,
+                'chainStructure': '{"A": "chainA", "B": "chainB"}',
+                'typeOfMolecule': 0,
+                'symmetryGroup': SYM_DIHEDRAL,
+                'symmetryOrder': 4
+                }
+
+        protContacts = self.newProtocol(ChimeraProtContacts, **args)
+        protContacts.setObjLabel('1a6d_unit_cell\nsym D4\ncontacts')
+        self.launchProtocol(protContacts)
+
+        c, conn = protContacts.prepareDataBase(drop=False)
+        tableName = protContacts.getTableName()
+        sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
+        c.execute(sqlCommand)
+        row = c.fetchone()
+        self.assertEqual(int(row[0]), 1302)
+
+    def testContactsAsymetryO(self):
+        # import PDB; whole macromolecule of the cubic core of the pyruvate dehydrogenase
+        # multienzyme complex (1eab); A. vinelandii; Ligands: Coenzyme A (CoA) and
+        # 6,8-dimercapto-octanoic acid amide (LPM)
+        # 24 independent chains
+        pdb1 = self._importStructureFromFile('PDBx_mmCIF/1eab_whole.pdb')
+        args = {'pdbFileToBeRefined': pdb1,
+                'chainStructure': '{"A": "up", "B": "up", "C": "down", "D": "down", '
+                                  '"E": "down", "F": "down", "G": "down", "H": "down", '
+                                  '"I": "down", "J": "down", "K": "up", "L": "up", '
+                                  '"M": "up", "N": "up", "O": "up", "P": "up", '
+                                  '"Q": "up", "R": "up", "S": "down", "T": "down", '
+                                  '"U": "up", "V": "up", "W": "down", "X": "down"}',
+                'typeOfMolecule': 1,
+                'symmetryGroup': SYM_OCTAHEDRAL
+                }
+
+        protContacts = self.newProtocol(ChimeraProtContacts, **args)
+        protContacts.setObjLabel('1eab_whole\nno sym\ncontacts')
+        self.launchProtocol(protContacts)
+
+        c, conn = protContacts.prepareDataBase(drop=False)
+        tableName = protContacts.getTableName()
+        sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
+        c.execute(sqlCommand)
+        row = c.fetchone()
+        self.assertEqual(int(row[0]), 7296)
+
+    def testContactsSymO(self):
+        # import PDB; unit cell of the cubic core of the pyruvate dehydrogenase
+        # multienzyme complex (1eab); A. vinelandii; Ligands: Coenzyme A (CoA) and
+        # 6,8-dimercapto-octanoic acid amide (LPM)
+        # 1 independent chain
+        pdb1 = self._importStructureFromPDBId('1eab')
+        args = {'pdbFileToBeRefined': pdb1,
+                'chainStructure': '{"A": "chainA"}',
+                'typeOfMolecule': 0,
+                'symmetryGroup': SYM_OCTAHEDRAL
+                }
+
+        protContacts = self.newProtocol(ChimeraProtContacts, **args)
+        protContacts.setObjLabel('1eab_unit_cell\nsym O\ncontacts')
+        self.launchProtocol(protContacts)
+
+        c, conn = protContacts.prepareDataBase(drop=False)
+        tableName = protContacts.getTableName()
+        sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
+        c.execute(sqlCommand)
+        row = c.fetchone()
+        self.assertEqual(int(row[0]), 548)
+
+    def testContactsAsymetryT(self):
+        # import PDB; tetrahedral oligomeric complex of GyrA N-terminal fragment
+        # S. pneumoniae (6n1r);
+        # 12 independent chains
+        pdb1 = self._importStructureFromPDBId('6n1r')
+        args = {'pdbFileToBeRefined': pdb1,
+                'chainStructure': '{"A": "chainA", "B": "chainB", "C": "chainC", '
+                                  '"D": "chainD", "E": "chainE", "F": "chainF", '
+                                  '"G": "chainG", "H": "chainH", "I": "chainI", '
+                                  '"J": "chainJ", "K": "chainK", "L": "chainL"}',
+                'typeOfMolecule': 1,
+                'symmetryGroup': SYM_TETRAHEDRAL
+                }
+
+        protContacts = self.newProtocol(ChimeraProtContacts, **args)
+        protContacts.setObjLabel('6n1r\nno sym\ncontacts')
+        self.launchProtocol(protContacts)
+
+        c, conn = protContacts.prepareDataBase(drop=False)
+        tableName = protContacts.getTableName()
+        sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
+        c.execute(sqlCommand)
+        row = c.fetchone()
+        self.assertEqual(int(row[0]), 7282)
+
+
+    def testContactsSymT(self):
+        # import PDB; unit cell of the tetrahedral aminopeptidase from P. horikoshii)
+        # (1y0r); Ligands: Zn, As
+        # 1 independent chain
+        pdb1 = self._importStructureFromPDBId('1y0r')
+        args = {'pdbFileToBeRefined': pdb1,
+                'chainStructure': '{"A": "chainA"}',
+                'typeOfMolecule': 0,
+                'symmetryGroup': SYM_TETRAHEDRAL
+                }
+
+        protContacts = self.newProtocol(ChimeraProtContacts, **args)
+        protContacts.setObjLabel('1y0r_unit_cell\nsym T\ncontacts')
+        self.launchProtocol(protContacts)
+
+        c, conn = protContacts.prepareDataBase(drop=False)
+        tableName = protContacts.getTableName()
+        sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
+        c.execute(sqlCommand)
+        row = c.fetchone()
+        self.assertEqual(int(row[0]), 523)
 
     def testContactsSymI222(self):
         """
@@ -125,6 +269,7 @@ class TestChimeraContact(TestImportData):
         # import structure of the unit cell of a icosahedral virus
         pdb1 = self._importStructureFromPDBId('6b1t') # A
         args = {'pdbFileToBeRefined': pdb1,
+                'typeOfMolecule': 0,
                 'symmetryGroup': SYM_I222,
                 # symmetry group of the whole virus, once you have applied
                 # symmetry to the unit cell
