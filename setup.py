@@ -14,7 +14,7 @@ from os import path
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
-with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 # Arguments marked as "Required" below must be included for upload to PyPI.
@@ -28,7 +28,7 @@ setup(
     url='https://github.com/scipion-em/scipion-em-chimera',  # Optional
     author='I2PC',  # Optional
     author_email='scipion@cnb.csic.es',  # Optional
-    keywords='scipion cryoem imageprocessing scipion-1.2',  # Optional
+    keywords='scipion cryoem imageprocessing scipion-2.0',  # Optional
     packages=find_packages(),
     package_data={  # Optional
        'chimera': [''],
