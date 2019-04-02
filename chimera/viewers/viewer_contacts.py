@@ -1,8 +1,12 @@
+from pyworkflow.em.viewers import Chimera
 from pyworkflow.protocol.params import EnumParam, BooleanParam, \
     LabelParam, IntParam
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
+from pyworkflow.utils import importFromPlugin
+
 from chimera.protocols.protocol_contacts import ChimeraProtContacts
 from pyworkflow.gui.text import _open_cmd
+import os
 
 class ChimeraProtContactsViewer(ProtocolViewer):
     _label = 'Contacts Viewer'
@@ -17,10 +21,12 @@ class ChimeraProtContactsViewer(ProtocolViewer):
         self.pairChains = self._displayPairChains()
 
     def _defineParams(self, form):
-        form.addSection(label="Chains")
-        form.addParam("doInvert", BooleanParam, label="swap chain columns",
-                      default=False,
-                      help="Set to TRUE to swap the first by the second chain.\n")
+        form.addSection(label="Display Results")
+
+        form.addParam('displayModel', LabelParam,
+                      label="View models in Chimera",
+                      help="Display symmetrized models.")
+
         form.addParam('aaDistance', IntParam,
                       label='Distance to group AAs',
                       default=4,
@@ -33,7 +39,9 @@ class ChimeraProtContactsViewer(ProtocolViewer):
                            "               modelName2, complexName2, chainName2"
                            "groups AA if they are not further appart than AA distance"
                       )
-
+        form.addParam("doInvert", BooleanParam, label="swap chain columns",
+                      default=False,
+                      help="Set to TRUE to swap the first by the second chain.\n")
         form.addParam('displayPairChains', LabelParam,
                       label="show file with Interacting Chains",
                       help="Display the chains that interact, and "
@@ -41,9 +49,35 @@ class ChimeraProtContactsViewer(ProtocolViewer):
 
     def _getVisualizeDict(self):
         return{
+            'displayModel': self._displayModel,
             'chainPair': self._chainPair,
             'displayPairChains': self._visualizeChainPairFile
         }
+
+    def _displayModel(self, e=None):
+        bildFileName = os.path.abspath(self.protocol._getTmpPath(
+            "axis_output.bild"))
+
+        # Axis Dim
+        dim = 150.
+        sampling = 1.
+        Chimera.createCoordinateAxisFile(dim,
+                                         bildFileName=bildFileName,
+                                         sampling=sampling)
+
+        fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
+        f = open(fnCmd, 'w')
+        # reference axis model = 0
+        f.write("open %s\n" % bildFileName)
+        f.write("cofr 0,0,0\n")  # set center of coordinates
+        if self.protocol.applySymmetry:
+            f.write("open %s\n" % self.protocol.getSymmetrizedModelName())
+        f.write("open %s\n" % self.protocol.pdbFileToBeRefined.get().getFileName())
+        f.close()
+        # run in the background
+        chimeraPlugin = importFromPlugin('chimera', 'Plugin', doRaise=True)
+        chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), fnCmd + "&")
+        return []
 
     def _visualizeChainPairFile(self, e=None):
         """Show file with the chains that interact."""

@@ -79,7 +79,7 @@ class TestChimeraContact(TestImportData):
                                   '"B": "chainB", "B002": "HEM_B", '
                                   '"C": "chainC", "C002": "HEM_C", '
                                   '"D": "chainD", "D002": "HEM_D"}',
-                'typeOfMolecule': 1
+                'applySymmetry': False
                 }
 
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
@@ -100,7 +100,7 @@ class TestChimeraContact(TestImportData):
         args = {'pdbFileToBeRefined': pdb1,
                 'chainStructure': '{"A": "chainA", "A002": "HEM_A", '
                                    '"B": "chainB", "B002": "HEM_B"}',
-                'typeOfMolecule': 0,
+                'applySymmetry': True,
                 'symmetryGroup': SYM_CYCLIC,
                 'symmetryOrder': 2
                 }
@@ -125,7 +125,7 @@ class TestChimeraContact(TestImportData):
                                   '"E": "up", "F": "down", "G": "down", "H": "down", '
                                   '"I": "down", "J": "up", "K": "up", "L": "up", '
                                   '"M": "down", "N": "down", "O": "down", "P": "down"}',
-                'typeOfMolecule': 1
+                'applySymmetry': False,
                 }
 
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
@@ -145,7 +145,7 @@ class TestChimeraContact(TestImportData):
         pdb1 = self._importStructureFromPDBId('1a6d')
         args = {'pdbFileToBeRefined': pdb1,
                 'chainStructure': '{"A": "chainA", "B": "chainB"}',
-                'typeOfMolecule': 0,
+                'applySymmetry': True,
                 'symmetryGroup': SYM_DIHEDRAL,
                 'symmetryOrder': 4
                 }
@@ -174,7 +174,7 @@ class TestChimeraContact(TestImportData):
                                   '"M": "up", "N": "up", "O": "up", "P": "up", '
                                   '"Q": "up", "R": "up", "S": "down", "T": "down", '
                                   '"U": "up", "V": "up", "W": "down", "X": "down"}',
-                'typeOfMolecule': 1,
+                'applySymmetry': False,
                 'symmetryGroup': SYM_OCTAHEDRAL
                 }
 
@@ -197,7 +197,7 @@ class TestChimeraContact(TestImportData):
         pdb1 = self._importStructureFromPDBId('1eab')
         args = {'pdbFileToBeRefined': pdb1,
                 'chainStructure': '{"A": "chainA"}',
-                'typeOfMolecule': 0,
+                'applySymmetry': True,
                 'symmetryGroup': SYM_OCTAHEDRAL
                 }
 
@@ -222,7 +222,7 @@ class TestChimeraContact(TestImportData):
                                   '"D": "chainD", "E": "chainE", "F": "chainF", '
                                   '"G": "chainG", "H": "chainH", "I": "chainI", '
                                   '"J": "chainJ", "K": "chainK", "L": "chainL"}',
-                'typeOfMolecule': 1,
+                'applySymmetry': False,
                 'symmetryGroup': SYM_TETRAHEDRAL
                 }
 
@@ -245,7 +245,7 @@ class TestChimeraContact(TestImportData):
         pdb1 = self._importStructureFromPDBId('1y0r')
         args = {'pdbFileToBeRefined': pdb1,
                 'chainStructure': '{"A": "chainA"}',
-                'typeOfMolecule': 0,
+                'applySymmetry': True,
                 'symmetryGroup': SYM_TETRAHEDRAL
                 }
 
@@ -269,7 +269,7 @@ class TestChimeraContact(TestImportData):
         # import structure of the unit cell of a icosahedral virus
         pdb1 = self._importStructureFromPDBId('6b1t') # A
         args = {'pdbFileToBeRefined': pdb1,
-                'typeOfMolecule': 0,
+                'applySymmetry': True,
                 'symmetryGroup': SYM_I222,
                 # symmetry group of the whole virus, once you have applied
                 # symmetry to the unit cell

@@ -7,7 +7,7 @@ from pyworkflow.protocol.params import (EnumParam,
                                         PointerParam,
                                         StringParam,
                                         FloatParam,
-                                        LEVEL_ADVANCED)
+                                        LEVEL_ADVANCED, BooleanParam)
 import sqlite3
 import json
 import collections
@@ -39,16 +39,12 @@ class ChimeraProtContacts(EMProtocol):
                            "a group. Contacts will be computed between any chain included "
                            "in this group and any other group/chain. However, no contacts "
                            "among members of the group will be calculated.")
-        form.addParam('typeOfMolecule', EnumParam,
-                         choices=self.TypeOfMolecule,
-                         label="Type of molecule:", default=0,
-                         help="Select the type of molecule defined by the atomic structure.\n"
-                              "Symmetry will be applied only with the option 'Unit cell'. "
-                              "In this case, contacts between any two chains of the unit cell "
+        form.addParam('applySymmetry', BooleanParam,
+                         label="Apply simmetry:", default=True,
+                         help="Symmetry=True means contacts between any two chains of the unit cell "
                               "or between a chain of the unit cell and another chain of a "
-                              "neigbour unit cell will be computed.\nHowever, if you select "
-                              "'Whole macromolecule' no symmetry will be applied and contacts "
-                              "will only be calculated for any couple of chains of that "
+                              "neigbour unit cell will be computed.\nSymmetry=False means "
+                              "contacts will only be calculated for chains within the "
                               "macromolecule.\n")
         form.addParam('symmetryGroup', EnumParam,
                       choices=[SCIPION_SYM_NAME[SYM_CYCLIC],
@@ -59,23 +55,23 @@ class ChimeraProtContacts(EMProtocol):
                                SCIPION_SYM_NAME[SYM_I222r],
                                SCIPION_SYM_NAME[SYM_In25],
                                SCIPION_SYM_NAME[SYM_In25r] ],
-                      default=SYM_I222r,
+                      default=SYM_CYCLIC,
                       label="Symmetry",
-                      condition='typeOfMolecule==%d' % 0,
+                      condition='applySymmetry',
                       help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/"
                            "Symmetry for a description of the symmetry groups "
                            "format in Xmipp.\n"
                            "If no symmetry is present, use _c1_."
                       )
         form.addParam('symmetryOrder', IntParam, default=1,
-                    condition='typeOfMolecule==%d and symmetryGroup<=%d' %
-                              (0, SYM_DIHEDRAL),
+                    condition='applySymmetry and symmetryGroup<=%d' %
+                              (SYM_DIHEDRAL),
                     label='Symmetry Order',
                     help='Select the order of cyclic or dihedral symmetry.')
         form.addParam('tetrahedralOrientation', EnumParam,
                       choices=self.TetrahedralOrientation, default=0,
-                      condition='typeOfMolecule==%d and symmetryGroup==%d' %
-                                (0, SYM_TETRAHEDRAL),
+                      condition='applySymmetry and symmetryGroup==%d' %
+                                (SYM_TETRAHEDRAL),
                       label='Tetrahedral Orientation',
                       help='Select the orientation of the tetrahedron:\n'
                            'default: (Chimera 222). Two-fold symmetry axes along '
@@ -135,23 +131,24 @@ class ChimeraProtContacts(EMProtocol):
         f = open(self.getChimeraScriptFileName(), "w")
         f.write("from chimera import runCommand\n")
         f.write("runCommand('open {}')\n".format(pdbFileName))
-        if self.typeOfMolecule == 1:
+        if not self.applySymmetry:
             self.sym = "Cn"
             self.symOrder = 1
         # apply symmetry
-        if self.sym == "Cn" and self.symOrder != 1:
+        elif self.sym == "Cn":
             f.write("runCommand('sym #0 group C%d contact 3')\n" % self.symOrder)
         elif self.sym == "Dn" and self.symOrder != 1:
             f.write("runCommand('sym #0 group d%d contact 3')\n" % self.symOrder)
         elif self.sym == "T":
             f.write("runCommand('sym #0 group t contact 3')\n")
-        # TODO: Refine sym tetrahedral according orientation
         # Look at: https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/sym.html
-        # Symmetry 222 will be considered by default
         elif self.sym == "O":
             f.write("runCommand('sym #0 group O contact 3')\n")
         elif self.sym == "222" or self.sym =="222r" or self.sym == "n25" or self.sym =="n25r":
             f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym)
+        if self.applySymmetry:
+            f.write("runCommand('write #1 {symmetrizedModelName}')\n".format(
+                symmetrizedModelName=self.getSymmetrizedModelName()))
         protId = firstValue
         chains = ""
         comma = ''
@@ -286,6 +283,9 @@ class ChimeraProtContacts(EMProtocol):
 
     def getDataBaseName(self):
         return self._getExtraPath("overlaps.sqlite")
+
+    def getSymmetrizedModelName(self):
+        return os.path.abspath(self._getExtraPath("symModel.pdb"))
 
     def getTableName(self):
         return "contacts"
