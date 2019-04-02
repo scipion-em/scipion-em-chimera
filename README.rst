@@ -1,5 +1,5 @@
 =====================
-Chimera scpion plugin
+Chimera scipion plugin
 =====================
 
 Plugin to use chimera programs within the Scipion framework: rigit fit, open chimera, model using an atomic struct reference and find contacts between atoms.
