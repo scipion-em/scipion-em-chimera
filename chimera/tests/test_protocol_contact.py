@@ -24,10 +24,9 @@
 
 
 import os
-from collections import Counter
-from pyworkflow.em.constants import (SYM_I222, SYM_I222r, SYM_In25, SYM_In25r,
+from pyworkflow.em.constants import (SYM_I222, SYM_I2n3,
                                      SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL,
-                                     SYM_OCTAHEDRAL, SCIPION_SYM_NAME)
+                                     SYM_OCTAHEDRAL)
 
 from chimera.protocols import ChimeraProtContacts
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
@@ -93,6 +92,57 @@ class TestChimeraContact(TestImportData):
         row = c.fetchone()
         self.assertEqual(int(row[0]), 736)
 
+    def testContactsAsymetryC2_b(self):
+        # import PDB; whole hemoglobin macromolecule with HEM groups as
+        # independent chains
+        pdb1 = self._importStructureFromFile('PDBx_mmCIF/5ni1_HEM.cif')
+        args = {'pdbFileToBeRefined': pdb1,
+                'chainStructure': '{"A": "chainA", "A002": "HEM_A", '
+                                  '"B": "chainB", "B002": "HEM_B", '
+                                  '"C": "chainC", "C002": "HEM_C", '
+                                  '"D": "chainD", "D002": "HEM_D"}',
+                'applySymmetry': True,
+                'symmetryGroup': SYM_CYCLIC,
+                'symmetryOrder': 1
+                }
+
+        protContacts = self.newProtocol(ChimeraProtContacts, **args)
+        protContacts.setObjLabel('5ni1_HEM\nerror b\nno sym\ncontacts')
+        self.launchProtocol(protContacts)
+
+        c, conn = protContacts.prepareDataBase(drop=False)
+        tableName = protContacts.getTableName()
+        sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
+        c.execute(sqlCommand)
+        row = c.fetchone()
+        self.assertEqual(int(row[0]), 736)
+
+    def testContactsAsymetryC2_c(self):
+        # import PDB; whole hemoglobin macromolecule with HEM groups as
+        # independent chains
+        pdb1 = self._importStructureFromFile('PDBx_mmCIF/5ni1_HEM.cif')
+        args = {'pdbFileToBeRefined': pdb1,
+                'chainStructure': '{"A": "chainA", "A002": "HEM_A", '
+                                  '"B": "chainB", "B002": "HEM_B", '
+                                  '"C": "chainC", "C002": "HEM_C", '
+                                  '"D": "chainD", "D002": "HEM_D"}',
+                'applySymmetry': True,
+                'symmetryGroup': SYM_CYCLIC,
+                'symmetryOrder': 0
+                }
+
+        protContacts = self.newProtocol(ChimeraProtContacts, **args)
+        protContacts.setObjLabel('5ni1_HEM\nerror c\nno sym\ncontacts')
+        try:
+            self.launchProtocol(protContacts)
+        except Exception as e:
+            self.assertTrue(True)
+            print "This test should return a error message as '" \
+                  " Error: Symmetry Order should be a positive integer.\n"
+
+            return
+        self.assertTrue(False)
+
     def testContactsSymC2(self):
         # import PDB; unit cell of hemoglobin macromolecule with HEM groups as
         # independent chains; sym C2
@@ -137,7 +187,59 @@ class TestChimeraContact(TestImportData):
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 9010)
+        self.assertEqual(int(row[0]), 816)
+
+    def testContactsAsymetryD4_b(self):
+        # import PDB; whole molecule of thermosome from T. acidophilum (1a6d)
+        # 8 independent chains, sym D4
+        pdb1 = self._importStructureFromFile('PDBx_mmCIF/1a6d_whole.pdb')
+        args = {'pdbFileToBeRefined': pdb1,
+                'chainStructure': '{"A": "up", "B": "up", "C": "up", "D": "up", '
+                                  '"E": "up", "F": "down", "G": "down", "H": "down", '
+                                  '"I": "down", "J": "up", "K": "up", "L": "up", '
+                                  '"M": "down", "N": "down", "O": "down", "P": "down"}',
+                'applySymmetry': True,
+                'symmetryGroup': SYM_DIHEDRAL,
+                'symmetryOrder': 1
+                }
+
+        protContacts = self.newProtocol(ChimeraProtContacts, **args)
+        protContacts.setObjLabel('1a6d_whole\nerror b\nno sym\ncontacts')
+        self.launchProtocol(protContacts)
+
+        c, conn = protContacts.prepareDataBase(drop=False)
+        tableName = protContacts.getTableName()
+        sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
+        c.execute(sqlCommand)
+        row = c.fetchone()
+        self.assertEqual(int(row[0]), 816)
+
+    def testContactsAsymetryD4_c(self):
+        # import PDB; whole molecule of thermosome from T. acidophilum (1a6d)
+        # 8 independent chains, sym D4
+        pdb1 = self._importStructureFromFile('PDBx_mmCIF/1a6d_whole.pdb')
+        args = {'pdbFileToBeRefined': pdb1,
+                'chainStructure': '{"A": "up", "B": "up", "C": "up", "D": "up", '
+                                  '"E": "up", "F": "down", "G": "down", "H": "down", '
+                                  '"I": "down", "J": "up", "K": "up", "L": "up", '
+                                  '"M": "down", "N": "down", "O": "down", "P": "down"}',
+                'applySymmetry': True,
+                'symmetryGroup': SYM_DIHEDRAL,
+                'symmetryOrder': 0
+                }
+
+        protContacts = self.newProtocol(ChimeraProtContacts, **args)
+        protContacts.setObjLabel('1a6d_whole\nerror c\nno sym\ncontacts')
+
+        try:
+            self.launchProtocol(protContacts)
+        except Exception as e:
+            self.assertTrue(True)
+            print "This test should return a error message as '" \
+                  " Error: Symmetry Order should be a positive integer.\n"
+
+            return
+        self.assertTrue(False)
 
     def testContactsSymD4(self):
         # import PDB; unit cell of thermosome from T. acidophilum (1a6d)
@@ -187,7 +289,7 @@ class TestChimeraContact(TestImportData):
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 7296)
+        self.assertEqual(int(row[0]), 480)
 
     def testContactsSymO(self):
         # import PDB; unit cell of the cubic core of the pyruvate dehydrogenase
@@ -289,11 +391,46 @@ class TestChimeraContact(TestImportData):
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('6b1t\nicosahedral virus\nsym I222\ncontacts ')
         self.launchProtocol(protContacts)
-        # TODO: more test are needed may be with an smaller sample
         c, conn = protContacts.prepareDataBase(drop=False)
         tableName = protContacts.getTableName()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
         # self.assertEqual(int(row[0]), 488698)
-        self.assertEqual(int(row[0]), 363616)
+        self.assertEqual(int(row[0]), 363096)
+
+    def testContactsSymI222_goodSym(self):
+        """
+        This test assesses contacts between any couple of proteins of the
+        unit cell of an icosahedral virus and between any protein of the unit
+        cell and any protein of the neighbour unit cells.
+        """
+        # import structure of the unit cell of a icosahedral virus
+        pdb1 = self._importStructureFromPDBId('6b1t') # A
+        args = {'pdbFileToBeRefined': pdb1,
+                'applySymmetry': True,
+                'symmetryGroup': SYM_I2n3,
+                # symmetry group of the whole virus, once you have applied
+                # symmetry to the unit cell
+                'chainStructure': '{"A": "h1", "B": "h1", "C": "h1", '
+                                  '"D": "h2", "E": "h2", "F": "h2", '
+                                  '"G": "h3", "H": "h3", "I": "h3", '
+                                  '"J": "h4", "K": "h4", "L": "h4", '
+                                  '"M": "p", "N": "iiia", "O": "viiiO",'
+                                  ' "P": "viiiP", "Q": "ix", '
+                                  '"R": "ix", "S": "ix", '
+                                  '"T": "ixb", "U": "vi", '
+                                  '"V": "vi", "W": "vii", '
+                                  '"X": "x", "Y": "vi"}'
+                # labeling of unit cell chains
+                }
+
+        protContacts = self.newProtocol(ChimeraProtContacts, **args)
+        protContacts.setObjLabel('6b1t\nicosahedral virus\nsym I2n3\ncontacts ')
+        self.launchProtocol(protContacts)
+        c, conn = protContacts.prepareDataBase(drop=False)
+        tableName = protContacts.getTableName()
+        sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
+        c.execute(sqlCommand)
+        row = c.fetchone()
+        self.assertEqual(int(row[0]), 13081)
