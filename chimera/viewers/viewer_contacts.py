@@ -14,6 +14,7 @@ class ChimeraProtContactsViewer(ProtocolViewer):
     _targets = [ChimeraProtContacts]
 
     def __init__(self,  **kwargs):
+
         ProtocolViewer.__init__(self,  **kwargs)
         self.c, self.conn = self.protocol.prepareDataBase(drop=False)
         # compute all pairs of chains that interact
@@ -22,30 +23,44 @@ class ChimeraProtContactsViewer(ProtocolViewer):
 
     def _defineParams(self, form):
         form.addSection(label="Display Results")
-
-        form.addParam('displayModel', LabelParam,
+        group = form.addGroup('3D Visualization')
+        group.addParam('displayModel', LabelParam,
                       label="View models in Chimera",
-                      help="Display symmetrized models.")
-
-        form.addParam('aaDistance', IntParam,
-                      label='Distance to group AAs',
-                      default=4,
-                      help='If two AAs are closer than this distance will be grouped')
-        form.addParam('chainPair', EnumParam,
-                      choices=self.pairChains,
-                      default=1,
-                      label="Chain Contacts",
-                      help="output format: modelName1, complexName1, chainName1"
-                           "               modelName2, complexName2, chainName2"
-                           "groups AA if they are not further appart than AA distance"
-                      )
-        form.addParam("doInvert", BooleanParam, label="swap chain columns",
+                      help="Display of input atomic structure and its respective"
+                           " symmetrized models.")
+        group = form.addGroup('Interacting chains')
+        group.addParam('displayPairChains', LabelParam,
+                      label="Summary list of all Interacting Chains",
+                      help="Display the interacting chains, and "
+                           "the number of atoms involved in these interactions.")
+        group = form.addGroup('Contacts between interacting chains')
+        group.addParam("doInvert", BooleanParam, label="Swap chain columns in the summary of contacts",
                       default=False,
-                      help="Set to TRUE to swap the first by the second chain.\n")
-        form.addParam('displayPairChains', LabelParam,
-                      label="show file with Interacting Chains",
-                      help="Display the chains that interact, and "
-                           "the # of atoms that interact")
+                      help="Set to YES to swap the first chain by the second one.\n")
+        group.addParam('aaDistance', IntParam,
+                      label='Distance to group residues (Number of residues)',
+                      default=4,
+                      help='If two residues are closer than this distance (number of residues),'
+                           ' then those two residues will be grouped.')
+        group.addParam('chainPair', EnumParam,
+                      choices=self.pairChains,
+                      default=0,
+                      label="Select two interacting chains and get the summary of contacts",
+                      help="Format of the interacting chains in the display window:\n"
+                           "# modelName1, chainLabelName1, chainName1 # modelName2, "
+                           "chainLabelName2, chainName2\n\n"
+                           "Output list format:\n"
+                           "Title: 'RESULTS for: # modelName1, chainLabelName1, chainName1 "
+                           "# modelName2, chainLabelName2, chainName2'\n"
+                           "Below the title, several paragraphs grouping residues are"
+                           " shown according to the distance to group residues selected by "
+                           "the user. Columns in each paragraph:\nnumberOfatoms, "
+                           "chainLabelName1, modelName1, chainName1, residueName1, "
+                           "chainLabelName2, modelName2, chainName2, residueName2.\n"
+                           "Meaning of question marks below each group:\n'?': First and last "
+                           "residues are separated by more than 20 residues.\n'????':  First "
+                           "and last residues are separated by less than 20 residues.")
+
 
     def _getVisualizeDict(self):
         return{
@@ -70,9 +85,12 @@ class ChimeraProtContactsViewer(ProtocolViewer):
         # reference axis model = 0
         f.write("open %s\n" % bildFileName)
         f.write("cofr 0,0,0\n")  # set center of coordinates
-        if self.protocol.applySymmetry:
-            f.write("open %s\n" % self.protocol.getSymmetrizedModelName())
         f.write("open %s\n" % self.protocol.pdbFileToBeRefined.get().getFileName())
+        sym = Chimera._symmetryMap[self.protocol.symmetryGroup.get()]
+        symOrder = self.protocol.symmetryOrder.get()
+        if self.protocol.applySymmetry and not \
+                 ((sym == "Cn" or sym == "Dn") and symOrder == 1):
+            f.write("open %s\n" % self.protocol.getSymmetrizedModelName())
         f.close()
         # run in the background
         chimeraPlugin = importFromPlugin('chimera', 'Plugin', doRaise=True)
@@ -233,6 +251,7 @@ WHERE
   AND cb.chainId_1   = ca.chainId_2
   AND ca.AAs  = cb.AAs
   AND ca.protId_1 > cb.protId_1
+
 ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
 """.format(viewName=viewPairChain)
         self.c.execute(commandDisplayPairChainsNR)
@@ -241,7 +260,7 @@ ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
         # create text file and list with pairs of chains
         f = open(self.getPairChainsFileName(), 'w')
         formatted_row = '{:<4} {:>3} {:<11} {:<3} {:>4} {:<11} {:<3}\n'
-        f.write(        "# atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2\n")
+        f.write("# atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2\n")
 
         choices = []
         for row in self.all_pair_chains:
