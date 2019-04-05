@@ -1,7 +1,8 @@
 from pyworkflow.em.protocol import EMProtocol
 from pyworkflow.em.constants import (SYM_I222, SYM_I222r, SYM_In25, SYM_In25r,
                                      SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL,
-                                     SYM_OCTAHEDRAL, SCIPION_SYM_NAME)
+                                     SYM_OCTAHEDRAL, SCIPION_SYM_NAME, SYM_I2n3,
+                                     SYM_I2n3r, SYM_I2n5, SYM_I2n5r)
 from pyworkflow.protocol.params import (EnumParam,
                                         IntParam,
                                         PointerParam,
@@ -14,14 +15,18 @@ import collections
 import os
 from pyworkflow.em.viewers.viewer_chimera import Chimera
 from chimera import Plugin
-from pyworkflow.em.viewers.viewer_chimera import (sessionFile)
+from operator import itemgetter
+
 
 class ChimeraProtContacts(EMProtocol):
     _label = 'contacts'
     _program = ""
     commandDropView = """DROP view IF EXISTS {viewName}"""
-    TypeOfMolecule = ['Unit cell', 'Whole macromolecule']
-    TetrahedralOrientation = ['default', 'z3']
+    TetrahedralOrientation = ['222', 'z3']
+
+    def __init__(self, **args):
+        EMProtocol.__init__(self, **args)
+        self.SYMMETRY = True
 
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -40,12 +45,18 @@ class ChimeraProtContacts(EMProtocol):
                            "in this group and any other group/chain. However, no contacts "
                            "among members of the group will be calculated.")
         form.addParam('applySymmetry', BooleanParam,
-                         label="Apply simmetry:", default=True,
-                         help="Symmetry=True means contacts between any two chains of the unit cell "
-                              "or between a chain of the unit cell and another chain of a "
-                              "neigbour unit cell will be computed.\nSymmetry=False means "
-                              "contacts will only be calculated for chains within the "
-                              "macromolecule.\n")
+                         label="Apply symmetry:", default=True,
+                         help="'Symmetry = Yes' indicates that symmetry will be applied, and then"
+                              " contacts will be computed between any two chains of the "
+                              "atomic structure (the unit cell) "
+                              "and between a chain of the unit cell and another chain of a "
+                              "neigbour unit cell. Output results will show only non "
+                              "redundant contatcs, i.e., contacts than you can infer by"
+                              " symmetry will not be shown.\n'Symmetry = No' indicates that "
+                              "symmetry will not be applied, and then  "
+                              "contacts will only be calculated between chains within the "
+                              "atomic structure. Output results will show all contacts between"
+                              " any couple of interacting chains.\n")
         form.addParam('symmetryGroup', EnumParam,
                       choices=[SCIPION_SYM_NAME[SYM_CYCLIC],
                                SCIPION_SYM_NAME[SYM_DIHEDRAL],
@@ -54,7 +65,11 @@ class ChimeraProtContacts(EMProtocol):
                                SCIPION_SYM_NAME[SYM_I222],
                                SCIPION_SYM_NAME[SYM_I222r],
                                SCIPION_SYM_NAME[SYM_In25],
-                               SCIPION_SYM_NAME[SYM_In25r] ],
+                               SCIPION_SYM_NAME[SYM_In25r],
+                               SCIPION_SYM_NAME[SYM_I2n3],
+                               SCIPION_SYM_NAME[SYM_I2n3r],
+                               SCIPION_SYM_NAME[SYM_I2n5],
+                               SCIPION_SYM_NAME[SYM_I2n5r]],
                       default=SYM_CYCLIC,
                       label="Symmetry",
                       condition='applySymmetry',
@@ -74,7 +89,7 @@ class ChimeraProtContacts(EMProtocol):
                                 (SYM_TETRAHEDRAL),
                       label='Tetrahedral Orientation',
                       help='Select the orientation of the tetrahedron:\n'
-                           'default: (Chimera 222). Two-fold symmetry axes along '
+                           '222, by default: Two-fold symmetry axes along '
                            'the X, Y, and Z axes, '
                            'a three-fold along axis (1,1,1).\n'
                            'z3: A three-fold symmetry axis along Z and another three-fold '
@@ -120,8 +135,10 @@ class ChimeraProtContacts(EMProtocol):
         self.removeDuplicates(c)
 
     def chimeraClashesStep(self):
-        labelDict = json.loads(self.chainStructure.get(),
+        labelDictAux = json.loads(self.chainStructure.get(),
                                object_pairs_hook=collections.OrderedDict)
+        labelDict = collections.OrderedDict(sorted(labelDictAux.items(), key=itemgetter(1)))
+
         pdbFileName = self.pdbFileToBeRefined.get().getFileName()
         self.sym = Chimera._symmetryMap[self.symmetryGroup.get()]
         self.symOrder = self.symmetryOrder.get()
@@ -134,21 +151,31 @@ class ChimeraProtContacts(EMProtocol):
         if not self.applySymmetry:
             self.sym = "Cn"
             self.symOrder = 1
+            self.SYMMETRY = False
+
         # apply symmetry
-        elif self.sym == "Cn":
-            f.write("runCommand('sym #0 group C%d contact 3')\n" % self.symOrder)
-        elif self.sym == "Dn" and self.symOrder != 1:
-            f.write("runCommand('sym #0 group d%d contact 3')\n" % self.symOrder)
-        elif self.sym == "T":
-            f.write("runCommand('sym #0 group t contact 3')\n")
-        # Look at: https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/sym.html
-        elif self.sym == "O":
-            f.write("runCommand('sym #0 group O contact 3')\n")
-        elif self.sym == "222" or self.sym =="222r" or self.sym == "n25" or self.sym =="n25r":
-            f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym)
-        if self.applySymmetry:
+        else:
+            if ((self.sym == "Cn" or self.sym == "Dn") and self.symOrder == 1):
+                self.SYMMETRY = False
+            if self.sym == "Cn" and self.symOrder != 1:
+                f.write("runCommand('sym #0 group C%d contact 3')\n" % self.symOrder)
+            elif self.sym == "Dn" and self.symOrder != 1:
+                f.write("runCommand('sym #0 group d%d contact 3')\n" % self.symOrder)
+            elif self.sym == "T":
+                f.write("runCommand('sym #0 group t,%s contact 3')\n" %
+                        self.TetrahedralOrientation[self.tetrahedralOrientation.get()])
+                # Look at: https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/sym.html
+            elif self.sym == "O":
+                f.write("runCommand('sym #0 group O contact 3')\n")
+            elif self.sym == "222" or self.sym =="222r" or self.sym == "n25" or \
+                 self.sym =="n25r" or self.sym=="2n3" or self.sym=="2n3r" or \
+                 self.sym =="2n5" or self.sym=="2n5r":
+                f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym)
+
+        if self.SYMMETRY:
             f.write("runCommand('write #1 {symmetrizedModelName}')\n".format(
-                symmetrizedModelName=self.getSymmetrizedModelName()))
+                    symmetrizedModelName=self.getSymmetrizedModelName()))
+
         protId = firstValue
         chains = ""
         comma = ''
@@ -168,6 +195,7 @@ class ChimeraProtContacts(EMProtocol):
                 outFileBase = v
         outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
         outFiles.append(outFile)
+
         f.write(
             """runCommand('echo {}')\nrunCommand('findclash  #0:{} test other savefile {} overlap {} hbond {} namingStyle simple')\n""".format(
                 chains, chains, outFile, self.cuttoff, self.allowance))
@@ -192,8 +220,9 @@ class ChimeraProtContacts(EMProtocol):
 
 
     def parseFiles(self, outFiles, c):
-        labelDict = json.loads(self.chainStructure.get(),
+        labelDictAux = json.loads(self.chainStructure.get(),
                                object_pairs_hook=collections.OrderedDict)
+        labelDict = collections.OrderedDict(sorted(labelDictAux.items(), key=itemgetter(1)))
         d = {}
         d1 = {}
         d2 = {}
@@ -206,7 +235,7 @@ class ChimeraProtContacts(EMProtocol):
                     # print "skip line", line
                     counter += 1
                 else:
-                    if self.sym == "Cn" and self.symOrder == 1:
+                    if not self.SYMMETRY:
                         info = line.split() # ['HIS', '87.A', 'NE2', 'HEM', '1.A002', 'ND', '0.620', '2.660']
                         d1['modelId'] = "'" + "#0" + "'"
                         d1['aaName'] = "'" + info[0][0] + info[0][1:].lower() + "'"  # "'HIS'"
@@ -349,6 +378,12 @@ class ChimeraProtContacts(EMProtocol):
         c.execute(self.commandDropView.format(viewName="view_ND_2"))
         c.execute(commandEliminateDuplicates2.format("view_ND_2", "view_ND_1", "view_ND_1", "view_ND_1"))
 
+    def _validate(self):
+        errors = []
+        if (self.symmetryOrder.get() <= 0):
+            errors.append("Error: Symmetry Order should be a positive integer" )
+
+        return errors
 
 def connectDB(sqliteFN, tableName=None):
     conn = sqlite3.connect(sqliteFN)
@@ -377,3 +412,4 @@ def connectDB(sqliteFN, tableName=None):
         c.execute(commandDropTable.format(tableName))
         c.execute(commandCreateTable.format(tableName))
     return c, conn
+
