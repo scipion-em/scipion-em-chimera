@@ -1,4 +1,4 @@
-from pyworkflow.em.protocol import EMProtocol
+from pyworkflow.em.protocol import EMProtocol, Boolean
 from pyworkflow.em.constants import (SYM_I222, SYM_I222r, SYM_In25, SYM_In25r,
                                      SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL,
                                      SYM_OCTAHEDRAL, SCIPION_SYM_NAME, SYM_I2n3,
@@ -26,7 +26,7 @@ class ChimeraProtContacts(EMProtocol):
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
-        self.SYMMETRY = True
+        self.SYMMETRY = Boolean(True)
 
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -121,6 +121,14 @@ class ChimeraProtContacts(EMProtocol):
 
     # --------------------------- INSERT steps functions --------------------
     def _insertAllSteps(self):
+        self.sym = Chimera._symmetryMap[self.symmetryGroup.get()]
+        self.symOrder = self.symmetryOrder.get()
+        if not self.applySymmetry:
+            self.sym = "Cn"
+            self.symOrder = 1
+            self.SYMMETRY = Boolean(False)
+        elif ((self.sym == "Cn" or self.sym == "Dn") and self.symOrder == 1):
+            self.SYMMETRY = Boolean(False)
         # connect to database, delete table and recreate it
         #execute chimera findclash
         self._insertFunctionStep('chimeraClashesStep')
@@ -129,6 +137,7 @@ class ChimeraProtContacts(EMProtocol):
         #                         self.pdbFileToBeRefined.get().getFileName(),
         #                         self.chainStructure
         #                         )
+        self._store()
 
     def postProcessStep(self):
         c, conn = connectDB(self.getDataBaseName(), None)
@@ -140,38 +149,35 @@ class ChimeraProtContacts(EMProtocol):
         labelDict = collections.OrderedDict(sorted(labelDictAux.items(), key=itemgetter(1)))
 
         pdbFileName = self.pdbFileToBeRefined.get().getFileName()
-        self.sym = Chimera._symmetryMap[self.symmetryGroup.get()]
-        self.symOrder = self.symmetryOrder.get()
         # first element of dictionary
         firstValue = labelDict[list(labelDict)[0]]
         outFiles = []
         f = open(self.getChimeraScriptFileName(), "w")
         f.write("from chimera import runCommand\n")
         f.write("runCommand('open {}')\n".format(pdbFileName))
-        if not self.applySymmetry:
-            self.sym = "Cn"
-            self.symOrder = 1
-            self.SYMMETRY = False
+        #if not self.applySymmetry:
+        #    self.sym = "Cn"
+        #    self.symOrder = 1
+        #    self.SYMMETRY = False
 
         # apply symmetry
-        else:
-            if ((self.sym == "Cn" or self.sym == "Dn") and self.symOrder == 1):
-                self.SYMMETRY = False
-            if self.sym == "Cn" and self.symOrder != 1:
-                f.write("runCommand('sym #0 group C%d contact 3')\n" % self.symOrder)
-            elif self.sym == "Dn" and self.symOrder != 1:
-                f.write("runCommand('sym #0 group d%d contact 3')\n" % self.symOrder)
-            elif self.sym == "T":
-                f.write("runCommand('sym #0 group t,%s contact 3')\n" %
-                        self.TetrahedralOrientation[self.tetrahedralOrientation.get()])
-                # Look at: https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/sym.html
-            elif self.sym == "O":
-                f.write("runCommand('sym #0 group O contact 3')\n")
-            elif self.sym == "222" or self.sym =="222r" or self.sym == "n25" or \
-                 self.sym =="n25r" or self.sym=="2n3" or self.sym=="2n3r" or \
-                 self.sym =="2n5" or self.sym=="2n5r":
-                f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym)
+        # else:
 
+        if self.sym == "Cn" and self.symOrder != 1:
+            f.write("runCommand('sym #0 group C%d contact 3')\n" % self.symOrder)
+        elif self.sym == "Dn" and self.symOrder != 1:
+            f.write("runCommand('sym #0 group d%d contact 3')\n" % self.symOrder)
+        elif self.sym == "T":
+            f.write("runCommand('sym #0 group t,%s contact 3')\n" %
+                    self.TetrahedralOrientation[self.tetrahedralOrientation.get()])
+            # Look at: https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/sym.html
+        elif self.sym == "O":
+            f.write("runCommand('sym #0 group O contact 3')\n")
+        elif self.sym == "222" or self.sym =="222r" or self.sym == "n25" or \
+             self.sym =="n25r" or self.sym=="2n3" or self.sym=="2n3r" or \
+             self.sym =="2n5" or self.sym=="2n5r":
+            f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym)
+        self.SYMMETRY = self.SYMMETRY.get()
         if self.SYMMETRY:
             f.write("runCommand('write #1 {symmetrizedModelName}')\n".format(
                     symmetrizedModelName=self.getSymmetrizedModelName()))

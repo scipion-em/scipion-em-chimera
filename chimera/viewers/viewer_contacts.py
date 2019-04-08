@@ -86,10 +86,8 @@ class ChimeraProtContactsViewer(ProtocolViewer):
         f.write("open %s\n" % bildFileName)
         f.write("cofr 0,0,0\n")  # set center of coordinates
         f.write("open %s\n" % self.protocol.pdbFileToBeRefined.get().getFileName())
-        sym = Chimera._symmetryMap[self.protocol.symmetryGroup.get()]
-        symOrder = self.protocol.symmetryOrder.get()
-        if self.protocol.applySymmetry and not \
-                 ((sym == "Cn" or sym == "Dn") and symOrder == 1):
+
+        if self.protocol.SYMMETRY.get():
             f.write("open %s\n" % self.protocol.getSymmetrizedModelName())
         f.close()
         # run in the background
