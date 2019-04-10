@@ -141,74 +141,78 @@ ORDER BY protId_1, modelId_1, chainId_1,
                                                     row[6]
                                                     )
         #print command
-        self.c.execute(command)
-        all_rows = self.c.fetchall()
+        rows_count = self.c.execute(command)
         f = open(self.getInteractionFileName(), 'w')
-        f.write("RESULTS for: {}\n".format(', '.join(str(s) for s in row)))
-        f.write("# atoms, prot_1, model_1, chain_1, AA_1, prot_2, model_2, chain2, AA_2\n")
-        first = None
-        last = None
-        first2 = None
-        last2 = None
-        aaDistance = self.aaDistance.get()
-        for row in all_rows:
-            AA_1 = row[4]
-            AA_1Int = int(AA_1[3:])
-            AA_2 = row[8]
-            AA_2Int = int(AA_2[3:])
-            if first is None:
-                first = AA_1
-                last = first
-                lastInt = AA_1Int
-
-                first2 = AA_2
-                firstInt2 = AA_2Int
-                last2 = first2
-                lastInt2 = AA_2Int
-            else:
-                if (AA_1Int - lastInt) > aaDistance:
-
-                    f.write(">>>> {first}".format(first=first))
-                    if last != first:
-                        f.write("_{last}".format(last=last))
-                    f.write(" ---- {first}".format(first=first2))
-                    if last2 != first2:
-                        f.write("_{last}".format(last=last2))
-                    if (lastInt2 - firstInt2) > 20:
-                        f.write("????\n\n")
-                    else:
-                        f.write("?\n\n")
-
+        row = self.c.fetchone()
+        if row == None:
+            f.write("No contacts found: Is the symmetry center equal to the origin of coordinates?")
+        else:
+            all_rows = self.c.fetchall()
+            f.write("RESULTS for: {}\n".format(', '.join(str(s) for s in row)))
+            f.write("# atoms, prot_1, model_1, chain_1, AA_1, prot_2, model_2, chain2, AA_2\n")
+            first = None
+            last = None
+            first2 = None
+            last2 = None
+            aaDistance = self.aaDistance.get()
+            for row in all_rows:
+                AA_1 = row[4]
+                AA_1Int = int(AA_1[3:])
+                AA_2 = row[8]
+                AA_2Int = int(AA_2[3:])
+                if first is None:
                     first = AA_1
                     last = first
                     lastInt = AA_1Int
+
                     first2 = AA_2
                     firstInt2 = AA_2Int
-                    last2 = AA_2
+                    last2 = first2
                     lastInt2 = AA_2Int
                 else:
-                    last = AA_1
-                    lastInt = int(AA_1[3:])
-                    tmpLastInt2 = int(AA_2[3:])
-                    if lastInt2 < tmpLastInt2:
-                        last2 = AA_2
-                        lastInt2 = tmpLastInt2
-                    if firstInt2 > tmpLastInt2:
-                        first2 = AA_2
-                        firstInt2 = tmpLastInt2
+                    if (AA_1Int - lastInt) > aaDistance:
 
-            f.write(', '.join(str(s) for s in row) + "\n")
-            # print first, last, first2, last2, firstInt2, lastInt2
-        f.write(">>>> {first}".format(first=first))
-        if last != first:
-            f.write("_{last}".format(last=last))
-        f.write(" ---- {first}".format(first=first2))
-        if last2 != first2:
-            f.write("_{last}".format(last=last2))
-        if (lastInt2 - firstInt2) > 20:
-            f.write("????\n\n")
-        else:
-            f.write("?\n\n")
+                        f.write(">>>> {first}".format(first=first))
+                        if last != first:
+                            f.write("_{last}".format(last=last))
+                        f.write(" ---- {first}".format(first=first2))
+                        if last2 != first2:
+                            f.write("_{last}".format(last=last2))
+                        if (lastInt2 - firstInt2) > 20:
+                            f.write("????\n\n")
+                        else:
+                            f.write("?\n\n")
+
+                        first = AA_1
+                        last = first
+                        lastInt = AA_1Int
+                        first2 = AA_2
+                        firstInt2 = AA_2Int
+                        last2 = AA_2
+                        lastInt2 = AA_2Int
+                    else:
+                        last = AA_1
+                        lastInt = int(AA_1[3:])
+                        tmpLastInt2 = int(AA_2[3:])
+                        if lastInt2 < tmpLastInt2:
+                            last2 = AA_2
+                            lastInt2 = tmpLastInt2
+                        if firstInt2 > tmpLastInt2:
+                            first2 = AA_2
+                            firstInt2 = tmpLastInt2
+
+                f.write(', '.join(str(s) for s in row) + "\n")
+                # print first, last, first2, last2, firstInt2, lastInt2
+            f.write(">>>> {first}".format(first=first))
+            if last != first:
+                f.write("_{last}".format(last=last))
+            f.write(" ---- {first}".format(first=first2))
+            if last2 != first2:
+                f.write("_{last}".format(last=last2))
+            if (lastInt2 - firstInt2) > 20:
+                f.write("????\n\n")
+            else:
+                f.write("?\n\n")
 
         f.close()
         _open_cmd(self.getInteractionFileName(), self.getTkRoot())
@@ -219,7 +223,7 @@ ORDER BY protId_1, modelId_1, chainId_1,
         viewPairChain = 'atoms_interacting_per_pair_of_chains'
 
         # drop auxiliary view if exists
-        sqlCommand = self.protocol.commandDropView.\
+        sqlCommand = self.protocol.commandDropView. \
             format(viewName=viewPairChain)
         self.c.execute(sqlCommand)
 
@@ -252,25 +256,31 @@ WHERE
 
 ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
 """.format(viewName=viewPairChain)
-        self.c.execute(commandDisplayPairChainsNR)
-        self.all_pair_chains = self.c.fetchall()
+        rows_count = self.c.execute(commandDisplayPairChainsNR)
 
         # create text file and list with pairs of chains
         f = open(self.getPairChainsFileName(), 'w')
-        formatted_row = '{:<4} {:>3} {:<11} {:<3} {:>4} {:<11} {:<3}\n'
-        f.write("# atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2\n")
-
         choices = []
-        for row in self.all_pair_chains:
-            f.write(formatted_row.format(*row))
-            choices.append("{model_1},{prot_1},{chain_1}:"
-                           "{model_2},{prot_2},{chain_2}".format(model_1=row[1],
-                                                       prot_1=row[2],
-                                                       chain_1=row[3],
-                                                       model_2=row[4],
-                                                       prot_2=row[5],
-                                                       chain_2=row[6])
-                           )
+        row = self.c.fetchone()
+
+        if row == None:
+            f.write("No contacts found")
+            choices=["No contacts found: Is the symmetry center equal to the origin of coordinates?"]
+        else:
+            self.all_pair_chains = self.c.fetchall()
+            formatted_row = '{:<4} {:>3} {:<11} {:<3} {:>4} {:<11} {:<3}\n'
+            f.write("# atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2\n")
+
+            for row in self.all_pair_chains:
+                f.write(formatted_row.format(*row))
+                choices.append("{model_1},{prot_1},{chain_1}:"
+                               "{model_2},{prot_2},{chain_2}".format(model_1=row[1],
+                                                                     prot_1=row[2],
+                                                                     chain_1=row[3],
+                                                                     model_2=row[4],
+                                                                     prot_2=row[5],
+                                                                     chain_2=row[6])
+                               )
         f.close()
         return choices # list with pairs of chains
 

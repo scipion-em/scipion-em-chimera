@@ -17,6 +17,8 @@ from pyworkflow.em.viewers.viewer_chimera import Chimera
 from chimera import Plugin
 from operator import itemgetter
 
+from pyworkflow.utils import red
+
 
 class ChimeraProtContacts(EMProtocol):
     _label = 'contacts'
@@ -232,8 +234,13 @@ class ChimeraProtContacts(EMProtocol):
         d = {}
         d1 = {}
         d2 = {}
+        anyResult = False
         for inFile in outFiles:
             print "processing file", inFile
+            if not os.path.exists(inFile):
+                continue
+            else:
+                anyResult = True
             counter = 0
             # parse contact files. Note that C1 symmetry file is different from the rest
             for line in open(inFile):
@@ -313,6 +320,9 @@ class ChimeraProtContacts(EMProtocol):
                     command += keys + " VALUES " + values
                     ##print command
                     c.execute(command)
+        print (red("Error: No contacts available. Is the symmetry center equal "
+                   "to the origin of coordinates?"))
+        return anyResult
 
     #    --------- util functions -----
 
