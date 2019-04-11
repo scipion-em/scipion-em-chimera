@@ -87,7 +87,8 @@ class ChimeraProtContactsViewer(ProtocolViewer):
         f.write("cofr 0,0,0\n")  # set center of coordinates
         f.write("open %s\n" % self.protocol.pdbFileToBeRefined.get().getFileName())
 
-        if self.protocol.SYMMETRY.get():
+        if self.protocol.SYMMETRY.get() and \
+                os.path.exists(self.protocol.getSymmetrizedModelName()):
             f.write("open %s\n" % self.protocol.getSymmetrizedModelName())
         f.close()
         # run in the background
@@ -143,11 +144,10 @@ ORDER BY protId_1, modelId_1, chainId_1,
         #print command
         rows_count = self.c.execute(command)
         f = open(self.getInteractionFileName(), 'w')
-        row = self.c.fetchone()
-        if row == None:
+        all_rows = self.c.fetchall()
+        if all_rows == []:
             f.write("No contacts found: Is the symmetry center equal to the origin of coordinates?")
         else:
-            all_rows = self.c.fetchall()
             f.write("RESULTS for: {}\n".format(', '.join(str(s) for s in row)))
             f.write("# atoms, prot_1, model_1, chain_1, AA_1, prot_2, model_2, chain2, AA_2\n")
             first = None
@@ -261,13 +261,12 @@ ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
         # create text file and list with pairs of chains
         f = open(self.getPairChainsFileName(), 'w')
         choices = []
-        row = self.c.fetchone()
 
-        if row == None:
+        self.all_pair_chains = self.c.fetchall()
+        if self.all_pair_chains == []:
             f.write("No contacts found")
             choices=["No contacts found: Is the symmetry center equal to the origin of coordinates?"]
         else:
-            self.all_pair_chains = self.c.fetchall()
             formatted_row = '{:<4} {:>3} {:<11} {:<3} {:>4} {:<11} {:<3}\n'
             f.write("# atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2\n")
 
