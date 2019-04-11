@@ -41,8 +41,7 @@ from pyworkflow.em.convert.sequence import (SequenceHandler,
 from collections import OrderedDict
 
 class ChimeraModelFromTemplate(ChimeraProtBase):
-    """Protocol to look for structures of homologous sequences of the input
-        sequence using Chimera.
+    """Protocol to model three-dimensional structures of proteins using Modeller.
         Execute command *scipionwrite [model #n]* from command line in order
         to transfer the selected
         pdb to scipion. Default value is model=#0,
