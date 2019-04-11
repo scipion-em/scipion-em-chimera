@@ -29,7 +29,7 @@
 from protocol_base import ChimeraProtBase
 
 class ChimeraProtOperate(ChimeraProtBase):
-    """Protocol to perform rigid fit using Chimera.
+    """This protocol provides access to Chimera and allows to save the result in Scipion framework.
         Execute command *scipionwrite [model #n] [refmodel #p]
         [saverefmodel 0|1]* from command line in order to transferm fitted
         pdb to scipion. Default values are model=#0,
