@@ -21,6 +21,8 @@ from pyworkflow.utils import red
 
 
 class ChimeraProtContacts(EMProtocol):
+    """Identifies interatomic clashes and contacts based on van der Waals radii
+    """
     _label = 'contacts'
     _program = ""
     commandDropView = """DROP view IF EXISTS {viewName}"""
@@ -428,4 +430,5 @@ def connectDB(sqliteFN, tableName=None):
         c.execute(commandDropTable.format(tableName))
         c.execute(commandCreateTable.format(tableName))
     return c, conn
+  
 
