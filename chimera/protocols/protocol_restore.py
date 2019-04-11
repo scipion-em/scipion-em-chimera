@@ -36,7 +36,9 @@ from pyworkflow.em.viewers.viewer_chimera import (Chimera,
 from protocol_base import ChimeraProtBase
 
 class ChimeraProtRestore(ChimeraProtBase):
-    """Protocol to perform rigid fit using Chimera.
+    """This protocol opens Chimera and restores a session
+      that has been stored each time a 3Dmap or an atomic structure 
+      by using `scipionwrite` or `scipionss` commad.
         Execute command *scipionwrite [model #n] [refmodel #p]
         [saverefmodel 0|1]* from command line in order to transfer fitted
         pdb to scipion. Default values are model=#0,
