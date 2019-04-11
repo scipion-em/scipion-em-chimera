@@ -50,4 +50,5 @@ To check the installation, simply run the following Scipion test:
 
 ## Status Buildbot
 Status devel version: ![build status](http://arquimedes.cnb.csic.es:9980/badges/chimera_devel.svg)
+
 Status production version: ![build status](http://arquimedes.cnb.csic.es:9980/badges/chimera_prod.svg)
