@@ -26,7 +26,7 @@ setup(
     description='Plugin to use chimera programs within the Scipion framework',  # Required
     long_description=long_description,  # Optional
     url='https://github.com/scipion-em/scipion-em-chimera',  # Optional
-    author='I2PC',  # Optional
+    author='I2PC, Marta Martinez, Roberto Marabini',  # Optional
     author_email='scipion@cnb.csic.es',  # Optional
     keywords='scipion cryoem imageprocessing scipion-2.0',  # Optional
     packages=find_packages(),
