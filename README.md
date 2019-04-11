@@ -44,9 +44,10 @@ To check the installation, simply run the following Scipion test:
 * rigit fit: fits an atomic structure (PDB/CIF) to a 3D map using a rigid fit algorithm.
 * model from template: models three-dimensional structures of proteins using [Modeller](https://salilab.org/modeller/manual/node7.html)
 * contacts: Identifies interatomic clashes and contacts based on van der Waals radii (https://www.cgl.ucsf.edu/chimera/docs/ContributedSoftware/findclash/findclash.html)
-* operate: open chimera and 
+* operate: provides access to Chimera and allows to save the result in Scipion framework
+* restore: each time a 3Dmap or an atomic structure is saved using `scipionwrite` or `scipionss` commad a chimera session is saved. This protocol opens Chimera and restores the session. 
 
 
-## References
-1.  Shawn Q Zheng, Eugene Palovcak, Jean-Paul Armache, Kliment A Verba, Yifan Cheng & David A Agard. MotionCor2: anisotropic correction of beam-induced motion for improved cryo-electron microscopy. Nature Methods volume 14, pages 331–332 (2017).
-![build status](http://arquimedes.cnb.csic.es:9980/badges/motioncorr_devel.svg "Build status")
+## Status Buildbot
+![build status devel version](http://arquimedes.cnb.csic.es:9980/badges/chimera_devel.svg)
+![build status production version](http://arquimedes.cnb.csic.es:9980/badges/chimera_prod.svg)
