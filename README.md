@@ -47,6 +47,8 @@ To check the installation, simply run the following Scipion test:
 * operate: provides access to Chimera and allows to save the result in Scipion framework
 * restore: each time a 3Dmap or an atomic structure is saved using `scipionwrite` or `scipionss` commad a chimera session is saved. This protocol opens Chimera and restores the session. 
 
+## Examples
+[See Model Building Tutorial](https://github.com/I2PC/scipion/wiki/tutorials/tutorial_model_building_basic.pdf)
 
 ## Status Buildbot
 Status devel version: ![build status](http://arquimedes.cnb.csic.es:9980/badges/chimera_devel.svg)
