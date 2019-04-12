@@ -22,7 +22,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 
 setup(
     name='scipion-em-chimera',  # Required
-    version='1.0.0b5',  # Required
+    version='1.0.0b7',  # Required
     description='Plugin to use chimera programs within the Scipion framework',  # Required
     long_description=long_description,  # Optional
     url='https://github.com/scipion-em/scipion-em-chimera',  # Optional
