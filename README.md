@@ -35,7 +35,7 @@ To check the installation, simply run the following Scipion test:
     scipion test chimera.tests.test_protocol_contact
 ```
 
-## Supported versions of Motioncor2
+## Supported versions of Chimera
 
 1.13.1
 
