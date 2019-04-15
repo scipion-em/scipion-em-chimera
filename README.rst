@@ -64,7 +64,7 @@ Protocols
 
 * rigit fit: Fits an atomic structure (PDB/CIF) to a 3D map using a rigid fit algorithm.
 * model from template: Models three-dimensional structures of proteins using `Modeller <https://salilab.org/modeller/manual/node7.html>`_.
-* contacts: Identifies interatomic `clashes and contacts <https://www.cgl.ucsf.edu/chimera/docs/ContributedSoftware/findclash/findclash.html`_ based on van der Waals radii. 
+* contacts: Identifies interatomic `clashes and contacts <https://www.cgl.ucsf.edu/chimera/docs/ContributedSoftware/findclash/findclash.html>`_ based on van der Waals radii. 
 * operate: Provides access to Chimera and allows to save the result in Scipion framework.
 * restore: This protocol opens Chimera and restores the session previously saved with commands `scipionwrite` or `scipionss`. 
 
