@@ -40,7 +40,7 @@ OR
 - **Binary files** 
 
 Chimera binaries will be installed automatically with the plugin, but you can also link an existing installation. 
-Default installation path assumed is `software/em/chimera-1.13.1`, if you want to change it, set *CHIMERA_HOME,* in `scipion.conf` file to the folder where Chimera is installed.
+Default installation path assumed is *software/em/chimera-1.13.1*, if you want to change it, set *CHIMERA_HOME* in *scipion.conf* file to the folder where Chimera is installed.
 
 - **Tests**
 
