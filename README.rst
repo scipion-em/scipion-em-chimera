@@ -46,7 +46,7 @@ Default installation path assumed is *software/em/chimera-1.13.1*, if you want t
 
 Tested with Chimera version: 1.13.1.
 
-To check the installation, simply run the following Scipion test: 
+To check the installation, simply run the following Scipion tests: 
 
 * scipion test chimera.tests.test_protocol_chimera_operate
 * scipion test chimera.tests.test_protocol_chimera_fit
