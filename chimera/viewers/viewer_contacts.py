@@ -85,7 +85,8 @@ class ChimeraProtContactsViewer(ProtocolViewer):
         # reference axis model = 0
         f.write("open %s\n" % bildFileName)
         f.write("cofr 0,0,0\n")  # set center of coordinates
-        f.write("open %s\n" % self.protocol.pdbFileToBeRefined.get().getFileName())
+        f.write("open %s\n" % os.path.abspath(
+            self.protocol.pdbFileToBeRefined.get().getFileName()))
 
         if self.protocol.SYMMETRY.get() and \
                 os.path.exists(self.protocol.getSymmetrizedModelName()):
