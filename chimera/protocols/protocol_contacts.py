@@ -137,10 +137,7 @@ class ChimeraProtContacts(EMProtocol):
         #execute chimera findclash
         self._insertFunctionStep('chimeraClashesStep')
         self._insertFunctionStep('postProcessStep')
-        #self._insertFunctionStep('',
-        #                         self.pdbFileToBeRefined.get().getFileName(),
-        #                         self.chainStructure
-        #                         )
+
         self._store()
 
     def postProcessStep(self):
@@ -156,16 +153,9 @@ class ChimeraProtContacts(EMProtocol):
         # first element of dictionary
         firstValue = labelDict[list(labelDict)[0]]
         outFiles = []
-        f = open(self.getChimeraScriptFileName(), "w")
+        f = open(self.getChimeraScriptFileName1(), "w")
         f.write("from chimera import runCommand\n")
         f.write("runCommand('open {}')\n".format(pdbFileName))
-        #if not self.applySymmetry:
-        #    self.sym = "Cn"
-        #    self.symOrder = 1
-        #    self.SYMMETRY = False
-
-        # apply symmetry
-        # else:
 
         if self.sym == "Cn" and self.symOrder != 1:
             f.write("runCommand('sym #0 group C%d contact 3')\n" % self.symOrder)
@@ -183,52 +173,32 @@ class ChimeraProtContacts(EMProtocol):
             f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym)
         self.SYMMETRY = self.SYMMETRY.get()
         if self.SYMMETRY:
-            if os.path.exists(self._getExtraPath("symModel.pdb")):
-                # When self.SYMMETRY = TRUE and at least a neighbor unit cell has been
-                # generated at less than 3 Angstroms:
-                f.write("runCommand('write #1 {symmetrizedModelName}')\n".format(
-                        symmetrizedModelName=self.getSymmetrizedModelName()))
-            else:
-                # When self.SYMMETRY = TRUE and no one neighbor unit cell has not been
-                # generated at less than 3 Angstroms, probably because the symmetry
-                # center is not equal to the origin of coordinates, at less we have the
-                # contacts that are within the unit cell. No contacts at all is not true.
-                # To get contacts within the unit cell, we have to start a new Chimera
-                # script identical to the self.SYMMETRY = False option.:
-                f.write("runCommand('stop')\n")
-                self.SYMMETRY = False
-                f = open(self.getChimeraScriptFileName(), "w")
-                f.write("from chimera import runCommand\n")
-                f.write("runCommand('open {}')\n".format(pdbFileName))
+            f.write("runCommand('write #1 {symmetrizedModelName}')\n".format(
+                symmetrizedModelName=self.getSymmetrizedModelName()))
 
-        protId = firstValue
-        chains = ""
-        comma = ''
-        for k, v in labelDict.iteritems():
-            if protId == v:
-                chains += "{}.{}".format(comma, k)
-                comma = ','
-                outFileBase = v
-            else:
-                outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
-                outFiles.append(outFile)
-                f.write(
-                    """runCommand('echo {}')\nrunCommand('findclash  #0:{} test other savefile {} overlap {} hbond {} namingStyle simple')\n""".format(
-                        chains, chains, outFile, self.cuttoff, self.allowance))
-                protId = v
-                chains = ".{}".format(k)
-                outFileBase = v
-        outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
-        outFiles.append(outFile)
-
-        f.write(
-            """runCommand('echo {}')\nrunCommand('findclash  #0:{} test other savefile {} overlap {} hbond {} namingStyle simple')\n""".format(
-                chains, chains, outFile, self.cuttoff, self.allowance))
-        #f.write("runCommand('save %s')\n" % os.path.abspath(self._getExtraPath(sessionFile)))
+        self.endChimeraScript(firstValue, labelDict, outFiles, f)
         f.close()
-        args = " --nogui --script " + self.getChimeraScriptFileName()
+        args = " --nogui --script " + self.getChimeraScriptFileName1()
         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
         Chimera.runProgram(Plugin.getProgram(), args)
+
+        if self.SYMMETRY and not os.path.exists(self.getSymmetrizedModelName()):
+            # When self.SYMMETRY = TRUE and no one neighbor unit cell has not been
+            # generated at less than 3 Angstroms, probably because the symmetry
+            # center is not equal to the origin of coordinates, at least we have the
+            # contacts that are within the unit cell.
+            print (red("Error: No neighbor unit cells are available. "
+                       "Is the symmetry center equal to the origin of "
+                       "coordinates?"))
+            self.SYMMETRY = False
+            f = open(self.getChimeraScriptFileName2(), "w")
+            f.write("from chimera import runCommand\n")
+            f.write("runCommand('open {}')\n".format(pdbFileName))
+            self.endChimeraScript(firstValue, labelDict, outFiles, f)
+            f.close()
+            args = " --nogui --script " + self.getChimeraScriptFileName2()
+            self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
+            Chimera.runProgram(Plugin.getProgram(), args)
 
         # parse all files created by chimera
         c, conn = self.prepareDataBase()
@@ -337,8 +307,7 @@ class ChimeraProtContacts(EMProtocol):
                     command += keys + " VALUES " + values
                     ##print command
                     c.execute(command)
-        print (red("Error: No neighbor unit cells available. Is the symmetry center equal "
-                   "to the origin of coordinates?"))
+
         return anyResult
 
     #    --------- util functions -----
@@ -352,8 +321,38 @@ class ChimeraProtContacts(EMProtocol):
     def getTableName(self):
         return "contacts"
 
-    def getChimeraScriptFileName(self):
-        return self._getTmpPath("chimera.cmd")
+    def getChimeraScriptFileName1(self):
+        return self._getTmpPath("chimera1.cmd")
+
+    def getChimeraScriptFileName2(self):
+        return self._getTmpPath("chimera2.cmd")
+
+    def endChimeraScript(self, firstValue, labelDict, outFiles, f):
+        protId = firstValue
+        chains = ""
+        comma = ''
+        for k, v in labelDict.iteritems():
+            if protId == v:
+                chains += "{}.{}".format(comma, k)
+                comma = ','
+                outFileBase = v
+            else:
+                outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
+                outFiles.append(outFile)
+                f.write(
+                    """runCommand('echo {}')\nrunCommand('findclash  #0:{} test other savefile {} overlap {} hbond {} namingStyle simple')\n""".format(
+                        chains, chains, outFile, self.cutoff, self.allowance))
+                protId = v
+                chains = ".{}".format(k)
+                outFileBase = v
+        outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
+        outFiles.append(outFile)
+
+        f.write(
+            """runCommand('echo {}')\nrunCommand('findclash  #0:{} test other savefile {} overlap {} hbond {} namingStyle simple')\n""".format(
+                chains, chains, outFile, self.cutoff, self.allowance))
+        # f.write("runCommand('save %s')\n" % os.path.abspath(self._getExtraPath(sessionFile)))
+
 
     def removeDuplicates(self, c):
         # Remove duplicate contacts

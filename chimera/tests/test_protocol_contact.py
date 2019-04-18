@@ -143,7 +143,7 @@ class TestChimeraContact(TestImportData):
             return
         self.assertTrue(False)
 
-    def testContactsSymC2(self):
+    def testContactsSymC2_a(self):
         # import PDB; unit cell of hemoglobin macromolecule with HEM groups as
         # independent chains; sym C2
         pdb1 = self._importStructureFromFile('PDBx_mmCIF/5ni1_unit_cell_HEM.cif')
@@ -165,6 +165,30 @@ class TestChimeraContact(TestImportData):
         c.execute(sqlCommand)
         row = c.fetchone()
         self.assertEqual(int(row[0]), 380)
+
+    def testContactsSymC2_b(self):
+        # import PDB; unit cell of hemoglobin macromolecule with HEM groups as
+        # independent chains; sym C2
+        # origin of coordinates different from center of symmetry
+        pdb1 = self._importStructureFromFile('PDBx_mmCIF/5ni1.cif')
+        args = {'pdbFileToBeRefined': pdb1,
+                'chainStructure': '{"A": "chainA", "B": "chainB", '
+                                  '"C": "chainC", "D": "chainD"}',
+                'applySymmetry': True,
+                'symmetryGroup': SYM_CYCLIC,
+                'symmetryOrder': 2
+                }
+
+        protContacts = self.newProtocol(ChimeraProtContacts, **args)
+        protContacts.setObjLabel('5ni1\nsym C2\ncenter of sym wrong\ncontacts')
+        self.launchProtocol(protContacts)
+
+        c, conn = protContacts.prepareDataBase(drop=False)
+        tableName = protContacts.getTableName()
+        sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
+        c.execute(sqlCommand)
+        row = c.fetchone()
+        self.assertEqual(int(row[0]), 636)
 
     def testContactsAsymetryD4(self):
         # import PDB; whole molecule of thermosome from T. acidophilum (1a6d)
