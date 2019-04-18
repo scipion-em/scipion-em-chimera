@@ -103,10 +103,10 @@ class ChimeraProtContacts(EMProtocol):
         # some empty space so if symmetryOrder can be seem
         # without resizing the window
         group = form.addGroup('Fit params for clashes and contacts')
-        group.addParam('cuttoff', FloatParam,
-                       label="cuttoff (Angstroms): ", default=-0.4,
+        group.addParam('cutoff', FloatParam,
+                       label="cutoff (Angstroms): ", default=-0.4,
                        expertLevel=LEVEL_ADVANCED,
-                       help="Large positive cuttoff identifies the more severe clashes, "
+                       help="Large positive cutoff identifies the more severe clashes, "
                             "whereas negative cutoff indicates favorable contacts:\n"
                             "default contact rule: -0.4 (from 0.0 to -1.0)\n"
                             "default clash rule: 0.6 (from 0.4 to 1.0)\n"
@@ -183,8 +183,23 @@ class ChimeraProtContacts(EMProtocol):
             f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym)
         self.SYMMETRY = self.SYMMETRY.get()
         if self.SYMMETRY:
-            f.write("runCommand('write #1 {symmetrizedModelName}')\n".format(
-                    symmetrizedModelName=self.getSymmetrizedModelName()))
+            if os.path.exists(self._getExtraPath("symModel.pdb")):
+                # When self.SYMMETRY = TRUE and at least a neighbor unit cell has been
+                # generated at less than 3 Angstroms:
+                f.write("runCommand('write #1 {symmetrizedModelName}')\n".format(
+                        symmetrizedModelName=self.getSymmetrizedModelName()))
+            else:
+                # When self.SYMMETRY = TRUE and no one neighbor unit cell has not been
+                # generated at less than 3 Angstroms, probably because the symmetry
+                # center is not equal to the origin of coordinates, at less we have the
+                # contacts that are within the unit cell. No contacts at all is not true.
+                # To get contacts within the unit cell, we have to start a new Chimera
+                # script identical to the self.SYMMETRY = False option.:
+                f.write("runCommand('stop')\n")
+                self.SYMMETRY = False
+                f = open(self.getChimeraScriptFileName(), "w")
+                f.write("from chimera import runCommand\n")
+                f.write("runCommand('open {}')\n".format(pdbFileName))
 
         protId = firstValue
         chains = ""
@@ -322,7 +337,7 @@ class ChimeraProtContacts(EMProtocol):
                     command += keys + " VALUES " + values
                     ##print command
                     c.execute(command)
-        print (red("Error: No contacts available. Is the symmetry center equal "
+        print (red("Error: No neighbor unit cells available. Is the symmetry center equal "
                    "to the origin of coordinates?"))
         return anyResult
 
