@@ -134,21 +134,23 @@ ORDER BY protId_1, modelId_1, chainId_1,
          protId_2, modelId_2, chainId_2,
          aaNumber_1, aaName_1,  aaNumber_2, aaName_2;
 """
-        row = self.all_pair_chains[self.chainPair.get()]
-        command = commandDisplayInteractions.format(row[1],
+        f = open(self.getInteractionFileName(), 'w')
+        if len(self.all_pair_chains) == self.chainPair.get():
+            f.write("No contacts found by applying symmetry: Is the symmetry "
+                    "center equal to the origin of coordinates?")
+        else:
+            row = self.all_pair_chains[self.chainPair.get()]
+            command = commandDisplayInteractions.format(row[1],
                                                     row[2],
                                                     row[3],
                                                     row[4],
                                                     row[5],
                                                     row[6]
                                                     )
-        #print command
-        rows_count = self.c.execute(command)
-        f = open(self.getInteractionFileName(), 'w')
-        all_rows = self.c.fetchall()
-        if all_rows == []:
-            f.write("No contacts found: Is the symmetry center equal to the origin of coordinates?")
-        else:
+            #print command
+            rows_count = self.c.execute(command)
+            all_rows = self.c.fetchall()
+
             f.write("RESULTS for: {}\n".format(', '.join(str(s) for s in row)))
             f.write("# atoms, prot_1, model_1, chain_1, AA_1, prot_2, model_2, chain2, AA_2\n")
             first = None
@@ -264,23 +266,26 @@ ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
         choices = []
 
         self.all_pair_chains = self.c.fetchall()
-        if self.all_pair_chains == []:
-            f.write("No contacts found")
-            choices=["No contacts found: Is the symmetry center equal to the origin of coordinates?"]
-        else:
-            formatted_row = '{:<4} {:>3} {:<11} {:<3} {:>4} {:<11} {:<3}\n'
-            f.write("# atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2\n")
 
-            for row in self.all_pair_chains:
-                f.write(formatted_row.format(*row))
-                choices.append("{model_1},{prot_1},{chain_1}:"
-                               "{model_2},{prot_2},{chain_2}".format(model_1=row[1],
-                                                                     prot_1=row[2],
-                                                                     chain_1=row[3],
-                                                                     model_2=row[4],
-                                                                     prot_2=row[5],
-                                                                     chain_2=row[6])
-                               )
+        formatted_row = '{:<4} {:>3} {:<11} {:<3} {:>4} {:<11} {:<3}\n'
+        f.write("# atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2\n")
+
+        for row in self.all_pair_chains:
+            f.write(formatted_row.format(*row))
+            choices.append("{model_1},{prot_1},{chain_1}:"
+                           "{model_2},{prot_2},{chain_2}".format(model_1=row[1],
+                                                                 prot_1=row[2],
+                                                                 chain_1=row[3],
+                                                                 model_2=row[4],
+                                                                 prot_2=row[5],
+                                                                 chain_2=row[6])
+                           )
+        if self.protocol.SYMMETRY.get() and not\
+                os.path.exists(self.protocol.getSymmetrizedModelName()):
+            f.write("No contacts found by applying symmetry: Is the symmetry "
+                    "center equal to the origin of coordinates?\n")
+            choices.append("No contacts found by applying symmetry: Is the symmetry "
+                           "center equal to the origin of coordinates?")
         f.close()
         return choices # list with pairs of chains
 
