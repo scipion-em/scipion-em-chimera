@@ -82,9 +82,9 @@ Buildbot status
 
 Status devel version: 
 
-.. image:: http://arquimedes.cnb.csic.es:9980/badges/chimera_devel.svg
+.. image:: http://scipion-test.cnb.csic.es:9980/badges/chimera_devel.svg
 
 Status production version: 
 
-.. image:: http://arquimedes.cnb.csic.es:9980/badges/chimera_prod.svg
+.. image:: http://scipion-test.cnb.csic.es:9980/badges/chimera_prod.svg
 
