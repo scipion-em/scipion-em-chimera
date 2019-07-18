@@ -52,6 +52,7 @@ from pyworkflow.protocol.params import (MultiPointerParam,
 from pyworkflow.utils.properties import Message
 
 from chimera import Plugin
+from chimera.constants import CLUSTALO, MUSCLE
 
 
 class ChimeraProtBase(EMProtocol):
@@ -314,6 +315,12 @@ class ChimeraProtBase(EMProtocol):
             errors.append("Missing variable CHIMERA_HOME")
         elif not os.path.exists(program):
             errors.append("Binary '%s' does not exists.\n" % program)
+        elif not self.is_tool(CLUSTALO):
+            errors.append("Clustal-omega program missing.\n "
+                          "Please install clustalo")
+        elif not self.is_tool(MUSCLE):
+            errors.append("MUSCLE program missing.\n "
+                          "Please install muscle")
 
         # If there is any error at this point it is related to config variables
         if errors:
@@ -352,6 +359,11 @@ class ChimeraProtBase(EMProtocol):
 
     def _citations(self):
         return ['Pettersen2004']
+
+    def is_tool(self, name):
+        """Check whether `name` is on PATH."""
+        from distutils.spawn import find_executable
+        return find_executable(name) is not None
 
 # define scipion_write command
 chimeraScriptHeader = '''
