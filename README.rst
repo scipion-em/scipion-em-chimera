@@ -58,9 +58,9 @@ To check the installation, simply run the following Scipion tests:
 1.13.1
 
 
-========
+=========
 Protocols
-========
+=========
 
 * rigit fit: Fits an atomic structure (PDB/CIF) to a 3D map using a rigid fit algorithm.
 * model from template: Models three-dimensional structures of proteins using `Modeller <https://salilab.org/modeller/manual/node7.html>`_.

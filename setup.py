@@ -22,7 +22,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='scipion-em-chimera',  # Required
-    version='1.0.0b12',  # Required
+    version='1.0.1',  # Required
     description='Plugin to use chimera programs within the Scipion framework',  # Required
     long_description=long_description,  # Optional
     url='https://github.com/scipion-em/scipion-em-chimera',  # Optional
@@ -30,6 +30,7 @@ setup(
     author_email='scipion@cnb.csic.es',  # Optional
     keywords='scipion cryoem imageprocessing scipion-2.0',  # Optional
     packages=find_packages(),
+    include_package_data=True,
     package_data={  # Optional
        'chimera': [''],
     }
