@@ -58,9 +58,9 @@ To check the installation, simply run the following Scipion tests:
 1.13.1
 
 
-========
+=========
 Protocols
-========
+=========
 
 * rigit fit: Fits an atomic structure (PDB/CIF) to a 3D map using a rigid fit algorithm.
 * model from template: Models three-dimensional structures of proteins using `Modeller <https://salilab.org/modeller/manual/node7.html>`_.
@@ -82,9 +82,9 @@ Buildbot status
 
 Status devel version: 
 
-.. image:: http://arquimedes.cnb.csic.es:9980/badges/chimera_devel.svg
+.. image:: http://scipion-test.cnb.csic.es:9980/badges/chimera_devel.svg
 
 Status production version: 
 
-.. image:: http://arquimedes.cnb.csic.es:9980/badges/chimera_prod.svg
+.. image:: http://scipion-test.cnb.csic.es:9980/badges/chimera_prod.svg
 

@@ -26,6 +26,8 @@
 
 CHIMERA_HOME = 'CHIMERA_HOME'
 CHIMERA_HEADLESS_HOME = 'CHIMERA_HEADLESS_HOME'
+CLUSTALO = 'clustalo'
+MUSCLE = 'muscle'
 
 # Supported Versions
 V1_10_1 = 'V1_10_1'
