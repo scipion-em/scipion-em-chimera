@@ -39,6 +39,7 @@ from pyworkflow.em.convert.sequence import (SequenceHandler,
                                             alignBioPairwise2Sequences,
                                             alignMuscleSequences)
 from collections import OrderedDict
+from chimera.constants import CLUSTALO, MUSCLE
 
 class ChimeraModelFromTemplate(ChimeraProtBase):
     """Protocol to model three-dimensional structures of proteins using Modeller.
@@ -286,3 +287,14 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
     #    super(ChimeraModelFromTemplate, self).validate()
     #    # TODO check if clustal/muscle exists
     #    #TODO; change help ro installation pages instead of apt-get
+
+    def _validate(self):
+        # Check that CLUSTALO or MUSCLE program exists
+        errors = super(ChimeraModelFromTemplate, self)._validate()
+        if not (self.is_tool(CLUSTALO) or self.is_tool(MUSCLE)):
+            errors.append("Clustal-omega and MUSCLE programs missing.\n "
+                          "You need at least one of them to run this program.\n"
+                          "Please install Clustal-omega and/or MUSCLE:\n"
+                          "     sudo apt-get install clustalo\n"
+                          "     sudo apt-get install muscle")
+        return errors
