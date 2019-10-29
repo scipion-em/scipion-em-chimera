@@ -457,4 +457,4 @@ class TestChimeraContact(TestImportData):
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 13081)
+        self.assertEqual(int(row[0]), 13083)
