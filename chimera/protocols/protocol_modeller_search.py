@@ -77,8 +77,10 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                        "structure to model your specific sequence.")
         param = form.getParam('inputVolume')
         param.condition.set('False')
+        # hide inputPdbFiles
         param = form.getParam('inputPdbFiles')
         param.condition.set('False')
+        param.allowsNull.set('True')
         section = formBase.getSection('Input')
         section.addParam('inputStructureChain', StringParam,
                        label="Chain ", allowsNull=True, important=True,
