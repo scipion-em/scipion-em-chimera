@@ -29,7 +29,15 @@ import os
 from pyworkflow.em import *
 from pyworkflow import VERSION_1_2
 from chimera.protocols import ChimeraProtBase
-from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+
+# Horrible hack to release this plugin before scipion next version.
+# TODO: remove when possible
+try:
+    from pyworkflow.em.convert.atom_struct import retry
+    from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+except:
+    from chimera.atom_struct import AtomicStructHandler
+
 from pyworkflow.protocol.params import (PointerParam,
                                         StringParam,
                                         MultiPointerParam)
