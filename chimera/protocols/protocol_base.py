@@ -75,7 +75,7 @@ class ChimeraProtBase(EMProtocol):
                       help="PDBx/mmCIF file that you can save after operating "
                            "with it.")
         form.addParam('inputPdbFiles', MultiPointerParam,
-                      pointerClass="AtomStruct",
+                      pointerClass="AtomStruct", allowsNull=True,
                       label='Other atomic structures',
                       help="In case you need to load more PDBx/mmCIF files, "
                            "you can load them here and save them after "
