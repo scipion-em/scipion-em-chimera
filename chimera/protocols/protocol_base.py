@@ -52,7 +52,6 @@ from pyworkflow.protocol.params import (MultiPointerParam,
 from pyworkflow.utils.properties import Message
 
 from chimera import Plugin
-from chimera.constants import CLUSTALO, MUSCLE
 
 
 class ChimeraProtBase(EMProtocol):
@@ -76,7 +75,7 @@ class ChimeraProtBase(EMProtocol):
                       help="PDBx/mmCIF file that you can save after operating "
                            "with it.")
         form.addParam('inputPdbFiles', MultiPointerParam,
-                      pointerClass="AtomStruct",
+                      pointerClass="AtomStruct", allowsNull=True,
                       label='Other atomic structures',
                       help="In case you need to load more PDBx/mmCIF files, "
                            "you can load them here and save them after "
@@ -315,12 +314,6 @@ class ChimeraProtBase(EMProtocol):
             errors.append("Missing variable CHIMERA_HOME")
         elif not os.path.exists(program):
             errors.append("Binary '%s' does not exists.\n" % program)
-        elif not self.is_tool(CLUSTALO):
-            errors.append("Clustal-omega program missing.\n "
-                          "Please install clustalo")
-        elif not self.is_tool(MUSCLE):
-            errors.append("MUSCLE program missing.\n "
-                          "Please install muscle")
 
         # If there is any error at this point it is related to config variables
         if errors:

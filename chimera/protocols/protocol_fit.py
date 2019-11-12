@@ -45,6 +45,7 @@ class ChimeraProtRigidFit(ChimeraProtBase):
         param = form.getParam('inputPdbFiles')
         param.label.set('Other reference atomic structures')
         param.help.set('Other PDBx/mmCIF files used as reference.')
+        param.allowsNull.set('True')
 
         # --------------------------- INSERT steps functions --------------------
 

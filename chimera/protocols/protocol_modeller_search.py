@@ -29,7 +29,15 @@ import os
 from pyworkflow.em import *
 from pyworkflow import VERSION_1_2
 from chimera.protocols import ChimeraProtBase
-from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+
+# Horrible hack to release this plugin before scipion next version.
+# TODO: remove when possible
+from pyworkflow import LAST_VERSION, VERSION_2_0
+if LAST_VERSION == VERSION_2_0 :
+    from chimera.atom_struct import AtomicStructHandler
+else:
+    from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+
 from pyworkflow.protocol.params import (PointerParam,
                                         StringParam,
                                         MultiPointerParam)
@@ -39,6 +47,7 @@ from pyworkflow.em.convert.sequence import (SequenceHandler,
                                             alignBioPairwise2Sequences,
                                             alignMuscleSequences)
 from collections import OrderedDict
+from chimera.constants import CLUSTALO, MUSCLE
 
 class ChimeraModelFromTemplate(ChimeraProtBase):
     """Protocol to model three-dimensional structures of proteins using Modeller.
@@ -68,8 +77,10 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                        "structure to model your specific sequence.")
         param = form.getParam('inputVolume')
         param.condition.set('False')
+        # hide inputPdbFiles
         param = form.getParam('inputPdbFiles')
         param.condition.set('False')
+        param.allowsNull.set('True')
         section = formBase.getSection('Input')
         section.addParam('inputStructureChain', StringParam,
                        label="Chain ", allowsNull=True, important=True,
@@ -286,3 +297,14 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
     #    super(ChimeraModelFromTemplate, self).validate()
     #    # TODO check if clustal/muscle exists
     #    #TODO; change help ro installation pages instead of apt-get
+
+    def _validate(self):
+        # Check that CLUSTALO or MUSCLE program exists
+        errors = super(ChimeraModelFromTemplate, self)._validate()
+        if not (self.is_tool(CLUSTALO) or self.is_tool(MUSCLE)):
+            errors.append("Clustal-omega and MUSCLE programs missing.\n "
+                          "You need at least one of them to run this program.\n"
+                          "Please install Clustal-omega and/or MUSCLE:\n"
+                          "     sudo apt-get install clustalo\n"
+                          "     sudo apt-get install muscle")
+        return errors
