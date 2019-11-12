@@ -34,8 +34,8 @@
 from __future__ import print_function
 import os
 import numpy
-import shutil
-from collections import defaultdict
+
+
 
 from Bio.PDB.Dice import ChainSelector
 from Bio.PDB.MMCIFParser import MMCIFParser
@@ -52,17 +52,18 @@ from Bio.Seq import Seq
 from pyworkflow.em.convert.transformations import translation_from_matrix
 import mmap
 import re
-import hashlib
+
 # TODO remove this hack when atom struct is updated in scipion
 try:
     from pyworkflow.em.constants import MAXIT
 except:
     MAXIT='maxit'
 import pyworkflow.utils as pwutils
-
-try:
-    from pyworkflow.em.convert.atom_struct import retry
-except:
+# TODO remove this hack when atom struct is updated in scipion
+from pyworkflow import LAST_VERSION, VERSION_2_0
+if LAST_VERSION != VERSION_2_0 :
+    from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+else:
 
     class OutOfChainsError(Exception):
         pass
