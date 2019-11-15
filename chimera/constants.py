@@ -28,6 +28,9 @@ CHIMERA_HOME = 'CHIMERA_HOME'
 CHIMERA_HEADLESS_HOME = 'CHIMERA_HEADLESS_HOME'
 CLUSTALO = 'clustalo'
 MUSCLE = 'muscle'
-
+MAXIT_HOME = 'MAXIT_HOME'
+MAXIT = 'maxit'
+MAXIT_URL = 'https://sw-tools.rcsb.org/apps/MAXIT/maxit-v10.100-prod-src.tar.gz'
+MAXIT_TAR = 'maxit-v10.100-prod-src.tar.gz'
 # Supported Versions
 V1_10_1 = 'V1_10_1'

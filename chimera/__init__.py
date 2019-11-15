@@ -31,7 +31,7 @@ import pyworkflow.utils as pwutils
 
 from bibtex import _bibtex # Load bibtex dict with references
 
-from chimera.constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_10_1
+from chimera.constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_10_1, MAXIT_HOME, MAXIT_TAR, MAXIT_URL, MAXIT
 
 _logo = "chimera_logo.png"
 
@@ -48,11 +48,20 @@ class Plugin(pyworkflow.em.Plugin):
     _pathVars = [CHIMERA_HOME]
     _supportedVersions = V1_10_1
 
+    @classmethod
+    def getMaxitHome(cls):
+        return cls.getVar(MAXIT_HOME)
+
+    @classmethod
+    def getMaxitBin(cls):
+        return os.path.join(cls.getMaxitHome(), 'bin', MAXIT)
 
     @classmethod
     def _defineVariables(cls):
         cls._defineEmVar(CHIMERA_HOME, 'chimera-1.13.1')
         cls._defineEmVar(CHIMERA_HEADLESS_HOME, 'chimera_headless')
+        cls._defineEmVar(MAXIT_HOME, os.path.join('maxit-10.1'))
+                                                  # 'maxit-10.1'))
 
     @classmethod
     def getEnviron(cls):
@@ -90,4 +99,12 @@ class Plugin(pyworkflow.em.Plugin):
                        commands=chimera_1_10_1_command,
                        default=True)
 
+        maxit_commands = [('make binary -j %d' % env.getProcessors(),
+                            ['bin/maxit'])]
+
+        env.addPackage('maxit', version='10.1',
+                       tar=MAXIT_TAR,
+                       url=MAXIT_URL,
+                       commands=maxit_commands,
+                       default=True)
 pyworkflow.em.Domain.registerPlugin(__name__)
