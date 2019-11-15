@@ -54,13 +54,17 @@ import mmap
 import re
 
 # TODO remove this hack when atom struct is updated in scipion
-try:
-    from pyworkflow.em.constants import MAXIT
-except:
-    MAXIT='maxit'
+#try:
+#    from pyworkflow.em.constants import MAXIT
+#except:
+
+
 import pyworkflow.utils as pwutils
 # TODO remove this hack when atom struct is updated in scipion
 from pyworkflow import LAST_VERSION, VERSION_2_0
+
+from chimera import MAXIT_HOME, Plugin
+
 if LAST_VERSION != VERSION_2_0 :
     from pyworkflow.em.convert.atom_struct import AtomicStructHandler
 else:
@@ -711,27 +715,33 @@ else:
         else:
             print("ERROR (toCIF), Unknown file type for file = %s" % inFileName)
 
+    def getEnviron():
+        environ = pwutils.Environ()
+        # environ = pwutils.Environ(os.environ)
+        environ.update({'RCSBROOT': Plugin.getMaxitHome(),
+                        'PATH': os.path.join(Plugin.getMaxitHome(), 'bin')
+                        }, position=pwutils.Environ.BEGIN)
+        return environ
+
+    def _frombase(inFileName, outFileName, log, oParam=1):
+        # convert pdb to cif using maxit
+        args = ' -input ' + inFileName + ' -output ' + outFileName +\
+               ' -o %d'% oParam
+        log.info('Launching: ' + Plugin.getMaxitBin() + args)
+        # run in the background
+        env = getEnviron()
+        print("env", env)
+        pwutils.runJob(None, Plugin.getMaxitBin(), args, env=env)
 
     def fromPDBToCIF(inFileName, outFileName, log):
-        # convert pdb to cif using maxit
-        args = ' -input ' + inFileName + ' -output ' + outFileName + ' -o 1'
-        log.info('Launching: ' + MAXIT + args)
-        # run in the background
-        pwutils.runJob(None, MAXIT, args)
+        _frombase(inFileName, outFileName, log, 1)
 
     def fromCIFToPDB(inFileName, outFileName, log):
-        # convert cif to pdb using maxit
-        args = ' -input ' + inFileName + ' -output ' + outFileName + ' -o 2'
-        log.info('Launching: ' + MAXIT + args)
-        # run in the background
-        pwutils.runJob(None, MAXIT, args)
+        _frombase(inFileName, outFileName, log, 2)
 
     def fromCIFTommCIF(inFileName, outFileName, log):
-        # convert pdb to cif using maxit
-        args = ' -input ' + inFileName + ' -output ' + outFileName + ' -o 8'
-        log.info('Launching: ' + MAXIT + args)
-        # run in the background
-        pwutils.runJob(None, MAXIT, args)
+        _frombase(inFileName, outFileName, log, 8)
+
 
     def retry(runEnvirom, program, args, cwd, listAtomStruct=[], log=None, clean_dir=None):
         try:
