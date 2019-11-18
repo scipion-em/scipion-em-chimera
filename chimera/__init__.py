@@ -99,7 +99,7 @@ class Plugin(pyworkflow.em.Plugin):
                        commands=chimera_1_10_1_command,
                        default=True)
 
-        maxit_commands = [('make binary ' , ['bin/maxit'])]
+        maxit_commands = [('make -j 1 binary ' , ['bin/maxit'])]
 
         env.addPackage('maxit', version='10.1',
                        tar=MAXIT_TAR,
