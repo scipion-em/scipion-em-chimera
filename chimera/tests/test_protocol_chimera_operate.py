@@ -29,14 +29,14 @@
 # manipulations with chimera
 
 from chimera.protocols import ChimeraProtOperate
-from pyworkflow.em.protocol.protocol_import import (ProtImportPdb,
+from pwem.protocols.protocol_import import (ProtImportPdb,
                                                     ProtImportVolumes)
 
-from pyworkflow.utils import importFromPlugin
+from pwem import Domain
 
-NMA_MASK_THRE = importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
+NMA_MASK_THRE = Domain.importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
                                  'NMA_MASK_THRE', doRaise=True)
-XmippProtConvertToPseudoAtoms = importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms',
+XmippProtConvertToPseudoAtoms = Domain.importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms',
                                                  'XmippProtConvertToPseudoAtoms')
 
 from pyworkflow.tests import *
@@ -146,7 +146,7 @@ class TestChimeraOperate(TestImportData):
     def testChimeraOperateFromVolAndPDB(self):
         """ This test checks that chimera runs with a volume provided
         directly as inputVol, input PDB """
-        print "Run Chimera operate from imported volume and pdb file"
+        print("Run Chimera operate from imported volume and pdb file")
 
         # Import Volume
         volume = self._importVolume()
@@ -181,7 +181,7 @@ class TestChimeraOperate(TestImportData):
     def testChimeraOperateFromVolAndmmCIF(self):
         """ This test checks that chimera runs with a volume provided
         directly as inputVol, input CIF file """
-        print "Run Chimera operate from imported volume and cif file"
+        print("Run Chimera operate from imported volume and cif file")
 
         volume = self._importVolume()
         structure1_mmCIF = self._importStructuremmCIFWoVol()
@@ -209,8 +209,8 @@ class TestChimeraOperate(TestImportData):
     def testChimeraOperateFromVolAssocToPDB(self):
         # This test checks that chimera runs when a volume is provided
         # associated to the input PDB and not directly as inputVol
-        print "Run Chimera operate from imported pdb file and volume " \
-              "associated"
+        print ("Run Chimera operate from imported pdb file and volume " \
+              "associated")
 
         structure2_PDB = self._importStructurePDBWithVol()
         extraCommands = ""
@@ -236,8 +236,8 @@ class TestChimeraOperate(TestImportData):
     def testChimeraOperateFromVolAssocTommCIF(self):
         # This test checks that chimera runs when a volume is provided
         # associated to the imput mmCIF file and not directly as inputVol
-        print "Run Chimera operate from imported mmCIF file and volume " \
-              "associated"
+        print ("Run Chimera operate from imported mmCIF file and volume " \
+              "associated")
 
         structure2_mmCIF = self._importStructuremmCIFWithVol()
         extraCommands = ""
@@ -264,8 +264,8 @@ class TestChimeraOperate(TestImportData):
         # This test corroborates that chimera runs with a pdb and without
         # providing a volume
 
-        print "Run Chimera operate from imported pdb file without imported " \
-              "or pdb-associated volume"
+        print ("Run Chimera operate from imported pdb file without imported " \
+              "or pdb-associated volume")
 
         structure1_PDB = self._importStructurePDBWoVol()
         self.assertTrue(structure1_PDB.getFileName())
@@ -290,8 +290,8 @@ class TestChimeraOperate(TestImportData):
     def testChimeraOperateFrommmCIFWithoutVol(self):
         # This test corroborates that chimera runs with a mmCIF file and
         # without providing a volume
-        print "Run chimera operate from imported mmCIF file without " \
-              "imported or mmCIF-associated volume"
+        print ("Run chimera operate from imported mmCIF file without " \
+              "imported or mmCIF-associated volume")
 
         structure1_mmCIF = self._importStructuremmCIFWoVol()
         self.assertTrue(structure1_mmCIF.getFileName())
@@ -317,8 +317,8 @@ class TestChimeraOperate(TestImportData):
     def testChimeraOperateFromChimeraPDB(self):
         # This test checks that chimera runs with objects not imported
         # but generated in other chimera programs
-        print "Run Chimera operate using the pdb and its volume associated " \
-              "generated in a previous protocol of Chimera rigid fit"
+        print ("Run Chimera operate using the pdb and its volume associated " \
+              "generated in a previous protocol of Chimera rigid fit")
 
         volume = self._importVolume()
         structure1_PDB = self._importStructurePDBWoVol()
@@ -379,8 +379,8 @@ class TestChimeraOperate(TestImportData):
         # This test checks that chimera runs when a volume is provided
         # associated to the input PDB and several PDB files are added,
         # one of them generated from powerfit rigid fit protocol
-        print "Run Chimera fit from imported pdb file and volume associated " \
-              "and addition of other three pdb files"
+        print ("Run Chimera fit from imported pdb file and volume associated " \
+              "and addition of other three pdb files")
 
         structure2_PDB = self._importStructurePDBWithVol()
         structure3_PDB = self._importMut1StructurePDBWoVol()
@@ -414,9 +414,9 @@ class TestChimeraOperate(TestImportData):
     def testChimeraOperateFromPDBAndVolumeDerived(self):
         # This test checks that chimera generates volumes starting from pdbs
         # and finally a pseudoatoms pdb can be generated from that volume
-        print "Run Chimera operate using an atomic structure, generation " \
+        print ("Run Chimera operate using an atomic structure, generation " \
               "of a volume and generation of a pseudoatoms atomic structure " \
-              "from this volume"
+              "from this volume")
 
         structure1_PDB = self._importStructurePDBWoVol()
         extraCommands = ""

@@ -26,7 +26,7 @@
 # **************************************************************************
 
 import os
-from pyworkflow.em import *
+from pwem import *
 from pyworkflow import VERSION_1_2
 from chimera.protocols import ChimeraProtBase
 
@@ -36,12 +36,12 @@ from pyworkflow import LAST_VERSION, VERSION_2_0
 if LAST_VERSION == VERSION_2_0 :
     from chimera.atom_struct import AtomicStructHandler
 else:
-    from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+    from pwem.convert.atom_struct import AtomicStructHandler
 
 from pyworkflow.protocol.params import (PointerParam,
                                         StringParam,
-                                        MultiPointerParam)
-from pyworkflow.em.convert.sequence import (SequenceHandler,
+                                        MultiPointerParam, BooleanParam, EnumParam)
+from pwem.convert.sequence import (SequenceHandler,
                                             saveFileSequencesToAlign,
                                             alignClustalSequences,
                                             alignBioPairwise2Sequences,
@@ -91,7 +91,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                        important=True,
                        help="Input the aminoacid sequence to align with the "
                             "structure template sequence.")
-        section.addParam('additionalSequencesToAlign', params.BooleanParam,
+        section.addParam('additionalSequencesToAlign', BooleanParam,
                          default=False, label='Additional sequences to align?',
                          help='Select YES if you want to add some more '
                               'sequences to accomplish the alignment. This '
@@ -103,7 +103,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                          label='Other sequences to align',
                          help="In case you need to load more sequences to "
                               "align, you can load them here.")
-        section.addParam('inputProgramToAlign1', params.EnumParam,
+        section.addParam('inputProgramToAlign1', EnumParam,
                          choices=self.ProgramToAlign1,
                          label="Alignment tool for two sequences:", default=0,
                          condition='additionalSequencesToAlign == False',
@@ -132,7 +132,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                                   "Install muscle if you choose this option "
                                   "for the first time by 'sudo apt install "
                                   "muscle'.")
-        section.addParam('inputProgramToAlign2', params.EnumParam,
+        section.addParam('inputProgramToAlign2', EnumParam,
                          choices=self.ProgramToAlign2,
                          label="Multiple alignment tool:", default=0,
                          condition='additionalSequencesToAlign == True',
@@ -203,9 +203,9 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         self.selectedChain = chainIdDict['chain']
         # self.selectedModel = chainId.split(',')[0].split(':')[1].strip()
         # self.selectedChain = chainId.split(',')[1].split(':')[1].strip()
-        print "Selected chain: %s from model: %s from structure: %s" \
+        print("Selected chain: %s from model: %s from structure: %s" \
               % (self.selectedChain, self.selectedModel,
-                 os.path.basename(fileName))
+                 os.path.basename(fileName)))
 
         # Bio.Seq.Seq object
         structureSeq = self.structureHandler.getSequenceFromChain(

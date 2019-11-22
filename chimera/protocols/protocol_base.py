@@ -29,22 +29,22 @@ import os
 
 from pyworkflow import VERSION_1_2
 try:
-    from pyworkflow.em.data import AtomStruct
+    from pwem.objects import AtomStruct
 except:
-    from pyworkflow.em.data import PdbFile as AtomStruct
+    from pwem.objects import PdbFile as AtomStruct
 
-from pyworkflow.em import Volume
-from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.data import Transform
-from pyworkflow.em.convert.headers import Ccp4Header
-from pyworkflow.em.protocol import EMProtocol
+from pwem.objects import Volume
+from pwem.convert import ImageHandler
+from pwem.objects import Transform
+from pwem.convert.headers import Ccp4Header
+from pwem.protocols import EMProtocol
 
-from pyworkflow.em.viewers.viewer_chimera import (Chimera,
-                                                  chimeraScriptFileName,
-                                                  sessionFile,
-                                                  chimeraMapTemplateFileName,
-                                                  chimeraScriptFileName,
-                                                  chimeraPdbTemplateFileName)
+from pwem.viewers.viewer_chimera import (Chimera,
+                                         chimeraScriptFileName,
+                                         sessionFile,
+                                         chimeraMapTemplateFileName,
+                                         chimeraScriptFileName,
+                                         chimeraPdbTemplateFileName)
 
 from pyworkflow.protocol.params import (MultiPointerParam,
                                         PointerParam,

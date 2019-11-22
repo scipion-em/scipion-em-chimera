@@ -1,8 +1,8 @@
-from pyworkflow.em.viewers import Chimera
+from pwem.viewers import Chimera
 from pyworkflow.protocol.params import EnumParam, BooleanParam, \
     LabelParam, IntParam
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
-from pyworkflow.utils import importFromPlugin
+from pwem import Domain
 
 from chimera.protocols.protocol_contacts import ChimeraProtContacts
 from pyworkflow.gui.text import _open_cmd
@@ -93,7 +93,7 @@ class ChimeraProtContactsViewer(ProtocolViewer):
             f.write("open %s\n" % self.protocol.getSymmetrizedModelName())
         f.close()
         # run in the background
-        chimeraPlugin = importFromPlugin('chimera', 'Plugin', doRaise=True)
+        chimeraPlugin = Domain.importFromPlugin('chimera', 'Plugin', doRaise=True)
         chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), fnCmd + "&")
         return []
 

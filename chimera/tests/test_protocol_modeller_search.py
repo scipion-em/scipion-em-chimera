@@ -32,11 +32,11 @@
 # select and save one of them.
 
 from chimera.protocols import ChimeraModelFromTemplate
-from pyworkflow.em.protocol.protocol_import import ProtImportPdb
-from pyworkflow.em.protocol.protocol_import.sequence import \
+from pwem.protocols.protocol_import import ProtImportPdb
+from pwem.protocols.protocol_import.sequence import \
     ProtImportSequence
 from pyworkflow.tests import *
-from pyworkflow.em.convert.sequence import indexToAlphabet
+from pwem.convert.sequence import indexToAlphabet
 
 
 class TestImportBase(BaseTest):
@@ -208,7 +208,7 @@ structure -> modeller (homology)
         prot1.setObjLabel('1_structure chain seq,\n and seq from '
                           'user file\n')
         if self.DISABLE_TEST:
-            print self.message
+            print(self.message)
         else:
             self.launchProtocol(prot1)
 
@@ -229,7 +229,7 @@ structure -> modeller (homology)
         prot2.setObjLabel('2_structure chain seq,\n and seq from '
                           'user file\n')
         if self.DISABLE_TEST:
-            print self.message
+            print(self.message)
         else:
             self.launchProtocol(prot2)
 
@@ -249,6 +249,6 @@ structure -> modeller (homology)
         prot3.setObjLabel('3_structure chain seq,\n and seq from '
                           'user file\n')
         if self.DISABLE_TEST:
-            print self.message
+            print(self.message)
         else:
             self.launchProtocol(prot3)

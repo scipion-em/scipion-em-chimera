@@ -127,6 +127,7 @@ class EntryGrid():
 
     def quit(self):
         for k, v in zip(self.rowList, self.gridDict.values()):
+        # for k, v in zip(self.rowList, list(self.gridDict.values())):
             self.data[k] = v.get()
         value = json.dumps(self.data)
         self.form.setVar(self.formAttribute, value)

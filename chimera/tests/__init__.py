@@ -25,7 +25,7 @@
 # *
 # **************************************************************************
 
-from test_protocol_chimera_fit import *
-from test_protocol_chimera_operate import *
-from test_protocol_modeller_search import *
-from test_protocol_contact import TestChimeraContact
+from .test_protocol_chimera_fit import *
+from .test_protocol_chimera_operate import *
+from .test_protocol_modeller_search import *
+from .test_protocol_contact import TestChimeraContact

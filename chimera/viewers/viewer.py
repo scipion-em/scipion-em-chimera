@@ -27,13 +27,13 @@
 
 import os
 
-from pyworkflow.em.convert import ImageHandler
+from pwem.convert import ImageHandler
 from chimera.protocols.protocol_fit import ChimeraProtRigidFit
 from chimera.protocols.protocol_operate import ChimeraProtOperate
 from chimera.protocols.protocol_restore import ChimeraProtRestore
 from chimera.protocols.protocol_modeller_search import ChimeraModelFromTemplate
 
-from pyworkflow.em.viewers.viewer_chimera import (Chimera,
+from pwem.viewers.viewer_chimera import (Chimera,
                                                   sessionFile)
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 

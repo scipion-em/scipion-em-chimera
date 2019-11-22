@@ -29,7 +29,7 @@
 # emringer and molprobity
 
 from chimera.protocols import ChimeraProtRigidFit
-from pyworkflow.em.protocol.protocol_import import ProtImportPdb, \
+from pwem.protocols.protocol_import import ProtImportPdb, \
     ProtImportVolumes
 from pyworkflow.tests import *
 import os.path
@@ -149,7 +149,7 @@ class TestChimeraFit2(TestImportData):
     def testChimeraFitFromVolAndPDBWithSavingVol(self):
         """ This test checks that chimera runs with a volume provided
         directly as inputVol, input PDB """
-        print "Run Chimera fit from imported volume and pdb file"
+        print("Run Chimera fit from imported volume and pdb file")
 
         # Import Volume
         volume = self._importVolume()
@@ -184,7 +184,7 @@ class TestChimeraFit2(TestImportData):
     def testChimeraFitFromVolAndmmCIFWithSavingVol(self):
         """ This test checks that chimera runs with a volume provided
         directly as inputVol, input CIF file """
-        print "Run Chimera fit from imported volume and cif file"
+        print("Run Chimera fit from imported volume and cif file")
 
         volume = self._importVolume()
         structure1_mmCIF = self._importStructuremmCIFWoVol()
@@ -212,7 +212,7 @@ class TestChimeraFit2(TestImportData):
     def testChimeraFitFromVolAssocToPDBWithSavingVol(self):
         # This test checks that chimera runs when a volume is provided
         # associated to the input PDB and not directly as inputVol
-        print "Run Chimera fit from imported pdb file and volume associated"
+        print("Run Chimera fit from imported pdb file and volume associated")
 
         structure2_PDB = self._importStructurePDBWithVol()
         extraCommands = ""
@@ -238,7 +238,7 @@ class TestChimeraFit2(TestImportData):
     def testChimeraFitFromVolAssocTommCIFWithSavingVol(self):
         # This test checks that chimera runs when a volume is provided
         # associated to the imput mmCIF file and not directly as inputVol
-        print "Run Chimera fit from imported mmCIF file and volume associated"
+        print("Run Chimera fit from imported mmCIF file and volume associated")
 
         structure2_mmCIF = self._importStructuremmCIFWithVol()
         extraCommands = ""
@@ -265,8 +265,8 @@ class TestChimeraFit2(TestImportData):
         # This test corroborates that chimera does not run unless a volume
         # is provided (directly as inputVol or associated to the imputPDB)
         # protocol should raise an exception
-        print "Run Chimera from imported pdb file without imported or " \
-              "pdb-associated volume"
+        print ("Run Chimera from imported pdb file without imported or " \
+              "pdb-associated volume")
 
         structure1_PDB = self._importStructurePDBWoVol()
         self.assertTrue(structure1_PDB.getFileName())
@@ -280,8 +280,8 @@ class TestChimeraFit2(TestImportData):
             self.launchProtocol(protChimera)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " ERROR running protocol scipion - chimera rigid fit"
+            print ("This test should return a error message as '" \
+                  " ERROR running protocol scipion - chimera rigid fit")
 
             return
         self.assertTrue(False)
@@ -290,8 +290,8 @@ class TestChimeraFit2(TestImportData):
         # This test corroborates that chimera does not run unless a volume
         # is provided (directly as inputVol or associated to the imputPDB)
         # protocol should raise an exception
-        print "Run chimera from imported mmCIF file without imported or " \
-              "mmCIF-associated volume"
+        print ("Run chimera from imported mmCIF file without imported or " \
+              "mmCIF-associated volume")
 
         structure1_mmCIF = self._importStructuremmCIFWoVol()
         self.assertTrue(structure1_mmCIF.getFileName())
@@ -304,8 +304,8 @@ class TestChimeraFit2(TestImportData):
             self.launchProtocol(protChimera)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " ERROR running protocol scipion - chimera rigid fit"
+            print ("This test should return a error message as '" \
+                  " ERROR running protocol scipion - chimera rigid fit")
 
             return
         self.assertTrue(False)
@@ -314,8 +314,8 @@ class TestChimeraFit2(TestImportData):
         # This test checks that chimera runs when a volume is provided
         # associated to the input PDB and several PDB files are added
 
-        print "Run Chimera fit from imported pdb file and volume associated " \
-              "and addition of two other pdb files"
+        print ("Run Chimera fit from imported pdb file and volume associated " \
+              "and addition of two other pdb files")
 
         structure2_PDB = self._importStructurePDBWithVol()
         structure3_PDB = self._importMut1StructurePDBWoVol()
@@ -349,8 +349,8 @@ class TestChimeraFit2(TestImportData):
     def testChimeraFitFromChimeraPDB(self):
         # This test checks that chimera runs with objects not imported
         # but generated in other programs
-        print "Run Chimera fit using the pdb and its volume associated " \
-              "generated in a previous protocol of Chimera rigid fit"
+        print ("Run Chimera fit using the pdb and its volume associated " \
+              "generated in a previous protocol of Chimera rigid fit")
 
         volume = self._importVolume()
         structure1_PDB = self._importStructurePDBWoVol()

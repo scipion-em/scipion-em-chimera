@@ -26,7 +26,7 @@
 # *
 # **************************************************************************
 
-from protocol_base import ChimeraProtBase
+from .protocol_base import ChimeraProtBase
 
 class ChimeraProtRigidFit(ChimeraProtBase):
     """Protocol to perform rigid fit using Chimera.
@@ -55,11 +55,11 @@ class ChimeraProtRigidFit(ChimeraProtBase):
         if self.inputVolume.get() is None:
             fnVol = self.pdbFileToBeRefined.get().getVolume()
             index, fn = fnVol.getLocation()
-            print "Volume: Volume associated to atomic structure %s(%d)\n" \
-                  % (fn, index)
+            print("Volume: Volume associated to atomic structure %s(%d)\n" \
+                  % (fn, index))
         else:
             fnVol = self.inputVolume.get()
-            print "Volume: Input volume %s\n" % fnVol
+            print("Volume: Input volume %s\n" % fnVol)
 
     def _validate(self):
         errors = super(ChimeraProtRigidFit, self)._validate()

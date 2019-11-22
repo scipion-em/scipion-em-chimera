@@ -1,19 +1,29 @@
-from pyworkflow.em.protocol import EMProtocol, Boolean
-from pyworkflow.em.constants import (SYM_I222, SYM_I222r, SYM_In25, SYM_In25r,
-                                     SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL,
-                                     SYM_OCTAHEDRAL, SCIPION_SYM_NAME, SYM_I2n3,
-                                     SYM_I2n3r, SYM_I2n5, SYM_I2n5r)
+from pwem.protocols import EMProtocol
+from pyworkflow.object import Boolean
+
+from chimera.constants import (CHIMERA_SYM_NAME, CHIMERA_TO_SCIPION, CHIMERA_CYCLIC,
+                              CHIMERA_DIHEDRAL_X, CHIMERA_TETRAHEDRAL, 
+                               CHIMERA_TETRAHEDRALZ3, CHIMERA_OCTAHEDRAL,
+                              CHIMERA_I222, CHIMERA_I222r, CHIMERA_In25, CHIMERA_In25r,
+                               CHIMERA_I2n5, CHIMERA_I2n5r, CHIMERA_I2n3, CHIMERA_I2n3r,
+                               )
+
 from pyworkflow.protocol.params import (EnumParam,
                                         IntParam,
                                         PointerParam,
                                         StringParam,
                                         FloatParam,
                                         LEVEL_ADVANCED, BooleanParam)
+from pwem.constants import (SYM_I222, SYM_I222r, SYM_In25, SYM_In25r,
+                                     SYM_CYCLIC, SYM_DIHEDRAL_X, SYM_TETRAHEDRAL,
+                                     SYM_TETRAHEDRAL_Z3, SYM_DIHEDRAL_Y,
+                                     SYM_OCTAHEDRAL, SCIPION_SYM_NAME, )
+
 import sqlite3
 import json
 import collections
 import os
-from pyworkflow.em.viewers.viewer_chimera import Chimera
+from pwem.viewers.viewer_chimera import Chimera
 from chimera import Plugin
 from operator import itemgetter
 
@@ -62,44 +72,86 @@ class ChimeraProtContacts(EMProtocol):
                               "atomic structure. Output results will show all contacts between"
                               " any couple of interacting chains.\n")
         form.addParam('symmetryGroup', EnumParam,
-                      choices=[SCIPION_SYM_NAME[SYM_CYCLIC],
-                               SCIPION_SYM_NAME[SYM_DIHEDRAL],
-                               SCIPION_SYM_NAME[SYM_TETRAHEDRAL],
-                               SCIPION_SYM_NAME[SYM_OCTAHEDRAL],
-                               SCIPION_SYM_NAME[SYM_I222],
-                               SCIPION_SYM_NAME[SYM_I222r],
-                               SCIPION_SYM_NAME[SYM_In25],
-                               SCIPION_SYM_NAME[SYM_In25r],
-                               SCIPION_SYM_NAME[SYM_I2n3],
-                               SCIPION_SYM_NAME[SYM_I2n3r],
-                               SCIPION_SYM_NAME[SYM_I2n5],
-                               SCIPION_SYM_NAME[SYM_I2n5r]],
-                      default=SYM_CYCLIC,
+                      choices=[CHIMERA_SYM_NAME[CHIMERA_CYCLIC] +
+                               " (" + SCIPION_SYM_NAME[CHIMERA_TO_SCIPION[CHIMERA_CYCLIC]] + ")",
+                               CHIMERA_SYM_NAME[CHIMERA_DIHEDRAL_X] +
+                               " (" + SCIPION_SYM_NAME[CHIMERA_TO_SCIPION[CHIMERA_DIHEDRAL_X]] + ")",
+                               CHIMERA_SYM_NAME[CHIMERA_TETRAHEDRAL] +
+                               " (" + SCIPION_SYM_NAME[CHIMERA_TO_SCIPION[CHIMERA_TETRAHEDRAL]] + ")",
+                               CHIMERA_SYM_NAME[CHIMERA_TETRAHEDRALZ3] +
+                               " (" + SCIPION_SYM_NAME[CHIMERA_TO_SCIPION[CHIMERA_TETRAHEDRALZ3]] + ")",
+                               CHIMERA_SYM_NAME[CHIMERA_OCTAHEDRAL] +
+                               " (" + SCIPION_SYM_NAME[CHIMERA_TO_SCIPION[CHIMERA_OCTAHEDRAL]] + ")",
+                               CHIMERA_SYM_NAME[CHIMERA_I222] +
+                               " (" + SCIPION_SYM_NAME[CHIMERA_TO_SCIPION[CHIMERA_I222]] + ")",
+                               CHIMERA_SYM_NAME[CHIMERA_I222r] +
+                               " (" + SCIPION_SYM_NAME[CHIMERA_TO_SCIPION[CHIMERA_I222r]] + ")",
+                               CHIMERA_SYM_NAME[CHIMERA_In25] +
+                               " (" + SCIPION_SYM_NAME[CHIMERA_TO_SCIPION[CHIMERA_In25]] + ")",
+                               CHIMERA_SYM_NAME[CHIMERA_In25r] +
+                               " (" + SCIPION_SYM_NAME[CHIMERA_TO_SCIPION[CHIMERA_In25r]] + ")",
+                               CHIMERA_SYM_NAME[CHIMERA_I2n3] +
+                               " (" + SCIPION_SYM_NAME[CHIMERA_TO_SCIPION[CHIMERA_I2n3]] + ")",
+                               CHIMERA_SYM_NAME[CHIMERA_I2n3r] +
+                               " (" + SCIPION_SYM_NAME[CHIMERA_TO_SCIPION[CHIMERA_I2n3r]] + ")",
+                               CHIMERA_SYM_NAME[CHIMERA_I2n5] +
+                               " (" + SCIPION_SYM_NAME[CHIMERA_TO_SCIPION[CHIMERA_I2n5]] + ")",
+                               CHIMERA_SYM_NAME[CHIMERA_I2n5r] +
+                               " (" + SCIPION_SYM_NAME[CHIMERA_TO_SCIPION[CHIMERA_I2n5r]] + ")",
+                               ],
+                      default=CHIMERA_I222,
                       label="Symmetry",
                       condition='applySymmetry',
-                      help="See http://xmipp.cnb.csic.es/twiki/bin/view/Xmipp/"
+                      help="https://scipion-em.github.io/docs/release-2.0.0/docs/developer/symmetries.html?highlight=symmetry"
                            "Symmetry for a description of the symmetry groups "
-                           "format in Xmipp.\n"
+                           "format in CHIMERA.\n"
                            "If no symmetry is present, use _c1_."
+                           'More information: \n'
+                           'https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/sym.html'
                       )
         form.addParam('symmetryOrder', IntParam, default=1,
-                    condition='applySymmetry and symmetryGroup<=%d' %
-                              (SYM_DIHEDRAL),
-                    label='Symmetry Order',
-                    help='Select the order of cyclic or dihedral symmetry.')
-        form.addParam('tetrahedralOrientation', EnumParam,
-                      choices=self.TetrahedralOrientation, default=0,
-                      condition='applySymmetry and symmetryGroup==%d' %
-                                (SYM_TETRAHEDRAL),
-                      label='Tetrahedral Orientation',
-                      help='Select the orientation of the tetrahedron:\n'
-                           '222, by default: Two-fold symmetry axes along '
-                           'the X, Y, and Z axes, '
-                           'a three-fold along axis (1,1,1).\n'
-                           'z3: A three-fold symmetry axis along Z and another three-fold '
-                           'axis in the YZ plane.\n'
-                           'More information: \n'
-                           'https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/sym.html')
+                      condition='applySymmetry and symmetryGroup<=%d' % SYM_DIHEDRAL_X,
+                      label='Symmetry Order',
+                      help='Select the order of cyclic or dihedral symmetry.')
+        # form.addParam('symmetryGroup', EnumParam,
+        #               choices=[SCIPION_SYM_NAME[SYM_CYCLIC],
+        #                        SCIPION_SYM_NAME[SYM_DIHEDRAL],
+        #                        SCIPION_SYM_NAME[SYM_TETRAHEDRAL],
+        #                        SCIPION_SYM_NAME[SYM_OCTAHEDRAL],
+        #                        SCIPION_SYM_NAME[SYM_I222],
+        #                        SCIPION_SYM_NAME[SYM_I222r],
+        #                        SCIPION_SYM_NAME[SYM_In25],
+        #                        SCIPION_SYM_NAME[SYM_In25r],
+        #                        SCIPION_SYM_NAME[SYM_I2n3],
+        #                        SCIPION_SYM_NAME[SYM_I2n3r],
+        #                        SCIPION_SYM_NAME[SYM_I2n5],
+        #                        SCIPION_SYM_NAME[SYM_I2n5r]],
+        #               default=SYM_CYCLIC,
+        #               label="Symmetry",
+        #               condition='applySymmetry',
+        #               help="See http://CHIMERA.cnb.csic.es/twiki/bin/view/CHIMERA/"
+        #                    "Symmetry for a description of the symmetry groups "
+        #                    "format in CHIMERA.\n"
+        #                    "If no symmetry is present, use _c1_."
+        #               )
+        # form.addParam('symmetryOrder', IntParam, default=1,
+        #             condition='applySymmetry and symmetryGroup<=%d' %
+        #                       (SYM_DIHEDRAL),
+        #             label='Symmetry Order',
+        #             help='Select the order of cyclic or dihedral symmetry.')
+        # form.addParam('tetrahedralOrientation', EnumParam,
+        #               choices=self.TetrahedralOrientation, default=0,
+        #               condition='applySymmetry and symmetryGroup==%d' %
+        #                         (SYM_TETRAHEDRAL),
+        #               label='Tetrahedral Orientation',
+        #               help='Select the orientation of the tetrahedron:\n'
+        #                    '222, by default: Two-fold symmetry axes along '
+        #                    'the X, Y, and Z axes, '
+        #                    'a three-fold along axis (1,1,1).\n'
+        #                    'z3: A three-fold symmetry axis along Z and another three-fold '
+        #                    'axis in the YZ plane.\n'
+        #                    'More information: \n'
+        #                    'https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/sym.html')
         # some empty space so if symmetryOrder can be seem
         # without resizing the window
         group = form.addGroup('Fit params for clashes and contacts')
@@ -125,7 +177,7 @@ class ChimeraProtContacts(EMProtocol):
 
     # --------------------------- INSERT steps functions --------------------
     def _insertAllSteps(self):
-        self.sym = Chimera._symmetryMap[self.symmetryGroup.get()]
+        self.sym = CHIMERA_SYM_NAME[self.symmetryGroup.get()]
         self.symOrder = self.symmetryOrder.get()
         if not self.applySymmetry:
             self.sym = "Cn"
@@ -148,7 +200,7 @@ class ChimeraProtContacts(EMProtocol):
         labelDictAux = json.loads(self.chainStructure.get(),
                                object_pairs_hook=collections.OrderedDict)
         labelDict = collections.OrderedDict(sorted(labelDictAux.items(), key=itemgetter(1)))
-
+        # labelDict = collections.OrderedDict(sorted(list(labelDictAux.items()), key=itemgetter(1)))
         pdbFileName = self.pdbFileToBeRefined.get().getFileName()
         # first element of dictionary
         firstValue = labelDict[list(labelDict)[0]]
@@ -161,16 +213,14 @@ class ChimeraProtContacts(EMProtocol):
             f.write("runCommand('sym #0 group C%d contact 3')\n" % self.symOrder)
         elif self.sym == "Dn" and self.symOrder != 1:
             f.write("runCommand('sym #0 group d%d contact 3')\n" % self.symOrder)
-        elif self.sym == "T":
-            f.write("runCommand('sym #0 group t,%s contact 3')\n" %
-                    self.TetrahedralOrientation[self.tetrahedralOrientation.get()])
-            # Look at: https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/sym.html
+        elif self.sym == "T222" or self.sym == "TZ3":
+            f.write("runCommand('sym #0 group t,%s contact 3')\n" % self.sym[1:])
         elif self.sym == "O":
             f.write("runCommand('sym #0 group O contact 3')\n")
-        elif self.sym == "222" or self.sym =="222r" or self.sym == "n25" or \
-             self.sym =="n25r" or self.sym=="2n3" or self.sym=="2n3r" or \
-             self.sym =="2n5" or self.sym=="2n5r":
-            f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym)
+        elif self.sym == "I222" or self.sym =="I222r" or self.sym == "In25" or \
+             self.sym =="In25r" or self.sym=="I2n3" or self.sym=="I2n3r" or \
+             self.sym =="I2n5" or self.sym=="I2n5r":
+            f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym[1:])
         self.SYMMETRY = self.SYMMETRY.get()
         if self.SYMMETRY:
             f.write("runCommand('write #1 {symmetrizedModelName}')\n".format(
@@ -187,7 +237,7 @@ class ChimeraProtContacts(EMProtocol):
             # generated at less than 3 Angstroms, probably because the symmetry
             # center is not equal to the origin of coordinates, at least we have the
             # contacts that are within the unit cell.
-            print (red("Error: No neighbor unit cells are available. "
+            print(red("Error: No neighbor unit cells are available. "
                        "Is the symmetry center equal to the origin of "
                        "coordinates?"))
             self.SYMMETRY = False
@@ -218,12 +268,13 @@ class ChimeraProtContacts(EMProtocol):
         labelDictAux = json.loads(self.chainStructure.get(),
                                object_pairs_hook=collections.OrderedDict)
         labelDict = collections.OrderedDict(sorted(labelDictAux.items(), key=itemgetter(1)))
+        # labelDict = collections.OrderedDict(sorted(list(labelDictAux.items()), key=itemgetter(1)))
         d = {}
         d1 = {}
         d2 = {}
         anyResult = False
         for inFile in outFiles:
-            print "processing file", inFile
+            print("processing file", inFile)
             if not os.path.exists(inFile):
                 continue
             else:
@@ -232,7 +283,7 @@ class ChimeraProtContacts(EMProtocol):
             # parse contact files. Note that C1 symmetry file is different from the rest
             for line in open(inFile):
                 if counter < 8:
-                    # print "skip line", line
+                    # print ("skip line", line
                     counter += 1
                 else:
                     if not self.SYMMETRY:
@@ -279,26 +330,30 @@ class ChimeraProtContacts(EMProtocol):
                     if d1['modelId'] == d2['modelId']:
                         if d1['protId'] <= d2['protId']:
                             for k in d1.keys():
+                            # for k in list(d1.keys()):
                                 d[k + '_1'] = d1[k]
                                 d[k + '_2'] = d2[k]
                         else:
                             for k in d1.keys():
+                            # for k in list(d1.keys()):
                                 d[k + '_1'] = d2[k]
                                 d[k + '_2'] = d1[k]
                     else:
                         if d1['modelId'] <= d2['modelId']:
                             for k in d1.keys():
+                            # for k in list(d1.keys()):
                                 d[k + '_1'] = d1[k]
                                 d[k + '_2'] = d2[k]
                         else:
                             for k in d1.keys():
+                            # for k in list(d1.keys()):
                                 d[k + '_1'] = d2[k]
                                 d[k + '_2'] = d1[k]
 
                     command = "INSERT INTO contacts "
                     keys = "("
                     values = " ("
-                    for key, value in d.iteritems():
+                    for key, value in d.items():
                         keys += key + ", "
                         values += str(value) + ", "
                     keys = keys[:-2] + ")"
@@ -331,7 +386,7 @@ class ChimeraProtContacts(EMProtocol):
         protId = firstValue
         chains = ""
         comma = ''
-        for k, v in labelDict.iteritems():
+        for k, v in labelDict.items():
             if protId == v:
                 chains += "{}.{}".format(comma, k)
                 comma = ','

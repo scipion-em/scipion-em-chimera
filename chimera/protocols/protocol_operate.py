@@ -26,7 +26,7 @@
 # *
 # **************************************************************************
 
-from protocol_base import ChimeraProtBase
+from .protocol_base import ChimeraProtBase
 
 class ChimeraProtOperate(ChimeraProtBase):
     """This protocol provides access to Chimera and allows to save the result in Scipion framework.

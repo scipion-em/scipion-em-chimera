@@ -25,11 +25,11 @@
 
 import os
 
-import pyworkflow.em
+import pwem
 import pyworkflow.utils as pwutils
 
 
-from bibtex import _bibtex # Load bibtex dict with references
+from .bibtex import _bibtex # Load bibtex dict with references
 
 from chimera.constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_10_1, MAXIT_HOME, MAXIT_TAR, MAXIT_URL, MAXIT
 
@@ -43,7 +43,7 @@ _references = ['Pettersen2004']
 # implemented
 
 
-class Plugin(pyworkflow.em.Plugin):
+class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
     _supportedVersions = V1_10_1
@@ -98,7 +98,8 @@ class Plugin(pyworkflow.em.Plugin):
                        tar='chimera-1.13.1-linux_x86_64.tgz',
                        commands=chimera_1_10_1_command,
                        default=True)
-
+        # TODO: maxit should be compiled by scipion
+        # so eventually this two commands should go
         maxit_commands = [('make -j 1 binary ' , ['bin/maxit'])]
 
         env.addPackage('maxit', version='10.1',
@@ -107,4 +108,4 @@ class Plugin(pyworkflow.em.Plugin):
                        commands=maxit_commands,
                        default=True)
 
-pyworkflow.em.Domain.registerPlugin(__name__)
+pwem.Domain.registerPlugin(__name__)

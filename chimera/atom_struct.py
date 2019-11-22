@@ -31,7 +31,6 @@
 # see http://biopython.org/DIST/docs/tutorial/Tutorial.html for a description
 # on the object "structure" and other Bio.xxxx modules
 
-from __future__ import print_function
 import os
 import numpy
 
@@ -49,13 +48,13 @@ from collections import OrderedDict
 from Bio.PDB.Polypeptide import is_aa
 from Bio.PDB.Polypeptide import three_to_one
 from Bio.Seq import Seq
-from pyworkflow.em.convert.transformations import translation_from_matrix
+from pwem.convert.transformations import translation_from_matrix
 import mmap
 import re
 
 # TODO remove this hack when atom struct is updated in scipion
 #try:
-#    from pyworkflow.em.constants import MAXIT
+#    from pwem.constants import MAXIT
 #except:
 
 
@@ -66,7 +65,7 @@ from pyworkflow import LAST_VERSION, VERSION_2_0
 from chimera import MAXIT_HOME, Plugin
 
 if LAST_VERSION != VERSION_2_0 :
-    from pyworkflow.em.convert.atom_struct import AtomicStructHandler
+    from pwem.convert.atom_struct import AtomicStructHandler
 else:
 
     class OutOfChainsError(Exception):
@@ -95,6 +94,8 @@ else:
             # Re-order lists if an order has been specified
             # Not all elements from the specified order are necessarily present
             for key, key_list in key_lists.items():
+            # P3
+            # for key, key_list in list(key_lists.items()):
                 if key in mmcif_order:
                     inds = []
                     for i in key_list:
@@ -151,6 +152,7 @@ else:
                     (str(item[0]), item[1], item[2], item[3]))
 
             for key, key_list in key_lists.items():
+            #  for key, key_list in list(key_lists.items()):
                 # Pick a sample mmCIF value, which can be a list or a single value
                 sample_val = self.dic[key + "." + key_list[0]]
                 n_vals = len(sample_val)
@@ -522,6 +524,7 @@ else:
                     return False
 
                 for new, old in chainmap.items():
+                # for new, old in list(chainmap.items()):
                     if new != old:
                         print("Renaming chain {0} to {1}".format(old, new))
 

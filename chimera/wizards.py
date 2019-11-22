@@ -25,9 +25,9 @@
 # *
 # **************************************************************************
 
-from pyworkflow.em.wizards import GetStructureChainsWizard
+from pwem.wizards import GetStructureChainsWizard
 from chimera.protocols import ChimeraModelFromTemplate
-from editList import EntryGrid
+from .editList import EntryGrid
 from chimera.protocols.protocol_contacts import \
     ChimeraProtContacts
 from pyworkflow.wizard import Wizard
@@ -46,7 +46,7 @@ class ProtContactsWizardChimera(Wizard):
         protocol = form.protocol
         models = chainWizard.getModelsChainsStep(protocol)
         rows = []
-        for chainID, lenResidues in sorted(models[0].iteritems()):
+        for chainID, lenResidues in sorted(models[0].items()):
             rows.append(str(chainID))
 
         EntryGrid(cols, rows, form , self.recibingAttribute)
