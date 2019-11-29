@@ -82,7 +82,6 @@ class TestChimeraContact(TestImportData):
                                   '"D": "chainD", "D002": "HEM_D"}',
                 'applySymmetry': False
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('5ni1_HEM\nno sym\ncontacts')
         self.launchProtocol(protContacts)
@@ -107,7 +106,6 @@ class TestChimeraContact(TestImportData):
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 1
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('5ni1_HEM\nerror b\nno sym\ncontacts')
         self.launchProtocol(protContacts)
@@ -132,7 +130,6 @@ class TestChimeraContact(TestImportData):
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 0
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('5ni1_HEM\nerror c\nno sym\ncontacts')
         try:
@@ -156,7 +153,6 @@ class TestChimeraContact(TestImportData):
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('5ni1_unit_cell_HEM\nsym C2\ncontacts')
         self.launchProtocol(protContacts)
@@ -180,7 +176,6 @@ class TestChimeraContact(TestImportData):
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('5ni1\nsym C2\ncenter of sym wrong\ncontacts')
         self.launchProtocol(protContacts)
@@ -203,7 +198,6 @@ class TestChimeraContact(TestImportData):
                                   '"M": "down", "N": "down", "O": "down", "P": "down"}',
                 'applySymmetry': False,
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1a6d_whole\nno sym\ncontacts')
         self.launchProtocol(protContacts)
@@ -228,7 +222,6 @@ class TestChimeraContact(TestImportData):
                 'symmetryGroup': CHIMERA_DIHEDRAL_X,
                 'symmetryOrder': 1
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1a6d_whole\nerror b\nno sym\ncontacts')
         self.launchProtocol(protContacts)
@@ -253,7 +246,6 @@ class TestChimeraContact(TestImportData):
                 'symmetryGroup': CHIMERA_DIHEDRAL_X,
                 'symmetryOrder': 0
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1a6d_whole\nerror c\nno sym\ncontacts')
 
@@ -277,7 +269,6 @@ class TestChimeraContact(TestImportData):
                 'symmetryGroup': CHIMERA_DIHEDRAL_X,
                 'symmetryOrder': 4
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1a6d_unit_cell\nsym D4\ncontacts')
         self.launchProtocol(protContacts)
@@ -305,7 +296,6 @@ class TestChimeraContact(TestImportData):
                 'applySymmetry': False,
                 'symmetryGroup': CHIMERA_OCTAHEDRAL
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1eab_whole\nno sym\ncontacts')
         self.launchProtocol(protContacts)
@@ -328,7 +318,6 @@ class TestChimeraContact(TestImportData):
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_OCTAHEDRAL
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1eab_unit_cell\nsym O\ncontacts')
         self.launchProtocol(protContacts)
@@ -353,7 +342,6 @@ class TestChimeraContact(TestImportData):
                 'applySymmetry': False,
                 'symmetryGroup': CHIMERA_TETRAHEDRAL
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('6n1r\nno sym\ncontacts')
         self.launchProtocol(protContacts)
@@ -376,7 +364,6 @@ class TestChimeraContact(TestImportData):
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_TETRAHEDRAL
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1y0r_unit_cell\nsym T\ncontacts')
         self.launchProtocol(protContacts)
@@ -413,7 +400,6 @@ class TestChimeraContact(TestImportData):
                                   '"X": "x", "Y": "vi"}'
                 # labeling of unit cell chains
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('6b1t\nicosahedral virus\nsym I222\ncontacts ')
         self.launchProtocol(protContacts)
@@ -450,7 +436,6 @@ class TestChimeraContact(TestImportData):
                                   '"X": "x", "Y": "vi"}'
                 # labeling of unit cell chains
                 }
-        print("********************args: ", args)
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('6b1t\nicosahedral virus\nsym I2n3\ncontacts ')
         self.launchProtocol(protContacts)
