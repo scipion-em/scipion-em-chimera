@@ -30,13 +30,8 @@ from pwem import *
 from pyworkflow import VERSION_1_2
 from chimera.protocols import ChimeraProtBase
 
-# Horrible hack to release this plugin before scipion next version.
-# TODO: remove when possible
-from pyworkflow import LAST_VERSION, VERSION_2_0
-if LAST_VERSION == VERSION_2_0 :
-    from chimera.atom_struct import AtomicStructHandler
-else:
-    from pwem.convert.atom_struct import AtomicStructHandler
+
+from pwem.convert.atom_struct import AtomicStructHandler
 
 from pyworkflow.protocol.params import (PointerParam,
                                         StringParam,
