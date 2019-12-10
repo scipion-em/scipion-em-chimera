@@ -75,20 +75,26 @@ class ChimeraViewerBase(Viewer):
                 sampling = 1.
                 _showVol = None
 
-        bildFileName = os.path.abspath(self.protocol._getTmpPath(
-            "axis_output.bild"))
+        # bildFileName = os.path.abspath(self.protocol._getTmpPath(
+        #     "axis_output.bild"))
+        bildFileName = self.protocol._getTmpPath("axis_output.bild")
         Chimera.createCoordinateAxisFile(dim,
                                  bildFileName=bildFileName,
                                  sampling=sampling)
         fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
         f = open(fnCmd, 'w')
+        # change to workingDir
+        # If we do not use cd and the project name has an space
+        # the protocol fails even if we pass absolute paths
+        f.write('cd %s\n' % os.getcwd())
         f.write("open %s\n" % bildFileName)
         f.write("cofr 0,0,0\n")  # set center of coordinates
 
         if _showVol is not None:
         # In case we have PDBs only, the _inputVol is None:
-            showVolFileName = os.path.abspath(
-                        ImageHandler.removeFileType(_showVol.getFileName()))
+        #     showVolFileName = os.path.abspath(
+        #                 ImageHandler.removeFileType(_showVol.getFileName()))
+            showVolFileName = ImageHandler.removeFileType(_showVol.getFileName())
             f.write("open %s\n" % showVolFileName)
             if _showVol.hasOrigin():
                 x, y, z = _showVol.getOrigin().getShifts()
@@ -102,12 +108,13 @@ class ChimeraViewerBase(Viewer):
         for filename in os.listdir(directory):
             if filename.endswith(".pdb") or filename.endswith(".cif"):
                 path = os.path.join(directory, filename)
-                f.write("open %s\n" % os.path.abspath(path))
+                # f.write("open %s\n" % os.path.abspath(path))
+                f.write("open %s\n" % path)
 
         f.close()
 
         # run in the background
-        Chimera.runProgram(Chimera.getProgram(), fnCmd+"&")
+        Chimera.runProgram(Chimera.getProgram(), fnCmd + "&")
         return []
 
 class ChimeraRestoreViewer(Viewer):
@@ -116,17 +123,24 @@ class ChimeraRestoreViewer(Viewer):
     _targets = [ChimeraProtRestore]
 
     def _visualize(self, obj, **args):
+        fnCmd = self.protocol._getTmpPath("chimera_restore_session.cmd")
+        f = open(fnCmd, 'w')
+        # change to workingDir
+        # If we do not use cd and the project name has an space
+        # the protocol fails even if we pass absolute paths
+        f.write('cd %s\n' % os.getcwd())
         path1 = os.path.join(self.protocol._getExtraPath(), sessionFile)
         if os.path.exists(path1):
             #restored SESSION
-            path = os.path.abspath(path1)
+            path = path1
         else:
             # SESSION from inputProtocol
             path2 = os.path.join(
                 self.protocol.inputProtocol.get()._getExtraPath(), sessionFile)
-            path = os.path.abspath(path2)
+            path = path2
+        f.write("open %s\n" % path)
 
-        Chimera.runProgram(Chimera.getProgram(), path  + "&")
+        Chimera.runProgram(Chimera.getProgram(), fnCmd + "&")
         return []
 
 

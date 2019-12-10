@@ -70,8 +70,9 @@ class ChimeraProtContactsViewer(ProtocolViewer):
         }
 
     def _displayModel(self, e=None):
-        bildFileName = os.path.abspath(self.protocol._getTmpPath(
-            "axis_output.bild"))
+        #bildFileName = os.path.abspath(self.protocol._getTmpPath(
+        #    "axis_output.bild"))
+        bildFileName = self.protocol._getTmpPath("axis_output.bild")
 
         # Axis Dim
         dim = 150.
@@ -82,11 +83,16 @@ class ChimeraProtContactsViewer(ProtocolViewer):
 
         fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
         f = open(fnCmd, 'w')
+        # change to workingDir
+        # If we do not use cd and the project name has an space
+        # the protocol fails even if we pass absolute paths
+        f.write('cd %s\n'% os.getcwd())
         # reference axis model = 0
         f.write("open %s\n" % bildFileName)
         f.write("cofr 0,0,0\n")  # set center of coordinates
-        f.write("open %s\n" % os.path.abspath(
-            self.protocol.pdbFileToBeRefined.get().getFileName()))
+        # f.write("open %s\n" % os.path.abspath(
+        #     self.protocol.pdbFileToBeRefined.get().getFileName()))
+        f.write("open %s\n" % self.protocol.pdbFileToBeRefined.get().getFileName())
 
         if self.protocol.SYMMETRY.get() and \
                 os.path.exists(self.protocol.getSymmetrizedModelName()):
@@ -94,7 +100,8 @@ class ChimeraProtContactsViewer(ProtocolViewer):
         f.close()
         # run in the background
         chimeraPlugin = Domain.importFromPlugin('chimera', 'Plugin', doRaise=True)
-        chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), fnCmd + "&")
+        chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), fnCmd + "&",
+                                        cwd=os.getcwd())
         return []
 
     def _visualizeChainPairFile(self, e=None):

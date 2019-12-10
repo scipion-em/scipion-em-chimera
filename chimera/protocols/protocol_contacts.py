@@ -371,7 +371,8 @@ class ChimeraProtContacts(EMProtocol):
         return self._getExtraPath("overlaps.sqlite")
 
     def getSymmetrizedModelName(self):
-        return os.path.abspath(self._getExtraPath("symModel.pdb"))
+        #return os.path.abspath(self._getExtraPath("symModel.pdb"))
+        return self._getExtraPath("symModel.pdb")
 
     def getTableName(self):
         return "contacts"
@@ -392,7 +393,8 @@ class ChimeraProtContacts(EMProtocol):
                 comma = ','
                 outFileBase = v
             else:
-                outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
+                #outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
+                outFile = self._getExtraPath("{}.over".format(outFileBase))
                 outFiles.append(outFile)
                 f.write(
                     """runCommand('echo {}')\nrunCommand('findclash  #0:{} test other savefile {} overlap {} hbond {} namingStyle simple')\n""".format(
@@ -400,7 +402,8 @@ class ChimeraProtContacts(EMProtocol):
                 protId = v
                 chains = ".{}".format(k)
                 outFileBase = v
-        outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
+        #outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
+        outFile = self._getExtraPath("{}.over".format(outFileBase))
         outFiles.append(outFile)
 
         f.write(

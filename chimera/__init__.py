@@ -62,10 +62,10 @@ class Plugin(pwem.Plugin):
         return environ
 
     @classmethod
-    def runChimeraProgram(cls, program, args=""):
+    def runChimeraProgram(cls, program, args="", cwd=None):
         """ Internal shortcut function to launch chimera program. """
         env = cls.getEnviron()
-        pwutils.runJob(None, program, args, env=env)
+        pwutils.runJob(None, program, args, env=env, cwd=cwd)
 
     @classmethod
     def getProgram(cls, progName="chimera"):
