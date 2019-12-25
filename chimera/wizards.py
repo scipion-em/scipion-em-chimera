@@ -39,7 +39,7 @@ class GetStructureChainsWizardChimera(GetStructureChainsWizard):
 class ProtContactsWizardChimera(Wizard):
     recibingAttribute = 'chainStructure'
     _targets = [(ChimeraProtContacts, [recibingAttribute])]
-has
+
     def show(self, form):
         cols = ['label']
         chainWizard = GetStructureChainsWizard()
