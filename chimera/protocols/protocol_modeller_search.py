@@ -28,7 +28,7 @@
 import os
 from pwem import *
 from pyworkflow import VERSION_1_2
-from chimera.protocols import ChimeraProtBase
+from . import ChimeraProtBase
 
 
 from pwem.convert.atom_struct import AtomicStructHandler
@@ -42,7 +42,8 @@ from pwem.convert.sequence import (SequenceHandler,
                                             alignBioPairwise2Sequences,
                                             alignMuscleSequences)
 from collections import OrderedDict
-from chimera.constants import CLUSTALO, MUSCLE
+from ..constants import CLUSTALO, MUSCLE
+
 
 class ChimeraModelFromTemplate(ChimeraProtBase):
     """Protocol to model three-dimensional structures of proteins using Modeller.

@@ -28,7 +28,7 @@
 # flexible fitting (coot and refmac), as well as validation programs such as
 # emringer and molprobity
 
-from chimera.protocols import ChimeraProtRigidFit
+from ..protocols import ChimeraProtRigidFit
 from pwem.protocols.protocol_import import ProtImportPdb, \
     ProtImportVolumes
 from pyworkflow.tests import *
@@ -265,7 +265,7 @@ class TestChimeraFit2(TestImportData):
         # This test corroborates that chimera does not run unless a volume
         # is provided (directly as inputVol or associated to the imputPDB)
         # protocol should raise an exception
-        print ("Run Chimera from imported pdb file without imported or " \
+        print("Run Chimera from imported pdb file without imported or "
               "pdb-associated volume")
 
         structure1_PDB = self._importStructurePDBWoVol()
@@ -280,7 +280,7 @@ class TestChimeraFit2(TestImportData):
             self.launchProtocol(protChimera)
         except Exception as e:
             self.assertTrue(True)
-            print ("This test should return a error message as '" \
+            print("This test should return a error message as '"
                   " ERROR running protocol scipion - chimera rigid fit")
 
             return
@@ -290,7 +290,7 @@ class TestChimeraFit2(TestImportData):
         # This test corroborates that chimera does not run unless a volume
         # is provided (directly as inputVol or associated to the imputPDB)
         # protocol should raise an exception
-        print ("Run chimera from imported mmCIF file without imported or " \
+        print("Run chimera from imported mmCIF file without imported or "
               "mmCIF-associated volume")
 
         structure1_mmCIF = self._importStructuremmCIFWoVol()
@@ -304,7 +304,7 @@ class TestChimeraFit2(TestImportData):
             self.launchProtocol(protChimera)
         except Exception as e:
             self.assertTrue(True)
-            print ("This test should return a error message as '" \
+            print("This test should return a error message as '" 
                   " ERROR running protocol scipion - chimera rigid fit")
 
             return
@@ -314,7 +314,7 @@ class TestChimeraFit2(TestImportData):
         # This test checks that chimera runs when a volume is provided
         # associated to the input PDB and several PDB files are added
 
-        print ("Run Chimera fit from imported pdb file and volume associated " \
+        print("Run Chimera fit from imported pdb file and volume associated "
               "and addition of two other pdb files")
 
         structure2_PDB = self._importStructurePDBWithVol()
@@ -349,7 +349,7 @@ class TestChimeraFit2(TestImportData):
     def testChimeraFitFromChimeraPDB(self):
         # This test checks that chimera runs with objects not imported
         # but generated in other programs
-        print ("Run Chimera fit using the pdb and its volume associated " \
+        print("Run Chimera fit using the pdb and its volume associated "
               "generated in a previous protocol of Chimera rigid fit")
 
         volume = self._importVolume()

@@ -4,9 +4,10 @@ from pyworkflow.protocol.params import EnumParam, BooleanParam, \
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
 from pwem import Domain
 
-from chimera.protocols.protocol_contacts import ChimeraProtContacts
+from ..protocols.protocol_contacts import ChimeraProtContacts
 from pyworkflow.gui.text import _open_cmd
 import os
+
 
 class ChimeraProtContactsViewer(ProtocolViewer):
     _label = 'Contacts Viewer'
@@ -60,7 +61,6 @@ class ChimeraProtContactsViewer(ProtocolViewer):
                            "Meaning of question marks below each group:\n'?': First and last "
                            "residues are separated by more than 20 residues.\n'????':  First "
                            "and last residues are separated by less than 20 residues.")
-
 
     def _getVisualizeDict(self):
         return{
@@ -227,7 +227,6 @@ ORDER BY protId_1, modelId_1, chainId_1,
         f.close()
         _open_cmd(self.getInteractionFileName(), self.getTkRoot())
 
-
     def _displayPairChains(self,):
         # auxiliary view name
         viewPairChain = 'atoms_interacting_per_pair_of_chains'
@@ -294,7 +293,7 @@ ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
             choices.append("No contacts found by applying symmetry: Is the symmetry "
                            "center equal to the origin of coordinates?")
         f.close()
-        return choices # list with pairs of chains
+        return choices  # list with pairs of chains
 
     def getPairChainsFileName(self):
         return self.protocol._getTmpPath('pairChainsFile.txt')

@@ -1,12 +1,12 @@
 from pwem.protocols import EMProtocol
 from pyworkflow.object import Boolean
 
-from chimera.constants import (CHIMERA_SYM_NAME, CHIMERA_TO_SCIPION, CHIMERA_CYCLIC,
-                              CHIMERA_DIHEDRAL_X, CHIMERA_TETRAHEDRAL, 
-                               CHIMERA_TETRAHEDRALZ3, CHIMERA_OCTAHEDRAL,
-                              CHIMERA_I222, CHIMERA_I222r, CHIMERA_In25, CHIMERA_In25r,
-                               CHIMERA_I2n5, CHIMERA_I2n5r, CHIMERA_I2n3, CHIMERA_I2n3r,
-                               )
+from ..constants import (CHIMERA_SYM_NAME, CHIMERA_TO_SCIPION, CHIMERA_CYCLIC,
+                         CHIMERA_DIHEDRAL_X, CHIMERA_TETRAHEDRAL,
+                         CHIMERA_TETRAHEDRALZ3, CHIMERA_OCTAHEDRAL,
+                         CHIMERA_I222, CHIMERA_I222r, CHIMERA_In25, CHIMERA_In25r,
+                         CHIMERA_I2n5, CHIMERA_I2n5r, CHIMERA_I2n3, CHIMERA_I2n3r,
+                         )
 
 from pyworkflow.protocol.params import (EnumParam,
                                         IntParam,
@@ -15,16 +15,16 @@ from pyworkflow.protocol.params import (EnumParam,
                                         FloatParam,
                                         LEVEL_ADVANCED, BooleanParam)
 from pwem.constants import (SYM_I222, SYM_I222r, SYM_In25, SYM_In25r,
-                                     SYM_CYCLIC, SYM_DIHEDRAL_X, SYM_TETRAHEDRAL,
-                                     SYM_TETRAHEDRAL_Z3, SYM_DIHEDRAL_Y,
-                                     SYM_OCTAHEDRAL, SCIPION_SYM_NAME, )
+                            SYM_CYCLIC, SYM_DIHEDRAL_X, SYM_TETRAHEDRAL,
+                            SYM_TETRAHEDRAL_Z3, SYM_DIHEDRAL_Y,
+                            SYM_OCTAHEDRAL, SCIPION_SYM_NAME, )
 
 import sqlite3
 import json
 import collections
 import os
 from pwem.viewers.viewer_chimera import Chimera
-from chimera import Plugin
+from .. import Plugin
 from operator import itemgetter
 
 from pyworkflow.utils import red
@@ -475,6 +475,7 @@ class ChimeraProtContacts(EMProtocol):
 
         return errors
 
+
 def connectDB(sqliteFN, tableName=None):
     conn = sqlite3.connect(sqliteFN)
     c = conn.cursor()
@@ -502,5 +503,3 @@ def connectDB(sqliteFN, tableName=None):
         c.execute(commandDropTable.format(tableName))
         c.execute(commandCreateTable.format(tableName))
     return c, conn
-  
-

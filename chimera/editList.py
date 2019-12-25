@@ -16,6 +16,7 @@ textFont3 = ("Arial", 8, "bold")
 
 kkk = None
 
+
 class LabelWidget(tk.Entry):
     def __init__(self, master, x, y, text):
         self.text = tk.StringVar()
@@ -41,8 +42,9 @@ class EntryWidget(tk.Entry):
         self.grid(column=x, row=y)
         self.value.set("")
 
+
 class EntryGrid():
-    ''' Dialog box with Entry widgets arranged in columns and rows.'''
+    """ Dialog box with Entry widgets arranged in columns and rows."""
 
     def __init__(self, colList, rowList, form, formAttribute, title="Entry Grid"):
         self.cols = colList[:]
@@ -83,7 +85,7 @@ class EntryGrid():
             self.ico()
 
     def ico(self):
-        ''' enter right values for icosahedron '''
+        """ enter right values for icosahedron """
         labelDict = collections.OrderedDict()
 
         labelDict['A'] = 'h1'
@@ -114,7 +116,7 @@ class EntryGrid():
             counter += 1
 
     def test(self):
-        ''' enter right values for icosahedron '''
+        """ enter right values for icosahedron """
         for i in range(len(self.cols)):
             for j in range(len(self.rowList)):
                 self.set(i,j,"")
@@ -152,7 +154,7 @@ class EntryGrid():
             w.bind(sequence="<KeyRelease>", func=handler)
 
     def __headerhandler(self, col, row, text):
-        ''' has no effect when Entry state=readonly '''
+        """ has no effect when Entry state=readonly """
         self.hdrDict[(col, row)].text.set(text)
 
     def get(self, x, y):

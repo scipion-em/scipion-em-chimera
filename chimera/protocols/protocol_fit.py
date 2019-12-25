@@ -28,6 +28,7 @@
 
 from .protocol_base import ChimeraProtBase
 
+
 class ChimeraProtRigidFit(ChimeraProtBase):
     """Protocol to perform rigid fit using Chimera.
         Execute command *scipionwrite [model #n] [refmodel #p]

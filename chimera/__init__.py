@@ -31,7 +31,7 @@ import pyworkflow.utils as pwutils
 
 from .bibtex import _bibtex # Load bibtex dict with references
 
-from chimera.constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_10_1
+from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_10_1
 
 _logo = "chimera_logo.png"
 

@@ -24,13 +24,13 @@
 
 
 import os
-from chimera.constants import (CHIMERA_I222, CHIMERA_I2n3,
-                               CHIMERA_CYCLIC,
-                               CHIMERA_DIHEDRAL_X,
-                               CHIMERA_TETRAHEDRAL,
-                               CHIMERA_OCTAHEDRAL)
+from ..constants import (CHIMERA_I222, CHIMERA_I2n3,
+                         CHIMERA_CYCLIC,
+                         CHIMERA_DIHEDRAL_X,
+                         CHIMERA_TETRAHEDRAL,
+                         CHIMERA_OCTAHEDRAL)
 
-from chimera.protocols import ChimeraProtContacts
+from ..protocols import ChimeraProtContacts
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocols.protocol_import import ProtImportPdb
 
@@ -40,6 +40,7 @@ class TestImportBase(BaseTest):
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dsModBuild = DataSet.getDataSet('model_building_tutorial')
+
 
 class TestImportData(TestImportBase):
     """ Import atomic structures(PDBx/mmCIF files)
@@ -53,7 +54,6 @@ class TestImportData(TestImportBase):
         self.launchProtocol(protImportPDB)
         self.assertTrue(protImportPDB.outputPdb.getFileName())
         return protImportPDB.outputPdb
-
 
     def _importStructureFromFile(self, fileName):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
@@ -136,7 +136,7 @@ class TestChimeraContact(TestImportData):
             self.launchProtocol(protContacts)
         except Exception as e:
             self.assertTrue(True)
-            print("This test should return a error message as '" \
+            print("This test should return a error message as '"
                   " Error: Symmetry Order should be a positive integer.\n")
 
             return
@@ -253,7 +253,7 @@ class TestChimeraContact(TestImportData):
             self.launchProtocol(protContacts)
         except Exception as e:
             self.assertTrue(True)
-            print("This test should return a error message as '" \
+            print("This test should return a error message as '"
                   " Error: Symmetry Order should be a positive integer.\n")
 
             return

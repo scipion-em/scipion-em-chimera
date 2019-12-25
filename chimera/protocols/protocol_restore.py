@@ -29,11 +29,12 @@ from .protocol_base import createScriptFile
 from pyworkflow.protocol.params import PointerParam, StringParam
 import os
 from pwem.viewers.viewer_chimera import (Chimera,
-                                                  chimeraScriptFileName,
-                                                  chimeraPdbTemplateFileName,
-                                                  chimeraMapTemplateFileName,
-                                                  sessionFile)
+                                         chimeraScriptFileName,
+                                         chimeraPdbTemplateFileName,
+                                         chimeraMapTemplateFileName,
+                                         sessionFile)
 from .protocol_base import ChimeraProtBase
+
 
 class ChimeraProtRestore(ChimeraProtBase):
     """This protocol opens Chimera and restores a session
@@ -124,7 +125,7 @@ class ChimeraProtRestore(ChimeraProtBase):
                                                  # this line
         sessionFileName = parentProt._getExtraPath(sessionFile)
         # Check SESSION.py exists
-        if (not os.path.exists(sessionFileName)):
+        if not os.path.exists(sessionFileName):
             errors.append("Error: No session saved by protocol: %s\n"
                           % parentProt.getObjLabel())
 

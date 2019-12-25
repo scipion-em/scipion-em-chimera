@@ -28,10 +28,10 @@
 import os
 
 from pwem.convert import ImageHandler
-from chimera.protocols.protocol_fit import ChimeraProtRigidFit
-from chimera.protocols.protocol_operate import ChimeraProtOperate
-from chimera.protocols.protocol_restore import ChimeraProtRestore
-from chimera.protocols.protocol_modeller_search import ChimeraModelFromTemplate
+from ..protocols.protocol_fit import ChimeraProtRigidFit
+from ..protocols.protocol_operate import ChimeraProtOperate
+from ..protocols.protocol_restore import ChimeraProtRestore
+from ..protocols.protocol_modeller_search import ChimeraModelFromTemplate
 
 from pwem.viewers.viewer_chimera import (Chimera,
                                                   sessionFile)
@@ -117,6 +117,7 @@ class ChimeraViewerBase(Viewer):
         Chimera.runProgram(Chimera.getProgram(), fnCmd + "&")
         return []
 
+
 class ChimeraRestoreViewer(Viewer):
     """ Visualize the output of protocols protocol_fit and protocol_operate """
     _label = 'viewer restore'
@@ -148,9 +149,11 @@ class ChimeraProtRigidFitViewer(ChimeraViewerBase):
     _label = 'viewer fit'
     _targets = [ChimeraProtRigidFit]
 
+
 class ChimeraProtOperateViewer(ChimeraViewerBase):
     _label = 'viewer operate'
     _targets = [ChimeraProtOperate]
+
 
 class ChimeraModelFromTemplateViewer(ChimeraViewerBase):
     _label = 'viewer model from template'

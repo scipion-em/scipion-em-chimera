@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import glob, os
+import glob
+import os
 import sqlite3
 import collections
 import sys
@@ -32,11 +33,11 @@ labelDict['T'] = 'lh3sym'
 # database file name
 sqliteFN = "overlaps.sqlite"
 tableName = "contacts" 
-pdbFileName='/home/roberto/latex/Documents/2019/paper_ladv2/OVERLAPS/cootOut0006_real_space_refined_renamed.cif'
+pdbFileName = '/home/roberto/latex/Documents/2019/paper_ladv2/OVERLAPS/cootOut0006_real_space_refined_renamed.cif'
 # drop table and recrearte it 
-commandDropTable="""DROP table IF EXISTS {}"""
+commandDropTable = """DROP table IF EXISTS {}"""
 
-commandCreateTable="""
+commandCreateTable = """
 CREATE TABLE {}(
      id integer primary key autoincrement,
      modelId_1  char(8),
@@ -55,8 +56,8 @@ CREATE TABLE {}(
      distance float
      );"""
 
-commandDropView="""DROP VIEW IF EXISTS {};"""
-commandGroupAAView="""
+commandDropView = """DROP VIEW IF EXISTS {};"""
+commandGroupAAView = """
 CREATE VIEW {} AS
   SELECT modelId_1, 
          protId_1, 
@@ -92,7 +93,7 @@ ORDER BY protId_1, aaNumber_1, atomId_1, modelId_2, protId_2,
 
 """
 
-commandEliminateDuplicates="""CREATE VIEW {} AS 
+commandEliminateDuplicates = """CREATE VIEW {} AS 
 SELECT *
 FROM {}
 
@@ -114,17 +115,20 @@ WHERE ca.protId_1    = cb.protId_2
 ORDER BY              protId_1, chainId_1, aaNumber_1, atomId_1, 
          modelId_2, protId_2, chainId_2, aaNumber_2, atomId_2;
 """
-commandReport="""
+commandReport = """
 SELECT * 
 FROM {}
 {}
 """
+
+
 def connectDB(sqliteFN, tableName):
     conn = sqlite3.connect(sqliteFN)
     c = conn.cursor()
     c.execute(commandDropTable.format(tableName))
     c.execute(commandCreateTable.format(tableName))
     return c, conn
+
 
 def createChimeraScript(labelDict, pdbFileName, firstValue):
     outFiles=[]
@@ -134,35 +138,36 @@ def createChimeraScript(labelDict, pdbFileName, firstValue):
     # rainbow model
     # findclash  #0:.Q,.R,.S test other savefile /home/roberto/latex/Documents/2019/paper_ladv2/OVERLAPS/lh3a_test_v3.over  overlap -0.4 hbond 0.0 namingStyle simple
     protId = firstValue
-    chains=""
-    comma=''
+    chains = ""
+    comma = ''
     for k, v in labelDict.items():
         if protId == v:
             chains += "{}.{}".format(comma,k)
-            comma=','
+            comma = ','
             outFileBase = v
         else:
-            outFile="/home/roberto/latex/Documents/2019/paper_ladv2/OVERLAPS/{}.over".format(outFileBase)
+            outFile = "/home/roberto/latex/Documents/2019/paper_ladv2/OVERLAPS/{}.over".format(outFileBase)
             outFiles.append(outFile)
             f.write("""echo {}\nfindclash  #0:{} test other savefile {} overlap -0.4 hbond 0.0 namingStyle simple\n""".format(chains, chains, outFile))
             protId = v
-            chains=".{}".format(k)
+            chains = ".{}".format(k)
             outFileBase = v
-    outFile="/home/roberto/latex/Documents/2019/paper_ladv2/OVERLAPS/{}.over".format(outFileBase)
+    outFile = "/home/roberto/latex/Documents/2019/paper_ladv2/OVERLAPS/{}.over".format(outFileBase)
     outFiles.append(outFile)
     f.write("""echo {}\nfindclash  #0:{} test other savefile {} overlap -0.4 hbond 0.0 namingStyle simple\n""".format(chains, chains, outFile))
     f.close()
     os.system("/home/roberto/Scipion/scipion_plugin/software/em/chimera-1.13.1/bin/chimera --nogui /tmp/chimera.cmd")
     return outFiles
 
+
 def parseFiles(outFiles, c):
-    d={}
-    AND=" "
-    WHERE=[]
+    d = {}
+    AND = " "
+    WHERE = []
     for inFile in outFiles:
-         print(inFile)
-         counter=0
-         for line in open(inFile) :
+        print(inFile)
+        counter = 0
+        for line in open(inFile) :
             if counter < 8:
                 #print ("skip line", line
                 counter += 1
@@ -189,14 +194,15 @@ def parseFiles(outFiles, c):
                 keys = "("
                 values = " ("
                 for key, value in d.items():
-                   keys += key + ", "
-                   values  += str(value)  + ", "
-                keys   = keys[:-2] + ")"
+                    keys += key + ", "
+                values += str(value) + ", "
+                keys = keys[:-2] + ")"
                 values = values[:-2] + ")"
 
                 command += keys + " VALUES " + values
                 ##print command
                 c.execute(command)
+
 
 def createReport(unique_value, c):
     WHERE = "" # protId_2<>'h1'
@@ -230,9 +236,6 @@ def createReport(unique_value, c):
         print(commandReport.format("view_ND_" + protein, WHERE))
         WHERE  += "   {} protId_2<>'{}'\n ".format(AND, protein)
         AND     = 'AND '
-        
-
-
 
 
 #execute chimera find clash
@@ -260,4 +263,3 @@ conn.commit()
 conn.close()
 
 #---- anallyze one by one, put dict as ordered dict produce csv
-

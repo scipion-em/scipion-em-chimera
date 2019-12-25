@@ -31,7 +31,7 @@
 # Modeller server in order to get five independent models. The user has to
 # select and save one of them.
 
-from chimera.protocols import ChimeraModelFromTemplate
+from ..protocols import ChimeraModelFromTemplate
 from pwem.protocols.protocol_import import ProtImportPdb
 from pwem.protocols.protocol_import.sequence import \
     ProtImportSequence
@@ -44,6 +44,7 @@ class TestImportBase(BaseTest):
     def setUpClass(cls):
         setupTestProject(cls)
         cls.dsModBuild = DataSet.getDataSet('model_building_tutorial')
+
 
 class TestImportData(TestImportBase):
     """ Import atomic structures(PDBx/mmCIF files) and sequences
@@ -163,6 +164,7 @@ class TestImportData(TestImportBase):
                                          sequence.getAlphabet()).letters
                          )
         return sequence
+
 
 class TestChimeraModellerSearch(TestImportData):
 

@@ -51,7 +51,7 @@ from pyworkflow.protocol.params import (MultiPointerParam,
                                         StringParam)
 from pyworkflow.utils.properties import Message
 
-from chimera import Plugin
+from .. import Plugin
 
 
 class ChimeraProtBase(EMProtocol):
@@ -237,7 +237,7 @@ class ChimeraProtBase(EMProtocol):
                 _inputVol = self.pdbFileToBeRefined.get().getVolume()
             else:
                 _inputVol = self.inputVolume.get()
-            if _inputVol is not None: # we have inputVol
+            if _inputVol is not None:  # we have inputVol
                 oldSampling = _inputVol.getSamplingRate()
 
             vol = Volume()  # this is an output volume object
@@ -345,7 +345,7 @@ class ChimeraProtBase(EMProtocol):
         return summary
 
     def _methods(self):
-        methodsMsgs = []
+        methodsMsgs = list()
         methodsMsgs.append("TODO")
 
         return methodsMsgs
@@ -472,7 +472,7 @@ def createScriptFile(pdbID, _3DmapId,
                      pdbFileTemplate, mapFileTemplate,
                      f, sessionFileName=''):
     f.write(chimeraScriptHeader)
-    d = {}
+    d = dict()
     d['pdbID'] = pdbID
     d['_3DmapId'] = _3DmapId
     d['pdbFileTemplate'] = pdbFileTemplate  # % 1
