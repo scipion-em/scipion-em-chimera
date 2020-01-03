@@ -40,7 +40,7 @@ class ProtContactsWizardChimera(Wizard):
     recibingAttribute = 'chainStructure'
     _targets = [(ChimeraProtContacts, [recibingAttribute])]
 
-    def show(self, form):
+    def show(self, form, *args):
         cols = ['label']
         chainWizard = GetStructureChainsWizard()
         protocol = form.protocol

@@ -45,6 +45,7 @@ class TestImportBase(BaseTest):
 class TestImportData(TestImportBase):
     """ Import atomic structures(PDBx/mmCIF files)
     """
+
     def _importStructureFromPDBId(self, pdbID):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_ID,
                 'pdbId': pdbID
@@ -148,7 +149,7 @@ class TestChimeraContact(TestImportData):
         pdb1 = self._importStructureFromFile('PDBx_mmCIF/5ni1_unit_cell_HEM.cif')
         args = {'pdbFileToBeRefined': pdb1,
                 'chainStructure': '{"A": "chainA", "A002": "HEM_A", '
-                                   '"B": "chainB", "B002": "HEM_B"}',
+                                  '"B": "chainB", "B002": "HEM_B"}',
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2
@@ -353,7 +354,6 @@ class TestChimeraContact(TestImportData):
         row = c.fetchone()
         self.assertEqual(int(row[0]), 7282)
 
-
     def testContactsSymT(self):
         # import PDB; unit cell of the tetrahedral aminopeptidase from P. horikoshii)
         # (1y0r); Ligands: Zn, As
@@ -382,7 +382,7 @@ class TestChimeraContact(TestImportData):
         cell and any protein of the neighbour unit cells.
         """
         # import structure of the unit cell of a icosahedral virus
-        pdb1 = self._importStructureFromPDBId('6b1t') # A
+        pdb1 = self._importStructureFromPDBId('6b1t')  # A
         args = {'pdbFileToBeRefined': pdb1,
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_I222,
@@ -418,7 +418,7 @@ class TestChimeraContact(TestImportData):
         cell and any protein of the neighbour unit cells.
         """
         # import structure of the unit cell of a icosahedral virus
-        pdb1 = self._importStructureFromPDBId('6b1t') # A
+        pdb1 = self._importStructureFromPDBId('6b1t')  # A
         args = {'pdbFileToBeRefined': pdb1,
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_I2n3,

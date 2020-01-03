@@ -50,11 +50,11 @@ class ChimeraProtRestore(ChimeraProtBase):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputProtocol', PointerParam,
-                  label="Input protocols", important=True,
-                  pointerClass='ChimeraProtOperate, '
-                               'ChimeraProtRigidFit, '
-                               'ChimeraModelFromTemplate',
-                  help="protocol to be reloaded")
+                      label="Input protocols", important=True,
+                      pointerClass='ChimeraProtOperate, '
+                                   'ChimeraProtRigidFit, '
+                                   'ChimeraModelFromTemplate',
+                      help="protocol to be reloaded")
 
         form.addParam('extraCommands', StringParam,
                       default='',
@@ -78,7 +78,7 @@ class ChimeraProtRestore(ChimeraProtBase):
         """
         """
         self.parentProt = self.inputProtocol.get()
-        self.parentProt.setProject(self.getProject()) # I do not really
+        self.parentProt.setProject(self.getProject())  # I do not really
         # understand this line
 
         self.inputVolume = self.parentProt.inputVolume
@@ -86,7 +86,7 @@ class ChimeraProtRestore(ChimeraProtBase):
         self.inputPdbFiles = self.parentProt.inputPdbFiles
 
     def runChimeraStep(self):
-        #create CMD file
+        # create CMD file
         parentSessionFileName = self.parentProt._getExtraPath(sessionFile)
         sessionFileName = self._getExtraPath(sessionFile)
         f = open(self._getTmpPath(chimeraScriptFileName), "w")
@@ -100,7 +100,7 @@ class ChimeraProtRestore(ChimeraProtBase):
                          sessionFileName
                          )
 
-        f.write("restoreSession('%s')\n"%parentSessionFileName)
+        f.write("restoreSession('%s')\n" % parentSessionFileName)
 
         if len(self.extraCommands.get()) > 2:
             f.write(self.extraCommands.get())
@@ -121,8 +121,8 @@ class ChimeraProtRestore(ChimeraProtBase):
     def _validate(self):
         errors = super(ChimeraProtRestore, self)._validate()
         parentProt = self.inputProtocol.get()
-        parentProt.setProject(self.getProject()) # I do not really understand
-                                                 # this line
+        parentProt.setProject(self.getProject())  # I do not really understand
+        # this line
         sessionFileName = parentProt._getExtraPath(sessionFile)
         # Check SESSION.py exists
         if not os.path.exists(sessionFileName):

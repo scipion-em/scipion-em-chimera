@@ -28,9 +28,10 @@
 import os
 
 from pyworkflow import VERSION_1_2
+
 try:
     from pwem.objects import AtomStruct
-except:
+except ImportError:
     from pwem.objects import PdbFile as AtomStruct
 
 from pwem.objects import Volume
@@ -40,7 +41,6 @@ from pwem.convert.headers import Ccp4Header
 from pwem.protocols import EMProtocol
 
 from pwem.viewers.viewer_chimera import (Chimera,
-                                         chimeraScriptFileName,
                                          sessionFile,
                                          chimeraMapTemplateFileName,
                                          chimeraScriptFileName,
@@ -102,7 +102,7 @@ class ChimeraProtBase(EMProtocol):
             able to restore the saved session by using the protocol chimera restore 
             session (SCIPION menu: Tools/Calculators/chimera restore session). ''')
 
-        return form #DO NOT remove this return
+        return form  # DO NOT remove this return
 
     # --------------------------- INSERT steps functions --------------------
     def _insertAllSteps(self):
@@ -144,13 +144,13 @@ class ChimeraProtBase(EMProtocol):
             sampling = _inputVol.getSamplingRate()
         else:
             dim = 150  # eventually we will create a PDB library that
-                       # computes PDB dim
+            # computes PDB dim
             sampling = 1.
 
         tmpFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
         Chimera.createCoordinateAxisFile(dim,
-                                 bildFileName=tmpFileName,
-                                 sampling=sampling)
+                                         bildFileName=tmpFileName,
+                                         sampling=sampling)
         f.write("runCommand('open %s')\n" % tmpFileName)
         f.write("runCommand('cofr 0,0,0')\n")  # set center of coordinates
 
@@ -184,15 +184,15 @@ class ChimeraProtBase(EMProtocol):
                 if len(models) > 1:
                     f.write("runCommand('select #%d.%s:.%s')\n"
                             % (pdbModelCounter, str(self.selectedModel),
-                                str(self.selectedChain)))
+                               str(self.selectedChain)))
                 else:
                     f.write("runCommand('select #%d:.%s')\n"
                             % (pdbModelCounter, str(self.selectedChain)))
                 # f.write("runCommand('sequence selection')\n") # To open
-                                                                # only the
-                                                                # sequence of
-                                                                # the selected
-                                                                # chain
+                # only the
+                # sequence of
+                # the selected
+                # chain
                 if self._getOutFastaSequencesFile is not None:
                     alignmentFile = self._getOutFastaSequencesFile()
                     f.write("runCommand('open %s')\n" % alignmentFile)
@@ -227,7 +227,7 @@ class ChimeraProtBase(EMProtocol):
         """
 
         # outvolName, this volume may or may not exists
-        volFileName = self._getExtraPath((chimeraMapTemplateFileName) % 1)
+        volFileName = self._getExtraPath(chimeraMapTemplateFileName % 1)
 
         # if we have outvol
         if os.path.exists(volFileName):
@@ -248,7 +248,7 @@ class ChimeraProtBase(EMProtocol):
             sampling = ccp4header.computeSampling()
             vol.setSamplingRate(sampling)
 
-            #find origin
+            # find origin
             if _inputVol is not None:
                 if self.inputVolume.get() is None:
                     origin = self.pdbFileToBeRefined.get().getVolume(). \
@@ -260,8 +260,8 @@ class ChimeraProtBase(EMProtocol):
                 newOrigin = vol.originResampled(origin, oldSampling)
                 vol.setOrigin(newOrigin)
 
-            else: # in this case there is no inputvol
-                  # but there is outputvol.
+            else:  # in this case there is no inputvol
+                # but there is outputvol.
                 if self.pdbFileToBeRefined.get().hasOrigin():
                     origin = self.pdbFileToBeRefined.get().getOrigin()
                 else:
@@ -280,7 +280,7 @@ class ChimeraProtBase(EMProtocol):
                     self.pdbFileToBeRefined.get(), vol)
             else:
                 self._defineSourceRelation(self.inputVolume.get(), vol)
-        #we do not have output volume
+        # we do not have output volume
         else:
             if self.inputVolume.get() is None:
                 vol = self.pdbFileToBeRefined.get().getVolume()
@@ -329,7 +329,7 @@ class ChimeraProtBase(EMProtocol):
     def _summary(self):
         # Think on how to update this summary with created PDB
         summary = []
-        if (self.getOutputsSize() > 0):
+        if self.getOutputsSize() > 0:
             directory = self._getExtraPath()
             counter = 1
             summary.append("Produced files:")
@@ -357,6 +357,7 @@ class ChimeraProtBase(EMProtocol):
         """Check whether `name` is on PATH."""
         from distutils.spawn import find_executable
         return find_executable(name) is not None
+
 
 # define scipion_write command
 chimeraScriptHeader = '''

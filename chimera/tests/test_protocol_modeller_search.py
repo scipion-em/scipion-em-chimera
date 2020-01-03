@@ -53,7 +53,6 @@ class TestImportData(TestImportBase):
     pdbID1 = "3lqd"  # Protein
     pdbID2 = "1aoi"  # DNA and protein
 
-
     def _importStructurePDBWoVol1(self):
         """Import the structure 3lqd (Protein structure)"""
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
@@ -167,10 +166,9 @@ class TestImportData(TestImportBase):
 
 
 class TestChimeraModellerSearch(TestImportData):
-
-    CHAIN1 = "[model: 0, chain: B, 148 residues]" # Protein
-    CHAIN2 = "[model: 0, chain: A, 98 residues]" # Protein
-    CHAIN3 = "[model: 7, chain: A, 134 residues]" # Protein
+    CHAIN1 = "[model: 0, chain: B, 148 residues]"  # Protein
+    CHAIN2 = "[model: 0, chain: A, 98 residues]"  # Protein
+    CHAIN3 = "[model: 7, chain: A, 134 residues]"  # Protein
     message = """*******************************************
 This test requires human intervention. By default is disabled
 so automatic checking do not fail but should be executed
@@ -192,7 +190,7 @@ structure -> modeller (homology)
 8) In command line type:  scipionwrite model #2.1 ,enter>
 9) close chimera 
 ************************************************"""
-    DISABLE_TEST = True 
+    DISABLE_TEST = True
 
     def testImportChainFromStructureAndSequence1(self):
         """
@@ -205,7 +203,7 @@ structure -> modeller (homology)
         args = {'pdbFileToBeRefined': structure1_PDB,
                 'inputStructureChain': self.CHAIN1,
                 'inputSequence': sequence1
-               }
+                }
         prot1 = self.newProtocol(ChimeraModelFromTemplate, **args)
         prot1.setObjLabel('1_structure chain seq,\n and seq from '
                           'user file\n')
@@ -226,7 +224,7 @@ structure -> modeller (homology)
         args = {'pdbFileToBeRefined': structure2_PDB,
                 'inputStructureChain': self.CHAIN2,
                 'inputSequence': sequence2
-               }
+                }
         prot2 = self.newProtocol(ChimeraModelFromTemplate, **args)
         prot2.setObjLabel('2_structure chain seq,\n and seq from '
                           'user file\n')

@@ -387,7 +387,7 @@ class TestChimeraOperate(TestImportData):
         structure4_PDB = self._importMut2StructurePDBWoVol()
 
         # chimera operate
-        _pdbFiles = []
+        _pdbFiles = list()
         _pdbFiles.append(structure3_PDB)
         _pdbFiles.append(structure4_PDB)
 
@@ -409,7 +409,6 @@ class TestChimeraOperate(TestImportData):
         self.launchProtocol(protChimera)
         self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
-
 
     def testChimeraOperateFromPDBAndVolumeDerived(self):
         # This test checks that chimera generates volumes starting from pdbs

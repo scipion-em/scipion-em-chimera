@@ -142,6 +142,7 @@ class TestImportData(TestImportBase):
         self.assertTrue(structureCoot_PDB.getFileName())
         return structureCoot_PDB
 
+
 class TestChimeraFit2(TestImportData):
     """ Test the rigid fit of chimera fit protocol
     """
@@ -321,7 +322,7 @@ class TestChimeraFit2(TestImportData):
         structure3_PDB = self._importMut1StructurePDBWoVol()
         structure4_PDB = self._importMut2StructurePDBWoVol()
 
-        _pdbFiles = []
+        _pdbFiles = list()
         _pdbFiles.append(structure3_PDB)
         _pdbFiles.append(structure4_PDB)
 
