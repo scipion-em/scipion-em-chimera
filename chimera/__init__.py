@@ -88,6 +88,3 @@ class Plugin(pwem.Plugin):
                        tar='chimera-1.13.1-linux_x86_64.tgz',
                        commands=chimera_1_10_1_command,
                        default=True)
-
-
-pwem.Domain.registerPlugin(__name__)
