@@ -32,12 +32,12 @@ from ..protocols import ChimeraProtOperate
 from pwem.protocols.protocol_import import (ProtImportPdb,
                                             ProtImportVolumes)
 
-from pwem import Domain
+# from pwem import Domain
 
-NMA_MASK_THRE = Domain.importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
-                                        'NMA_MASK_THRE', doRaise=True)
-XmippProtConvertToPseudoAtoms = Domain.importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms',
-                                                        'XmippProtConvertToPseudoAtoms')
+# NMA_MASK_THRE = Domain.importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms_base',
+#                                         'NMA_MASK_THRE', doRaise=True)
+# XmippProtConvertToPseudoAtoms = Domain.importFromPlugin('xmipp3.protocols.pdb.protocol_pseudoatoms',
+#                                                         'XmippProtConvertToPseudoAtoms')
 
 from pyworkflow.tests import *
 import os.path
@@ -410,45 +410,46 @@ class TestChimeraOperate(TestImportData):
         self.assertIsNotNone(protChimera.outputPdb_01.getFileName(),
                              "There was a problem with the alignment")
 
-    def testChimeraOperateFromPDBAndVolumeDerived(self):
-        # This test checks that chimera generates volumes starting from pdbs
-        # and finally a pseudoatoms pdb can be generated from that volume
-        print("Run Chimera operate using an atomic structure, generation "
-              "of a volume and generation of a pseudoatoms atomic structure "
-              "from this volume")
-
-        structure1_PDB = self._importStructurePDBWoVol()
-        extraCommands = ""
-        extraCommands += "runCommand('molmap #1 3.5 modelId 2')\n"
-        extraCommands += "runCommand('scipionwrite model #1 refmodel #2 " \
-                         "saverefmodel 1')\n"
-        extraCommands += "runCommand('stop')\n"
-
-        args = {'extraCommands': extraCommands,
-                'pdbFileToBeRefined': structure1_PDB
-                }
-        protChimera = self.newProtocol(ChimeraProtOperate, **args)
-        protChimera.setObjLabel('chimera operate\n volume generated from pdb\n '
-                                'save volume and model')
-        self.launchProtocol(protChimera)
-
-        self.assertIsNotNone(protChimera.output3Dmap.getFileName(),
-                             "There was a problem")
-        self.assertTrue(os.path.exists(protChimera.outputPdb_01.
-                                       getVolume().getFileName()))
-        volume = protChimera.output3Dmap
-
-        # create pdb fileoutput
-        args = {'inputStructure': volume,
-                'maskMode': NMA_MASK_THRE,
-                'maskThreshold': 0.5,
-                'pseudoAtomRadius': 1.5
-                }
-        protPseudoatoms = self.newProtocol(XmippProtConvertToPseudoAtoms,
-                                           **args)
-        protPseudoatoms.setObjLabel('get pseudoatoms pdb')
-        self.launchProtocol(protPseudoatoms)
-
-        # check results
-        filenamePdb = protPseudoatoms._getPath('pseudoatoms.pdb')
-        self.assertTrue(os.path.isfile(filenamePdb))
+    # This test is missplaced here.
+    # def testChimeraOperateFromPDBAndVolumeDerived(self):
+    #     # This test checks that chimera generates volumes starting from pdbs
+    #     # and finally a pseudoatoms pdb can be generated from that volume
+    #     print("Run Chimera operate using an atomic structure, generation "
+    #           "of a volume and generation of a pseudoatoms atomic structure "
+    #           "from this volume")
+    #
+    #     structure1_PDB = self._importStructurePDBWoVol()
+    #     extraCommands = ""
+    #     extraCommands += "runCommand('molmap #1 3.5 modelId 2')\n"
+    #     extraCommands += "runCommand('scipionwrite model #1 refmodel #2 " \
+    #                      "saverefmodel 1')\n"
+    #     extraCommands += "runCommand('stop')\n"
+    #
+    #     args = {'extraCommands': extraCommands,
+    #             'pdbFileToBeRefined': structure1_PDB
+    #             }
+    #     protChimera = self.newProtocol(ChimeraProtOperate, **args)
+    #     protChimera.setObjLabel('chimera operate\n volume generated from pdb\n '
+    #                             'save volume and model')
+    #     self.launchProtocol(protChimera)
+    #
+    #     self.assertIsNotNone(protChimera.output3Dmap.getFileName(),
+    #                          "There was a problem")
+    #     self.assertTrue(os.path.exists(protChimera.outputPdb_01.
+    #                                    getVolume().getFileName()))
+    #     volume = protChimera.output3Dmap
+    #
+    #     # create pdb fileoutput
+    #     args = {'inputStructure': volume,
+    #             'maskMode': NMA_MASK_THRE,
+    #             'maskThreshold': 0.5,
+    #             'pseudoAtomRadius': 1.5
+    #             }
+    #     protPseudoatoms = self.newProtocol(XmippProtConvertToPseudoAtoms,
+    #                                        **args)
+    #     protPseudoatoms.setObjLabel('get pseudoatoms pdb')
+    #     self.launchProtocol(protPseudoatoms)
+    #
+    #     # check results
+    #     filenamePdb = protPseudoatoms._getPath('pseudoatoms.pdb')
+    #     self.assertTrue(os.path.isfile(filenamePdb))
