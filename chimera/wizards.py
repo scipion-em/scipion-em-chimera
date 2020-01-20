@@ -26,21 +26,21 @@
 # **************************************************************************
 
 from pwem.wizards import GetStructureChainsWizard
-from chimera.protocols import ChimeraModelFromTemplate
+from .protocols import ChimeraModelFromTemplate
 from .editList import EntryGrid
-from chimera.protocols.protocol_contacts import \
-    ChimeraProtContacts
+from .protocols.protocol_contacts import ChimeraProtContacts
 from pyworkflow.wizard import Wizard
+
 
 class GetStructureChainsWizardChimera(GetStructureChainsWizard):
     _targets = [(ChimeraModelFromTemplate, ['inputStructureChain'])]
 
+
 class ProtContactsWizardChimera(Wizard):
     recibingAttribute = 'chainStructure'
-    _targets = [(ChimeraProtContacts, [recibingAttribute])
-                ]
+    _targets = [(ChimeraProtContacts, [recibingAttribute])]
 
-    def show(self, form):
+    def show(self, form, *args):
         cols = ['label']
         chainWizard = GetStructureChainsWizard()
         protocol = form.protocol
@@ -49,4 +49,4 @@ class ProtContactsWizardChimera(Wizard):
         for chainID, lenResidues in sorted(models[0].items()):
             rows.append(str(chainID))
 
-        EntryGrid(cols, rows, form , self.recibingAttribute)
+        EntryGrid(cols, rows, form, self.recibingAttribute)

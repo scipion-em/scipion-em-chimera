@@ -28,19 +28,22 @@ setup(
     url='https://github.com/scipion-em/scipion-em-chimera',  # Optional
     author='Marta Martinez, Roberto Marabini',  # Optional
     author_email='scipion@cnb.csic.es',  # Optional
-    keywords='scipion cryoem imageprocessing scipion-2.0',  # Optional
+    keywords='scipion cryoem imageprocessing scipion-3.0',  # Optional
     packages=find_packages(),
     include_package_data=True,
     package_data={  # Optional
-       'chimera': [''],
+        'chimera': [''],
     },
     classifiers=[  # Optional
-    # How mature is this project? Common values are
-    #   3 - Alpha
-    #   4 - Beta
-    #   5 - Production/Stable
-    'Development Status :: 3 - Alpha',
-    'Programming Language :: Python :: 3'
+        # How mature is this project? Common values are
+        #   3 - Alpha
+        #   4 - Beta
+        #   5 - Production/Stable
+        'Development Status :: 3 - Alpha',
+        'Programming Language :: Python :: 3'
     ],
+    entry_points={
+            'pyworkflow.plugin': 'chimera = chimera'
+        },
 
 )

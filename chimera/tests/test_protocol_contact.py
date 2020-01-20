@@ -24,13 +24,13 @@
 
 
 import os
-from chimera.constants import (CHIMERA_I222, CHIMERA_I2n3,
-                               CHIMERA_CYCLIC,
-                               CHIMERA_DIHEDRAL_X,
-                               CHIMERA_TETRAHEDRAL,
-                               CHIMERA_OCTAHEDRAL)
+from ..constants import (CHIMERA_I222, CHIMERA_I2n3,
+                         CHIMERA_CYCLIC,
+                         CHIMERA_DIHEDRAL_X,
+                         CHIMERA_TETRAHEDRAL,
+                         CHIMERA_OCTAHEDRAL)
 
-from chimera.protocols import ChimeraProtContacts
+from ..protocols import ChimeraProtContacts
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocols.protocol_import import ProtImportPdb
 
@@ -41,9 +41,11 @@ class TestImportBase(BaseTest):
         setupTestProject(cls)
         cls.dsModBuild = DataSet.getDataSet('model_building_tutorial')
 
+
 class TestImportData(TestImportBase):
     """ Import atomic structures(PDBx/mmCIF files)
     """
+
     def _importStructureFromPDBId(self, pdbID):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_ID,
                 'pdbId': pdbID
@@ -53,7 +55,6 @@ class TestImportData(TestImportBase):
         self.launchProtocol(protImportPDB)
         self.assertTrue(protImportPDB.outputPdb.getFileName())
         return protImportPDB.outputPdb
-
 
     def _importStructureFromFile(self, fileName):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
@@ -136,7 +137,7 @@ class TestChimeraContact(TestImportData):
             self.launchProtocol(protContacts)
         except Exception as e:
             self.assertTrue(True)
-            print("This test should return a error message as '" \
+            print("This test should return a error message as '"
                   " Error: Symmetry Order should be a positive integer.\n")
 
             return
@@ -148,7 +149,7 @@ class TestChimeraContact(TestImportData):
         pdb1 = self._importStructureFromFile('PDBx_mmCIF/5ni1_unit_cell_HEM.cif')
         args = {'pdbFileToBeRefined': pdb1,
                 'chainStructure': '{"A": "chainA", "A002": "HEM_A", '
-                                   '"B": "chainB", "B002": "HEM_B"}',
+                                  '"B": "chainB", "B002": "HEM_B"}',
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2
@@ -253,7 +254,7 @@ class TestChimeraContact(TestImportData):
             self.launchProtocol(protContacts)
         except Exception as e:
             self.assertTrue(True)
-            print("This test should return a error message as '" \
+            print("This test should return a error message as '"
                   " Error: Symmetry Order should be a positive integer.\n")
 
             return
@@ -353,7 +354,6 @@ class TestChimeraContact(TestImportData):
         row = c.fetchone()
         self.assertEqual(int(row[0]), 7282)
 
-
     def testContactsSymT(self):
         # import PDB; unit cell of the tetrahedral aminopeptidase from P. horikoshii)
         # (1y0r); Ligands: Zn, As
@@ -382,7 +382,7 @@ class TestChimeraContact(TestImportData):
         cell and any protein of the neighbour unit cells.
         """
         # import structure of the unit cell of a icosahedral virus
-        pdb1 = self._importStructureFromPDBId('6b1t') # A
+        pdb1 = self._importStructureFromPDBId('6b1t')  # A
         args = {'pdbFileToBeRefined': pdb1,
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_I222,
@@ -418,7 +418,7 @@ class TestChimeraContact(TestImportData):
         cell and any protein of the neighbour unit cells.
         """
         # import structure of the unit cell of a icosahedral virus
-        pdb1 = self._importStructureFromPDBId('6b1t') # A
+        pdb1 = self._importStructureFromPDBId('6b1t')  # A
         args = {'pdbFileToBeRefined': pdb1,
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_I2n3,

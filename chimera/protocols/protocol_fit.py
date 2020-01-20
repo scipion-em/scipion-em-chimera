@@ -28,6 +28,7 @@
 
 from .protocol_base import ChimeraProtBase
 
+
 class ChimeraProtRigidFit(ChimeraProtBase):
     """Protocol to perform rigid fit using Chimera.
         Execute command *scipionwrite [model #n] [refmodel #p]
@@ -55,7 +56,7 @@ class ChimeraProtRigidFit(ChimeraProtBase):
         if self.inputVolume.get() is None:
             fnVol = self.pdbFileToBeRefined.get().getVolume()
             index, fn = fnVol.getLocation()
-            print("Volume: Volume associated to atomic structure %s(%d)\n" \
+            print("Volume: Volume associated to atomic structure %s(%d)\n"
                   % (fn, index))
         else:
             fnVol = self.inputVolume.get()

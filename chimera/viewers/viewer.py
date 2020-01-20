@@ -28,13 +28,13 @@
 import os
 
 from pwem.convert import ImageHandler
-from chimera.protocols.protocol_fit import ChimeraProtRigidFit
-from chimera.protocols.protocol_operate import ChimeraProtOperate
-from chimera.protocols.protocol_restore import ChimeraProtRestore
-from chimera.protocols.protocol_modeller_search import ChimeraModelFromTemplate
+from ..protocols.protocol_fit import ChimeraProtRigidFit
+from ..protocols.protocol_operate import ChimeraProtOperate
+from ..protocols.protocol_restore import ChimeraProtRestore
+from ..protocols.protocol_modeller_search import ChimeraModelFromTemplate
 
 from pwem.viewers.viewer_chimera import (Chimera,
-                                                  sessionFile)
+                                         sessionFile)
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
 
 
@@ -56,7 +56,7 @@ class ChimeraViewerBase(Viewer):
             try:
                 _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
             except:
-                _inputVol = self.protocol.inputProtocol.get().\
+                _inputVol = self.protocol.inputProtocol.get(). \
                     pdbFileToBeRefined.get().getVolume()
 
         if _inputVol is not None:
@@ -79,8 +79,8 @@ class ChimeraViewerBase(Viewer):
         #     "axis_output.bild"))
         bildFileName = self.protocol._getTmpPath("axis_output.bild")
         Chimera.createCoordinateAxisFile(dim,
-                                 bildFileName=bildFileName,
-                                 sampling=sampling)
+                                         bildFileName=bildFileName,
+                                         sampling=sampling)
         fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
         f = open(fnCmd, 'w')
         # change to workingDir
@@ -91,9 +91,9 @@ class ChimeraViewerBase(Viewer):
         f.write("cofr 0,0,0\n")  # set center of coordinates
 
         if _showVol is not None:
-        # In case we have PDBs only, the _inputVol is None:
-        #     showVolFileName = os.path.abspath(
-        #                 ImageHandler.removeFileType(_showVol.getFileName()))
+            # In case we have PDBs only, the _inputVol is None:
+            #     showVolFileName = os.path.abspath(
+            #                 ImageHandler.removeFileType(_showVol.getFileName()))
             showVolFileName = ImageHandler.removeFileType(_showVol.getFileName())
             f.write("open %s\n" % showVolFileName)
             if _showVol.hasOrigin():
@@ -117,6 +117,7 @@ class ChimeraViewerBase(Viewer):
         Chimera.runProgram(Chimera.getProgram(), fnCmd + "&")
         return []
 
+
 class ChimeraRestoreViewer(Viewer):
     """ Visualize the output of protocols protocol_fit and protocol_operate """
     _label = 'viewer restore'
@@ -131,7 +132,7 @@ class ChimeraRestoreViewer(Viewer):
         f.write('cd %s\n' % os.getcwd())
         path1 = os.path.join(self.protocol._getExtraPath(), sessionFile)
         if os.path.exists(path1):
-            #restored SESSION
+            # restored SESSION
             path = path1
         else:
             # SESSION from inputProtocol
@@ -148,9 +149,11 @@ class ChimeraProtRigidFitViewer(ChimeraViewerBase):
     _label = 'viewer fit'
     _targets = [ChimeraProtRigidFit]
 
+
 class ChimeraProtOperateViewer(ChimeraViewerBase):
     _label = 'viewer operate'
     _targets = [ChimeraProtOperate]
+
 
 class ChimeraModelFromTemplateViewer(ChimeraViewerBase):
     _label = 'viewer model from template'
