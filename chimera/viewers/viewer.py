@@ -27,7 +27,7 @@
 
 import os
 
-from pwem.convert import ImageHandler
+from pwem.emlib.image import ImageHandler
 from ..protocols.protocol_fit import ChimeraProtRigidFit
 from ..protocols.protocol_operate import ChimeraProtOperate
 from ..protocols.protocol_restore import ChimeraProtRestore

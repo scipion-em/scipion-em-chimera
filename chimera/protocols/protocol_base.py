@@ -35,7 +35,7 @@ except ImportError:
     from pwem.objects import PdbFile as AtomStruct
 
 from pwem.objects import Volume
-from pwem.convert import ImageHandler
+from pwem.emlib.image import ImageHandler
 from pwem.objects import Transform
 from pwem.convert.headers import Ccp4Header
 from pwem.protocols import EMProtocol
