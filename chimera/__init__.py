@@ -28,19 +28,11 @@ import os
 import pwem
 import pyworkflow.utils as pwutils
 
-
-from .bibtex import _bibtex  # Load bibtex dict with references
-
 from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_10_1
 
+
 _logo = "chimera_logo.png"
-
 _references = ['Pettersen2004']
-
-# The following class is required for Scipion to detect this Python module
-# as a Scipion Plugin. It needs to specify the PluginMeta __metaclass__
-# Some function related to the underlying package binaries need to be
-# implemented
 
 
 class Plugin(pwem.Plugin):
@@ -88,6 +80,3 @@ class Plugin(pwem.Plugin):
                        tar='chimera-1.13.1-linux_x86_64.tgz',
                        commands=chimera_1_10_1_command,
                        default=True)
-
-
-pwem.Domain.registerPlugin(__name__)

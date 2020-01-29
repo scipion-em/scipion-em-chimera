@@ -84,7 +84,7 @@ class TestImportData(TestImportBase):
                     'PDBx_mmCIF/1g03.cif'),
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import structure\n 1aoi')
+        protImportPDB.setObjLabel('import structure\n 1g03')
         self.launchProtocol(protImportPDB)
         structure3_PDB = protImportPDB.outputPdb
         return structure3_PDB
