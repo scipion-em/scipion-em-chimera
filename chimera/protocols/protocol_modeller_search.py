@@ -72,6 +72,8 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                        "structure to model your specific sequence.")
         param = form.getParam('inputVolume')
         param.condition.set('False')
+        param = form.getParam('inputVolumes')
+        param.condition.set('False')
         # hide inputPdbFiles
         param = form.getParam('inputPdbFiles')
         param.condition.set('False')

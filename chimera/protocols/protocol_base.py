@@ -27,7 +27,7 @@
 
 import os
 
-from pyworkflow import VERSION_1_2
+from pyworkflow import VERSION_3_0
 
 try:
     from pwem.objects import AtomStruct
@@ -61,16 +61,21 @@ class ChimeraProtBase(EMProtocol):
         pdb to scipion. Default values are model=#0,
         refmodel =#1 and saverefmodel 0 (false).
         model refers to the pdb file. refmodel to a 3Dmap"""
-    _version = VERSION_1_2
+    _version = VERSION_3_0
 
     # --------------------------- DEFINE param functions --------------------
     def _defineParams(self, form, doHelp=True):
         form.addSection(label='Input')
         form.addParam('inputVolume', PointerParam, pointerClass="Volume",
                       label='Input Volume', allowsNull=True,
+                      important=True,
                       help="Volume to process")
+        form.addParam('inputVolumes', MultiPointerParam, pointerClass="Volume",
+                      label='Input additional Volumes', allowsNull=True,
+                      help="Other Volumes")
         form.addParam('pdbFileToBeRefined', PointerParam,
-                      pointerClass="AtomStruct",
+                      pointerClass="AtomStruct", allowsNull=True,
+                      important=True,
                       label='Atomic structure',
                       help="PDBx/mmCIF file that you can save after operating "
                            "with it.")
@@ -130,7 +135,7 @@ class ChimeraProtBase(EMProtocol):
                          self._getExtraPath(chimeraPdbTemplateFileName),
                          self._getExtraPath(chimeraMapTemplateFileName),
                          f,
-                         self._getExtraPath(sessionFile)
+                         self._getExtraPath(sessionFile),
                          )
 
         if self.inputVolume.get() is None:
@@ -166,6 +171,12 @@ class ChimeraProtBase(EMProtocol):
                     % _inputVol.getSamplingRate())
             f.write("runCommand('volume #1 origin %0.2f,%0.2f,%0.2f')\n"
                     % (x_input, y_input, z_input))
+
+        if self.inputVolumes is not None:
+            pdbModelCounter += 1
+            for vol in self.inputVolumes:
+                f.write("runCommand('open %s')\n" % vol.get().getFileName())
+                pdbModelCounter += 1
 
         pdbFileToBeRefined = self.pdbFileToBeRefined.get()
         f.write("runCommand('open %s')\n" % os.path.abspath(
@@ -206,6 +217,8 @@ class ChimeraProtBase(EMProtocol):
                 x, y, z = pdb.get().getOrigin().getShifts()
                 f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
                         "coord #0')\n" % (x, y, z, pdbModelCounter))
+            # TODO: Check this this this this this this
+            pdbModelCounter += 1
 
         # run the text:
         if len(self.extraCommands.get()) > 2:
@@ -423,7 +436,7 @@ chimeraScriptMain = '''
      # model    = chimera.openModels.list()[modelId]
      # TODO: this ID is wrong if models before refmodel are modified
      refModel = chimera.openModels.list()[refModelId]
-
+     
      #for m in chimera.openModels.list():
      #    if m.id != modelId:
      #        continue
@@ -441,6 +454,7 @@ chimeraScriptMain = '''
      if saverefmodel:
          _save_grid_data(refModel.data,"%(chimeraMapTemplateFileName)s" )
      # always save session when write
+     
      # beep(0.1)
 
   doExtensionFunc(scipionWrite,args)
@@ -460,7 +474,6 @@ def cmd_scipionRestoreSession(scipionRestoreSession,args):
      beep(0.1)
 
   doExtensionFunc(scipionRestoreSession,args)
-
 
 from Midas.midas_text import addCommand
 addCommand('scipionwrite', cmd_scipionWrite, help="http://scipion.cnb.csic.es")

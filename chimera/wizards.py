@@ -25,18 +25,45 @@
 # *
 # **************************************************************************
 
-from pwem.wizards import GetStructureChainsWizard
-from .protocols import ChimeraModelFromTemplate
+from pwem.wizards import GetStructureChainsWizard, pwobj, emconv
+from .protocols import ChimeraModelFromTemplate, ChimeraSubtractionMaps
 from .editList import EntryGrid
 from .protocols.protocol_contacts import ChimeraProtContacts
 from pyworkflow.wizard import Wizard
+from pyworkflow.gui.tree import ListTreeProviderString
+from pyworkflow.gui import dialog
 
 
 class GetStructureChainsWizardChimera(GetStructureChainsWizard):
-    _targets = [(ChimeraModelFromTemplate, ['inputStructureChain'])]
+    _targets = [(ChimeraModelFromTemplate, ['inputStructureChain']),
+                (ChimeraSubtractionMaps, ['inputStructureChain'])]
 
+class GetStructureChains2WizardChimera(GetStructureChainsWizard):
+    _targets = [(ChimeraSubtractionMaps, ['selectStructureChain'])]
+
+    def show(self, form, *params):
+        protocol = form.protocol
+        try:
+            modelsLength, modelsSeq = self.getModelsChainsStep(protocol)
+        except Exception as e:
+            print("ERROR: ", e)
+            return
+
+        self.editionListOfChains(modelsLength)
+        finalChainList = []
+        for i in self.chainList:
+            finalChainList.append(pwobj.String(i))
+        provider = ListTreeProviderString(finalChainList)
+        dlg = dialog.ListDialog(form.root, "Model chains", provider,
+                                "Select one of the chains (model, chain, "
+                                "number of chain residues)")
+        form.setVar('selectStructureChain', dlg.values[0].get())
 
 class ProtContactsWizardChimera(Wizard):
+    """ Return a table with two columns. First one is the chain id second one may
+    be used by the user to group merge chains into a single object. If two
+    or more chains are merged, the contacts will NOT be computed between the chains
+    belonging to the same group"""
     recibingAttribute = 'chainStructure'
     _targets = [(ChimeraProtContacts, [recibingAttribute])]
 
@@ -44,9 +71,61 @@ class ProtContactsWizardChimera(Wizard):
         cols = ['label']
         chainWizard = GetStructureChainsWizard()
         protocol = form.protocol
-        models = chainWizard.getModelsChainsStep(protocol)
+        models, modelsFirstResidue = chainWizard.getModelsChainsStep(protocol)
         rows = []
         for chainID, lenResidues in sorted(models[0].items()):
             rows.append(str(chainID))
 
         EntryGrid(cols, rows, form, self.recibingAttribute)
+
+class GetChainResiduesWizardChimera(GetStructureChainsWizard):
+    _targets = [(ChimeraSubtractionMaps, ['firstResidueToRemove'])]
+
+    def editionListOfResidues(self, modelsFirstResidue, model, chain):
+        self.residueList = []
+        for modelID, chainDic in modelsFirstResidue.items():
+            if int(model) == modelID:
+                for chainID, seq_number in chainDic.items():
+                    if chain == chainID:
+                        for i in seq_number:
+                            self.residueList.append(
+                                '{"residue": %d, "%s"}' % (i[0], str(i[1])))
+
+    def getResidues(self, form):
+        protocol = form.protocol
+        try:
+            modelsLength, modelsFirstResidue = self.getModelsChainsStep(protocol)
+        except Exception as e:
+            print("ERROR: ", e)
+            return
+        if protocol.selectStructureChain.get() is not None:
+            selection = protocol.selectStructureChain.get()
+        else:
+            selection = protocol.inputStructureChain.get()
+        model = selection.split(',')[0].split(':')[1].strip()
+        chain = selection.split(',')[1].split(':')[1].split('"')[1]
+        self.editionListOfResidues(modelsFirstResidue, model, chain)
+        finalResiduesList = []
+        for i in self.residueList:
+            finalResiduesList.append(pwobj.String(i))
+        return finalResiduesList
+
+    def show(self, form, *params):
+        finalResiduesList = self.getResidues(form)
+        provider = ListTreeProviderString(finalResiduesList)
+        dlg = dialog.ListDialog(form.root, "Chain residues", provider,
+                                "Select one residue (residue number, "
+                                "residue name)")
+        form.setVar('firstResidueToRemove', dlg.values[0].get())
+
+class GetChainResidues2WizardChimera(GetChainResiduesWizardChimera):
+    _targets = [(ChimeraSubtractionMaps, ['lastResidueToRemove'])]
+
+    def show(self, form, *params):
+        finalResiduesList = self.getResidues(form)
+        provider = ListTreeProviderString(finalResiduesList)
+        dlg = dialog.ListDialog(form.root, "Chain residues", provider,
+                                "Select one residue (residue number, "
+                                "residue name)")
+        form.setVar('lastResidueToRemove', dlg.values[0].get())
+
