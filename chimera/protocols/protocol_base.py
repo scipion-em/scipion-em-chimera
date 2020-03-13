@@ -55,12 +55,7 @@ from .. import Plugin
 
 
 class ChimeraProtBase(EMProtocol):
-    """Protocol to perform rigid fit using Chimera.
-        Execute command *scipionwrite [model #n] [refmodel #p]
-        [saverefmodel 0|1]* from command line in order to transferm fitted
-        pdb to scipion. Default values are model=#0,
-        refmodel =#1 and saverefmodel 0 (false).
-        model refers to the pdb file. refmodel to a 3Dmap"""
+    """Base class  for chimera protocol"""
     _version = VERSION_3_0
 
     # --------------------------- DEFINE param functions --------------------
@@ -92,20 +87,10 @@ class ChimeraProtBase(EMProtocol):
                       help="Add extra commands in cmd file. Use for testing")
         if doHelp:
             form.addSection(label='Help')
-            form.addLine('''Execute command *scipionwrite [model #n] [refmodel #p] 
-            [saverefmodel 0|1]* from command line in order to transfer structures 
-            and 3D map volumes to SCIPION. 
-            In the particular case in which you have only a volume and a structure, 
-            default values are model #2, refmodel #1 and saverefmodel 0 (false). 
-            Model refers to the PDBx/mmCIF file, refmodel to a 3D map volume. 
-            If you have several structures and no volumes, you can save 
-            all of them by executing commands *scipionwrite [model #1]*, 
-            *scipionwrite [model #2]*, *scipionwrite [model #3]*, and so on.
-            When you use the command line scipionwrite, the Chimera session will 
-            be saved by default. Additionally, you can save the Chimera session 
-            whenever you want by executing the command *scipionss". You will be 
-            able to restore the saved session by using the protocol chimera restore 
-            session (SCIPION menu: Tools/Calculators/chimera restore session). ''')
+            form.addLine(''' scipionwrite model #n [refmodel #p] [prefix stringAddedToFilename]
+            scipionss
+            scipionrs
+            Type 'help command' in chimera command line for details (command is the command name)''')
 
         return form  # DO NOT remove this return
 
@@ -440,10 +425,10 @@ def cmd_scipionRestoreSession(scipionRestoreSession,args):
   doExtensionFunc(scipionRestoreSession,args)
 
 from Midas.midas_text import addCommand
-addCommand('scipionwrite', cmd_scipionWrite, help="http://scipion.cnb.csic.es")
-addCommand('scipionw', cmd_scipionWrite, help="http://scipion.cnb.csic.es")
-addCommand('scipionss', cmd_scipionSaveSession, help="http://scipion.cnb.csic.es")
-addCommand('scipionrs', cmd_scipionRestoreSession, help="http://scipion.cnb.csic.es")
+addCommand('scipionwrite', cmd_scipionWrite, help="https://github.com/scipion-em/scipion-em-chimera/wiki/scipionwrite")
+addCommand('scipionw', cmd_scipionWrite, help="https://github.com/scipion-em/scipion-em-chimera/wiki/scipionwrite")
+addCommand('scipionss', cmd_scipionSaveSession, help="https://github.com/scipion-em/scipion-em-chimera/wiki/scipionss")
+addCommand('scipionrs', cmd_scipionRestoreSession, help="https://github.com/scipion-em/scipion-em-chimera/wiki/scipionrs")
 '''
 
 
