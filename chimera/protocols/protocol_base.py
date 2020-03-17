@@ -400,7 +400,8 @@ chimeraScriptMain = '''
      # alternative way to save  the pdb file using a command
 
      try:
-         saveSession('%(sessionFileName)s')
+         if prefix is None or prefix != 'DONOTSAVESESSION':  # this is needed for the tests
+             saveSession('%(sessionFileName)s')
      except Exception as e:
          f = open ('/tmp/chimera_error.txt','w')
          f.write(e.message)
