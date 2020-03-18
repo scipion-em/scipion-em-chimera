@@ -27,7 +27,11 @@
 
 import os
 
+from pwem.convert import Ccp4Header
 from pwem.emlib.image import ImageHandler
+from pwem.objects import Volume
+from pwem.objects import Transform
+
 from ..protocols.protocol_fit import ChimeraProtRigidFit
 from ..protocols.protocol_operate import ChimeraProtOperate
 from ..protocols.protocol_restore import ChimeraProtRestore
@@ -45,38 +49,44 @@ class ChimeraViewerBase(Viewer):
     def _visualize(self, obj, **args):
         # THe input map or pdb may be a parameter from the protocol
         # or from the parent protocol.
+        dim = 150.
+        sampling = 1.
+        _inputVol = None
+        directory = self.protocol._getExtraPath()
         try:
-            _inputVol = self.protocol.inputVolume.get()
-            directory = self.protocol._getExtraPath()
-        except:
-            _inputVol = self.protocol.inputProtocol.get().inputVolume.get()
-            directory = self.protocol.inputProtocol.get()._getExtraPath()
-
-        if _inputVol is None:
             try:
-                _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
+                if self.protocol.inputVolume.get() is not None:
+                    _inputVol = self.protocol.inputVolume.get()
+                elif self.protocol.pdbFileToBeRefined.get().getVolume() is not None:
+                    _inputVol = self.protocol.pdbFileToBeRefined.get().getVolume()
+                elif self.protocol.inputVolumes[0] is not None:
+                    _inputVol = self.protocol.inputVolumes[0].get()
             except:
-                _inputVol = self.protocol.inputProtocol.get(). \
-                    pdbFileToBeRefined.get().getVolume()
+                output3DMapList = []
+                for filename in sorted(os.listdir(directory)):
+                    if filename.endswith(".mrc"):
+                        output3DMapList.append(filename.split('.')[0])
+                        output3DMap = str(output3DMapList[0])
+                        if len(output3DMap) > 0:
+                            _inputVol = self.protocol.output3DMap
+        except:
+            # TODO: I do not know if we still need this part
+            # Remark that inputProtocol does not longer exist, it has been replaced by inputProtocolDict
+            # Compare with the previous code, specially the alternative directory
+            for item in list(self.protocol.inputProtocolDict().values()):
+                if item.hasAttribute('inputVolume') and item.inputVolume.get() is not None:
+                    _inputVol = item.inputVolume.get()
+                    break
+                elif item.hasAttribute('pdbFileToBeRefined') and \
+                    item.pdbFileToBeRefined.get().getVolume() is not None:
+                    _inputVol = item.pdbFileToBeRefined.get().getVolume()
+                    break
+                # directory = item._getExtraPath()
 
         if _inputVol is not None:
             dim = _inputVol.getDim()[0]
             sampling = _inputVol.getSamplingRate()
-            _showVol = _inputVol
-        else:
-            try:
-                outputVol = self.protocol.output3Dmap
-                dim = outputVol.getDim()[0]
-                sampling = outputVol.getSamplingRate()
-                _showVol = outputVol
-            except:
-                # To show pdbs only
-                dim = 150.
-                sampling = 1.
-                _showVol = None
 
-        # bildFileName = os.path.abspath(self.protocol._getTmpPath(
-        #     "axis_output.bild"))
         bildFileName = self.protocol._getTmpPath("axis_output.bild")
         Chimera.createCoordinateAxisFile(dim,
                                          bildFileName=bildFileName,
@@ -89,21 +99,37 @@ class ChimeraViewerBase(Viewer):
         f.write('cd %s\n' % os.getcwd())
         f.write("open %s\n" % bildFileName)
         f.write("cofr 0,0,0\n")  # set center of coordinates
-
-        if _showVol is not None:
-            # In case we have PDBs only, the _inputVol is None:
-            #     showVolFileName = os.path.abspath(
-            #                 ImageHandler.removeFileType(_showVol.getFileName()))
-            showVolFileName = ImageHandler.removeFileType(_showVol.getFileName())
-            f.write("open %s\n" % showVolFileName)
-            if _showVol.hasOrigin():
-                x, y, z = _showVol.getOrigin().getShifts()
+        inputVolFileName = ''
+        counter = 1.
+        if _inputVol is not None:
+            # In case we have PDBs only, _inputVol is None:
+            inputVolFileName = ImageHandler.removeFileType(_inputVol.getFileName())
+            f.write("open %s\n" % inputVolFileName)
+            if _inputVol.hasOrigin():
+                x, y, z = _inputVol.getOrigin().getShifts()
             else:
-                x, y, z = _showVol.getOrigin(force=True).getShifts()
+                x, y, z = _inputVol.getOrigin(force=True).getShifts()
+            f.write("volume #%d style surface voxelSize %f\n"
+                    "volume #%d origin %0.2f,%0.2f,%0.2f\n"
+                    % (counter, _inputVol.getSamplingRate(), counter, x, y, z))
 
-            f.write("volume #1 style surface voxelSize %f\n"
-                    "volume #1 origin %0.2f,%0.2f,%0.2f\n"
-                    % (_showVol.getSamplingRate(), x, y, z))
+        for filename in sorted(os.listdir(directory)):
+            if filename.endswith(".mrc") and filename != inputVolFileName:
+                counter += 1
+                volFileName = os.path.join(directory, filename)
+                vol = Volume()
+                vol.setFileName(volFileName)
+
+                # fix mrc header
+                ccp4header = Ccp4Header(volFileName, readHeader=True)
+                sampling = ccp4header.computeSampling()
+                origin = Transform()
+                shifts = ccp4header.getOrigin()
+                origin.setShiftsTuple(shifts)
+                f.write("open %s\n" % volFileName)
+                f.write("volume #%d style surface voxelSize %f\n"
+                        "volume #%d origin %0.2f,%0.2f,%0.2f\n"
+                        % (counter, sampling, counter, shifts[0], shifts[1], shifts[2]))
 
         for filename in os.listdir(directory):
             if filename.endswith(".pdb") or filename.endswith(".cif"):
