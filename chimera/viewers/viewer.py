@@ -112,6 +112,8 @@ class ChimeraViewerBase(Viewer):
             f.write("volume #%d style surface voxelSize %f\n"
                     "volume #%d origin %0.2f,%0.2f,%0.2f\n"
                     % (counter, _inputVol.getSamplingRate(), counter, x, y, z))
+        else:
+            counter = 0
 
         for filename in sorted(os.listdir(directory)):
             if filename.endswith(".mrc") and filename != inputVolFileName:
