@@ -347,7 +347,7 @@ def saveModel(_model, _refModel, fileName, mapFileName, prefix):
     if _model.find('.') != -1:
         modelSubId = int(_model[1]) 
 
-    # get model so we can asses if it is a 3D map or a atomic structure
+    # get model so we can asses if it is a 3D map or an atomic structure
     model = openModels.list(id=modelId, subid=modelSubId)[0]
     
     if isinstance(model, _molecule.Molecule):

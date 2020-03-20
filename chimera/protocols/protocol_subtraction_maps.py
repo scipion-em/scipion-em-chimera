@@ -27,8 +27,14 @@
 
 import os
 from pwem import *
-from pwem.viewers import Chimera
-from pwem.viewers.viewer_chimera import chimeraScriptFileName
+from pwem.convert import Ccp4Header
+from pwem.objects import Volume
+from pwem.objects import Transform
+try:
+    from pwem.objects import AtomStruct
+except ImportError:
+    from pwem.objects import PdbFile as AtomStruct
+
 from pyworkflow import VERSION_3_0
 
 from pwem.convert.atom_struct import AtomicStructHandler
@@ -39,26 +45,19 @@ from pyworkflow.protocol.params import (PointerParam,
                                         FloatParam,
                                         BooleanParam,
                                         StringParam, MultiPointerParam)
-from pwem.convert.sequence import (SequenceHandler,
-                                   saveFileSequencesToAlign,
-                                   alignClustalSequences,
-                                   alignBioPairwise2Sequences,
-                                   alignMuscleSequences)
-from collections import OrderedDict
-from ..constants import CLUSTALO, MUSCLE
+
 from pwem.constants import (SYM_DIHEDRAL_X)
 from ..constants import (CHIMERA_I222)
 from ..convert import CHIMERA_LIST
 from pwem.protocols import EMProtocol
-from .protocol_base import chimeraScriptMain, \
-    chimeraScriptHeader, \
-    chimeraMapTemplateFileName, chimeraPdbTemplateFileName
+from .protocol_base import createScriptFile
 from pwem.viewers.viewer_chimera import (Chimera,
                                          sessionFile,
                                          chimeraMapTemplateFileName,
                                          chimeraScriptFileName,
                                          chimeraPdbTemplateFileName)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
+from .. import Plugin
 
 class ChimeraSubtractionMaps(EMProtocol):
     """Protocol to subtract two volumes.
@@ -209,6 +208,11 @@ class ChimeraSubtractionMaps(EMProtocol):
                       label="Gaussian filter width",
                       default=1.5,
                       help="Set the width of the Gaussian filter.")
+        form.addParam('extraCommands', StringParam,
+                      default='',
+                      condition='False',
+                      label='Extra commands for chimera viewer',
+                      help="Add extra commands in cmd file. Use for testing")
         form.addSection(label='Help')
         form.addLine("Step 1:\nIn the sequence window your target "
                          "sequence (and other additional sequences that you "
@@ -248,7 +252,7 @@ class ChimeraSubtractionMaps(EMProtocol):
     def _insertAllSteps(self):
         self._insertFunctionStep('prerequisitesStep')
         self._insertFunctionStep('runChimeraStep')
-        # self._insertFunctionStep('createOutput')
+        self._insertFunctionStep('createOutput')
 
 
     def prerequisitesStep(self):
@@ -261,7 +265,7 @@ class ChimeraSubtractionMaps(EMProtocol):
         if self.mapOrModel.get() == 0: # 0 -> map
             self.subVol = self.inputVolume2.get()
             self.subVolName = os.path.abspath(self.subVol.getFileName())
-            print("Map to self.subVolubtract:\n %s\n" % self.subVolName)
+            print("Map to subtract:\n %s\n" % self.subVolName)
         else: # 1 -> ATOMIC STRUCT
             self.atomStruct = self.pdbFileToBeRefined.get()
             self.atomStructName = os.path.abspath(self.atomStruct.getFileName())
@@ -274,14 +278,14 @@ class ChimeraSubtractionMaps(EMProtocol):
         f = open(self._getTmpPath(chimeraScriptFileName), "w")
         f.write("from chimera import runCommand\n")
 
-        # # create coherent header
-        # createScriptFile(1,  # model id pdb
-        #                  1,  # model id 3D map
-        #                  self._getExtraPath(chimeraPdbTemplateFileName),
-        #                  self._getExtraPath(chimeraMapTemplateFileName),
-        #                  f,
-        #                  self._getExtraPath(sessionFile),
-        #                  )
+        # create coherent header
+        createScriptFile(1,  # model id pdb
+                         1,  # model id 3D map
+                         self._getExtraPath(chimeraPdbTemplateFileName),
+                         self._getExtraPath(chimeraMapTemplateFileName),
+                         f,
+                         self._getExtraPath(sessionFile),
+                         )
 
         # building coordinate axes
         dim = self.vol.getDim()[0]
@@ -291,7 +295,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                                          sampling=sampling)
         # input volume
         chimeraModelId = 0
-        f.write("runCommand('open %s model-ID %d')\n" % (bildFileName, chimeraModelId))
+        f.write("runCommand('open %s')\n" % (bildFileName))
         f.write("runCommand('cofr 0,0,0')\n")  # set center of coordinates
         # origin coordinates
         chimeraModelIdM = chimeraModelId + 1 # 1, Minuend
@@ -304,8 +308,8 @@ class ChimeraSubtractionMaps(EMProtocol):
         # input vol with its origin coordinates
         chimeraModelIdS = chimeraModelIdM + 1  # 2 Subtrahend
         if self.mapOrModel == 0:
-            f.write("runCommand('open %s model-ID %d')\n" %
-                    (self.subVolName, chimeraModelIdS))
+            f.write("runCommand('open %s')\n" %
+                    (self.subVolName))
             f.write("runCommand('volume #%d style surface voxelSize %f')\n"
                     % (chimeraModelIdS, sampling))
             x, y, z = self.subVol.getShiftsFromOrigin()
@@ -319,7 +323,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                 aSH = AtomicStructHandler()
                 aSH.read(self.atomStructName)
                 aSH.getStructure()
-                print("aSH: ", aSH)
+
                 modelsLength, modelsFirstResidue = aSH.getModelsChains()
                 # model and chain selected
                 chain = self.selectStructureChain.get()
@@ -335,7 +339,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                 #             import json
                 #             chainIdDict = json.loads(self.inputStructureChain.get())
 
-                f.write("runCommand('')")
+                f.write("rc('')")
 
         chimeraModelIdD = chimeraModelIdS + 1  # 3 Diff map
         f.write("runCommand('vop subtract #%d #%d modelId #%d "
@@ -345,180 +349,61 @@ class ChimeraSubtractionMaps(EMProtocol):
         chimeraModelIdF = chimeraModelIdD + 1
         if self.filterToApplyToDiffMap.get() == 0:
             f.write("runCommand('vop gaussian #%d sd %0.3f')\n"
-                    % (chimeraModelIdF, self.widthFilter.get()))
+                    % (chimeraModelIdD, self.widthFilter.get()))
         else:
-            f.write("runCommand('vop laplacian #%d')\n"
-                    % (chimeraModelIdF))
+            f.write("rc('vop laplacian #%d')\n"
+                    % (chimeraModelIdD))
 
-# xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-#             if self.inputVolumes is not None:
-#                 f.write("runCommand('open %s model-ID %d')\n" %
-#                         (self.subVolName, chimeraModelId))
-#
-#
-#
-#                 pdbModelCounter += 1
-#                 for vol in self.inputVolumes:
-#                     f.write("runCommand('open %s')\n" % vol.get().getFileName())
-#                     pdbModelCounter += 1
-#
-#             pdbFileToBeRefined = self.pdbFileToBeRefined.get()
-#             f.write("runCommand('open %s')\n" % os.path.abspath(
-#                 pdbFileToBeRefined.getFileName()))
-#             if pdbFileToBeRefined.hasOrigin():
-#                 x, y, z = (pdbFileToBeRefined.getOrigin().getShifts())
-#                 f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
-#                         "coord #0')\n" % (x, y, z, pdbModelCounter))
-#
-#             # Alignment of sequence and structure
-#             if (hasattr(self, 'inputSequence') and
-#                     hasattr(self, 'inputStructureChain')):
-#                 if (self.inputSequence.get() is not None and
-#                         self.inputStructureChain.get() is not None):
-#                     models = self.structureHandler.getModelsChains()
-#                     if len(models) > 1:
-#                         f.write("runCommand('select #%d.%s:.%s')\n"
-#                                 % (pdbModelCounter, str(self.selectedModel),
-#                                    str(self.selectedChain)))
-#                     else:
-#                         f.write("runCommand('select #%d:.%s')\n"
-#                                 % (pdbModelCounter, str(self.selectedChain)))
-#                     # f.write("runCommand('sequence selection')\n") # To open
-#                     # only the
-#                     # sequence of
-#                     # the selected
-#                     # chain
-#                     if self._getOutFastaSequencesFile is not None:
-#                         alignmentFile = self._getOutFastaSequencesFile()
-#                         f.write("runCommand('open %s')\n" % alignmentFile)
-#
-#             # other pdb files
-#             pdbModelCounter += 1
-#             for pdb in self.inputPdbFiles:
-#                 f.write("runCommand('open %s')\n" % os.path.abspath(pdb.get(
-#                 ).getFileName()))
-#                 if pdb.get().hasOrigin():
-#                     x, y, z = pdb.get().getOrigin().getShifts()
-#                     f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
-#                             "coord #0')\n" % (x, y, z, pdbModelCounter))
-#                 # TODO: Check this this this this this this
-#                 pdbModelCounter += 1
-#
-#             # run the text:
-#             if len(self.extraCommands.get()) > 2:
-#                 f.write(self.extraCommands.get())
-#                 args = " --nogui --script " + self._getTmpPath(
-#                     chimeraScriptFileName)
-#             else:
-#                 args = " --script " + self._getTmpPath(chimeraScriptFileName)
-#
-#             f.close()
-#
-#             self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
-#
-#             # run in the background
-#             Chimera.runProgram(Plugin.getProgram(), args)
-#
-#         # get pdb sequence
-#         if (self.pdbFileToBeRefined.get() is not None) and \
-#                 (self.selectStructureChain.get() is not None):
-#             import json
-#             chainIdDict = json.loads(self.inputStructureChain.get())
-#
-#         # read PDB
-#         self.structureHandler = AtomicStructHandler()
-#         fileName = os.path.abspath(self.pdbFileToBeRefined.get(
-#         ).getFileName())
-#         self.structureHandler.read(fileName)
-#
-#         # get sequence of structure chain with id chainId (selected by the user)
-#         self.selectedModel = chainIdDict['model']
-#         self.selectedChain = chainIdDict['chain']
-#         # self.selectedModel = chainId.split(',')[0].split(':')[1].strip()
-#         # self.selectedChain = chainId.split(',')[1].split(':')[1].strip()
-#         print("Selected chain: %s from model: %s from structure: %s" \
-#               % (self.selectedChain, self.selectedModel,
-#                  os.path.basename(fileName)))
-#
-#         # Bio.Seq.Seq object
-#         structureSeq = self.structureHandler.getSequenceFromChain(
-#             self.selectedModel, self.selectedChain)
-#
-#         # obtain a seqID for our PDB sequence
-#         structSeqID = self.structureHandler.getFullID(self.selectedModel,
-#                                                       self.selectedChain)
-#         # END PDB sequence
-#
-#         # start user imported target sequence
-#         # get target sequence imported by the user
-#         userSeq = self.inputSequence.get()  # SEQ object from Scipion
-#         targetSeqID = userSeq.getId()  # ID associated to SEQ object (str)
-#         userSequence = userSeq.getSequence()  # sequence associated to
-#         # that SEQ object (str)
-#         # transformation of this sequence (str) in a Bio.Seq.Seq object:
-#         seqHandler = SequenceHandler(userSequence,
-#                                      isAminoacid=userSeq.getIsAminoacids())
-#         targetSeq = seqHandler._sequence  # Bio.Seq.Seq object
-#
-#         # creation of Dic of IDs and sequences
-#         SeqDic = OrderedDict()
-#         SeqDic[structSeqID] = structureSeq
-#         SeqDic[targetSeqID] = targetSeq
-#
-#         # align sequences and save them to disk, -this will be chimera input-
-#         # get all sequences in a fasta file
-#         inFile = self._getInFastaSequencesFile()
-#         outFile = self._getOutFastaSequencesFile()
-#
-#         # get the alignment of sequences
-#         if not self.additionalSequencesToAlign.get():
-#             saveFileSequencesToAlign(SeqDic, inFile)
-#             self.inputSequencesToAlign = None
-#             if self.inputProgramToAlign1.get() == \
-#                     self.ProgramToAlign1.index('Bio.pairwise2'):
-#                 # Only the two first sequences will be included in the alignment
-#                 self.alignment = alignBioPairwise2Sequences(
-#                     structSeqID, structureSeq,
-#                     targetSeqID, targetSeq,
-#                     outFile)
-#             else:
-#                 # All the sequences will be included in the alignment
-#                 if self.inputProgramToAlign1.get() == \
-#                         self.ProgramToAlign1.index('Clustal Omega'):
-#                     cline = alignClustalSequences(inFile, outFile)
-#                 else:
-#                     cline = alignMuscleSequences(inFile, outFile)
-#                 args = ''
-#                 self.runJob(cline, args)
-#         else:
-#             # if there are additional sequences imported by the user
-#             if self.inputSequencesToAlign is not None:
-#                 for seq in self.inputSequencesToAlign:
-#                     seq = seq.get()
-#                     ID = seq.getId()
-#                     sequence = seq.getSequence()
-#                     seqHandler = SequenceHandler(sequence,
-#                                                  isAminoacid=seq.getIsAminoacids())
-#                     otherSeq = seqHandler._sequence  # Bio.Seq.Seq object
-#                     SeqDic[ID] = otherSeq
-#
-#             # align sequences and save them to disk, -this will be chimera input-
-#             # get all sequences in a fasta file
-#             # inFile = self._getInFastaSequencesFile()
-#             saveFileSequencesToAlign(SeqDic, inFile)
-#             # outFile = self._getOutFastaSequencesFile()
-#
-#             # All the sequences will be included in the alignment
-#             if self.inputProgramToAlign2.get() == self.ProgramToAlign2.index(
-#                     'Clustal Omega'):
-#                 cline = alignClustalSequences(inFile, outFile)
-#             else:
-#                 cline = alignMuscleSequences(inFile, outFile)
-#             args = ''
-#             self.runJob(cline, args)
-#
-#
-#
+        # run the text:
+        if len(self.extraCommands.get()) > 2:
+            f.write(self.extraCommands.get())
+            args = " --nogui --script " + self._getTmpPath(
+                            chimeraScriptFileName)
+        else:
+            args = " --script " + self._getTmpPath(chimeraScriptFileName)
+        f.close()
+
+        self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
+
+        # run in the background
+        Chimera.runProgram(Plugin.getProgram(), args)
+
+    def createOutput(self):
+
+        """ Register outputs.
+        """
+
+        # Check vol and pdb files
+        directory = self._getExtraPath()
+        counter = 1
+        for filename in sorted(os.listdir(directory)):
+            if filename.endswith(".mrc"):
+                volFileName = os.path.join(directory, filename)
+                vol = Volume()
+                vol.setFileName(volFileName)
+
+                # fix mrc header
+                ccp4header = Ccp4Header(volFileName, readHeader=True)
+                sampling = ccp4header.computeSampling()
+                origin = Transform()
+                shifts = ccp4header.getOrigin()
+                origin.setShiftsTuple(shifts)
+                vol.setOrigin(origin)
+                vol.setSamplingRate(sampling)
+                keyword = filename.split(".mrc")[0]
+                # counter += 1
+                kwargs = {keyword: vol}
+                self._defineOutputs(**kwargs)
+
+            if filename.endswith(".pdb") or filename.endswith(".cif"):
+                path = os.path.join(directory, filename)
+                pdb = AtomStruct()
+                pdb.setFileName(path)
+                keyword = filename.split(".pdb")[0].replace(".","_")
+                #counter += 1
+                kwargs = {keyword: pdb}
+                self._defineOutputs(**kwargs)
+
 
     def _validate(self):
         errors = super(ChimeraSubtractionMaps, self)._validate()
@@ -534,3 +419,4 @@ class ChimeraSubtractionMaps(EMProtocol):
                           "map or an atomic structure.\n")
 
         return errors
+
