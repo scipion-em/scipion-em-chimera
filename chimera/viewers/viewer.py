@@ -32,6 +32,7 @@ from pwem.emlib.image import ImageHandler
 from pwem.objects import Volume
 from pwem.objects import Transform
 
+from ..protocols import ChimeraSubtractionMaps
 from ..protocols.protocol_fit import ChimeraProtRigidFit
 from ..protocols.protocol_operate import ChimeraProtOperate
 from ..protocols.protocol_restore import ChimeraProtRestore
@@ -186,3 +187,7 @@ class ChimeraProtOperateViewer(ChimeraViewerBase):
 class ChimeraModelFromTemplateViewer(ChimeraViewerBase):
     _label = 'viewer model from template'
     _targets = [ChimeraModelFromTemplate]
+
+class ChimeraSubtractionMapsViewer(ChimeraViewerBase):
+    _label = 'viewer subtract maps'
+    _targets = [ChimeraSubtractionMaps]
