@@ -213,7 +213,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                       help="Choose the filter to clean the background noise "
                            "of the differential map.")
         form.addParam("widthFilter", FloatParam,
-                      condition='filterToApplyToDiffMap',
+                      condition='filterToApplyToDiffMap==%d' % 0,
                       expertLevel=LEVEL_ADVANCED,
                       label="Gaussian filter width",
                       default=1.5,
