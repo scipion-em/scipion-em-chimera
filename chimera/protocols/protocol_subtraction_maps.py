@@ -30,14 +30,12 @@ from pwem import *
 from pwem.convert import Ccp4Header
 from pwem.objects import Volume
 from pwem.objects import Transform
-try:
-    from pwem.objects import AtomStruct
-except ImportError:
-    from pwem.objects import PdbFile as AtomStruct
+#try:
+from pwem.objects import AtomStruct
+#except ImportError:
+#    from pwem.objects import PdbFile as AtomStruct
 
 from pyworkflow import VERSION_3_0
-
-from pwem.convert.atom_struct import AtomicStructHandler
 
 from pyworkflow.protocol.params import (PointerParam,
                                         IntParam,
@@ -47,7 +45,7 @@ from pyworkflow.protocol.params import (PointerParam,
                                         StringParam, MultiPointerParam)
 
 from pwem.constants import (SYM_DIHEDRAL_X)
-from ..constants import (CHIMERA_I222, CHIMERA_SYM_NAME)
+from ..constants import (CHIMERA_SYM_NAME, CHIMERA_I222r)
 from ..convert import CHIMERA_LIST
 from pwem.protocols import EMProtocol
 from .protocol_base import createScriptFile
@@ -164,7 +162,7 @@ class ChimeraSubtractionMaps(EMProtocol):
         form.addParam('symmetryGroup', EnumParam,
                       condition=(('mapOrModel==%d and applySymmetry==True') % 1),
                       choices=CHIMERA_LIST,
-                      default=CHIMERA_I222,
+                      default=CHIMERA_I222r,
                       important=True,
                       label="Symmetry",
                       help="https://scipion-em.github.io/docs/release-2.0.0/docs/developer/symmetries.html?highlight=symmetry"
@@ -224,6 +222,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                       label='Extra commands for chimera viewer',
                       help="Add extra commands in cmd file. Use for testing")
         form.addSection(label='Help')
+        # TODO: update help
         form.addLine("Step 1:\nIn the sequence window your target "
                          "sequence (and other additional sequences that you "
                          "want to use in  the alignment) will appear aligned to "
@@ -303,11 +302,11 @@ class ChimeraSubtractionMaps(EMProtocol):
         bildFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
         Chimera.createCoordinateAxisFile(dim, bildFileName=bildFileName,
                                          sampling=sampling)
-        # input volume
+        # coordinate axis
         chimeraModelId = 0
         f.write("runCommand('open %s')\n" % (bildFileName))
         f.write("runCommand('cofr 0,0,0')\n")  # set center of coordinates
-        # origin coordinates
+        # input volume
         chimeraModelMapM = chimeraModelId + 1 # 1, Minuend
         f.write("runCommand('open %s')\n" % self.fnVolName)
         f.write("runCommand('volume #%d style surface voxelSize %f')\n"
@@ -350,6 +349,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                             os.path.basename(self.atomStructName)))
                     f.write("runCommand('sel #%d:.%s')\n"
                             % (chimeraModelAtomStruct, self.selectedChain))
+                    # TODO: save in protocol tmp
                     f.write("runCommand('write format pdb selected relative %d #%d "
                             "/tmp/chain.pdb')\n"
                             % (chimeraModelId, chimeraModelAtomStruct))
@@ -516,7 +516,7 @@ class ChimeraSubtractionMaps(EMProtocol):
             f.write("runCommand('vop gaussian #%d sd %0.3f')\n"
                     % (chimeraModelMapDiff, self.widthFilter.get()))
         else:
-            f.write("rc('vop laplacian #%d')\n"
+            f.write("runCommand('vop laplacian #%d')\n"
                     % (chimeraModelMapDiff))
         f.write("runCommand('scipionwrite model #%d refmodel #%d " \
                 "prefix filtered_')\n"
@@ -563,7 +563,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                 kwargs = {keyword: vol}
                 self._defineOutputs(**kwargs)
 
-            if filename.endswith(".pdb") or filename.endswith(".cif"):
+            elif filename.endswith(".pdb") or filename.endswith(".cif"):
                 path = os.path.join(directory, filename)
                 pdb = AtomStruct()
                 pdb.setFileName(path)
