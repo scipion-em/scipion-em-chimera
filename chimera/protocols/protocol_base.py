@@ -99,7 +99,8 @@ class ChimeraProtBase(EMProtocol):
 
         self._insertFunctionStep('prerequisitesStep')
         self._insertFunctionStep('runChimeraStep')
-        self._insertFunctionStep('createOutput')
+        directory = self._getExtraPath()
+        self._insertFunctionStep('createOutput', directory)
 
     # --------------------------- STEPS functions ---------------------------
 
@@ -220,13 +221,10 @@ class ChimeraProtBase(EMProtocol):
         # run in the background
         Chimera.runProgram(Plugin.getProgram(), args)
 
-    def createOutput(self):
+    def createOutput(self, directory):
         """ Copy the PDB structure and register the output object.
         """
-
         # Check vol and pdb files
-        directory = self._getExtraPath()
-        counter = 1
         for filename in sorted(os.listdir(directory)):
             if filename.endswith(".mrc"):
                 volFileName = os.path.join(directory, filename)
@@ -242,7 +240,6 @@ class ChimeraProtBase(EMProtocol):
                 vol.setOrigin(origin)
                 vol.setSamplingRate(sampling)
                 keyword = filename.split(".mrc")[0]
-                # counter += 1
                 kwargs = {keyword: vol}
                 self._defineOutputs(**kwargs)
 
@@ -251,7 +248,6 @@ class ChimeraProtBase(EMProtocol):
                 pdb = AtomStruct()
                 pdb.setFileName(path)
                 keyword = filename.split(".pdb")[0].replace(".","_")
-                #counter += 1
                 kwargs = {keyword: pdb}
                 self._defineOutputs(**kwargs)
 
