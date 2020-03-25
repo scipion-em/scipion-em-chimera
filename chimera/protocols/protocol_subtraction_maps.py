@@ -506,7 +506,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                     % (modelMapDiff, self.widthFilter.get()))
         else:
             f.write("runCommand('vop laplacian #%d')\n"
-                    % (chimeraModelMapDiff))
+                    % (modelMapDiff))
         f.write("runCommand('scipionwrite model #%d refmodel #%d " \
                 "prefix filtered_')\n"
                 % (modelMapDiffFil, modelMapM))
