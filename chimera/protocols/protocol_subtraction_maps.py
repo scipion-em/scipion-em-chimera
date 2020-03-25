@@ -276,11 +276,11 @@ class ChimeraSubtractionMaps(EMProtocol):
         bildFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
         Chimera.createCoordinateAxisFile(dim, bildFileName=bildFileName,
                                          sampling=sampling)
-        # input volume
+        # origin coordinates
         modelId = 0
         f.write("runCommand('open %s')\n" % (bildFileName))
         f.write("runCommand('cofr 0,0,0')\n")  # set center of coordinates
-        # origin coordinates
+        # input volume
         modelMapM = modelId + 1 # 1, Minuend
         f.write("runCommand('open %s')\n" % self.fnVolName)
         f.write("runCommand('volume #%d style surface voxelSize %f')\n"
