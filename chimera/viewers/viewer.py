@@ -133,6 +133,8 @@ class ChimeraViewerBase(Viewer):
                 f.write("volume #%d style surface voxelSize %f\n"
                         "volume #%d origin %0.2f,%0.2f,%0.2f\n"
                         % (counter, sampling, counter, shifts[0], shifts[1], shifts[2]))
+                f.write("volume #%d level %0.3f\n"
+                        % (counter, 0.001))
 
         for filename in os.listdir(directory):
             if filename.endswith(".pdb") or filename.endswith(".cif"):
