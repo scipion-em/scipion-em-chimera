@@ -30,14 +30,12 @@ from pwem import *
 from pwem.convert import Ccp4Header
 from pwem.objects import Volume
 from pwem.objects import Transform
-try:
-    from pwem.objects import AtomStruct
-except ImportError:
-    from pwem.objects import PdbFile as AtomStruct
+#try:
+from pwem.objects import AtomStruct
+#except ImportError:
+#    from pwem.objects import PdbFile as AtomStruct
 
 from pyworkflow import VERSION_3_0
-
-from pwem.convert.atom_struct import AtomicStructHandler
 
 from pyworkflow.protocol.params import (PointerParam,
                                         IntParam,
@@ -47,7 +45,7 @@ from pyworkflow.protocol.params import (PointerParam,
                                         StringParam, MultiPointerParam)
 
 from pwem.constants import (SYM_DIHEDRAL_X)
-from ..constants import (CHIMERA_I222, CHIMERA_SYM_NAME)
+from ..constants import (CHIMERA_SYM_NAME, CHIMERA_I222r)
 from ..convert import CHIMERA_LIST
 from pwem.protocols import EMProtocol
 from .protocol_base import createScriptFile, ChimeraProtBase
@@ -165,7 +163,7 @@ class ChimeraSubtractionMaps(EMProtocol):
         form.addParam('symmetryGroup', EnumParam,
                       condition=(('mapOrModel==%d and applySymmetry==True') % 1),
                       choices=CHIMERA_LIST,
-                      default=CHIMERA_I222,
+                      default=CHIMERA_I222r,
                       important=True,
                       label="Symmetry",
                       help="https://scipion-em.github.io/docs/release-2.0.0/docs/developer/symmetries.html?highlight=symmetry"
@@ -507,8 +505,8 @@ class ChimeraSubtractionMaps(EMProtocol):
             f.write("runCommand('vop gaussian #%d sd %0.3f')\n"
                     % (modelMapDiff, self.widthFilter.get()))
         else:
-            f.write("rc('vop laplacian #%d')\n"
-                    % (modelMapDiff))
+            f.write("runCommand('vop laplacian #%d')\n"
+                    % (chimeraModelMapDiff))
         f.write("runCommand('scipionwrite model #%d refmodel #%d " \
                 "prefix filtered_')\n"
                 % (modelMapDiffFil, modelMapM))
@@ -553,7 +551,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                 kwargs = {keyword: vol}
                 self._defineOutputs(**kwargs)
 
-            if filename.endswith(".pdb") or filename.endswith(".cif"):
+            elif filename.endswith(".pdb") or filename.endswith(".cif"):
                 path = os.path.join(directory, filename)
                 pdb = AtomStruct()
                 pdb.setFileName(path)
