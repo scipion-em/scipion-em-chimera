@@ -50,7 +50,7 @@ from pwem.constants import (SYM_DIHEDRAL_X)
 from ..constants import (CHIMERA_I222, CHIMERA_SYM_NAME)
 from ..convert import CHIMERA_LIST
 from pwem.protocols import EMProtocol
-from .protocol_base import createScriptFile
+from .protocol_base import createScriptFile, ChimeraProtBase
 from pwem.viewers.viewer_chimera import (Chimera,
                                          sessionFile,
                                          chimeraMapTemplateFileName,
@@ -58,14 +58,15 @@ from pwem.viewers.viewer_chimera import (Chimera,
                                          chimeraPdbTemplateFileName)
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from .. import Plugin
+from pyworkflow.utils.properties import Message
 
 class ChimeraSubtractionMaps(EMProtocol):
     """Protocol to subtract two volumes.
         One of these volumes can be derived from an atomic structure.
-        Execute command *scipionwrite [model #n]* from command line in order
-        to transfer the selected
-        pdb to scipion. Default value is model=#0,
-        model refers to the pdb file."""
+        Execute command *scipionwrite model #n [refmodel #p] [prefix stringAddedToFilename]*
+        from command line in order to transfer the generated maps and models to scipion.
+        In addition to maps and models that the protocol saves by default,
+        the user can generate and save some others"""
     _label = 'map subtraction'
     _program = ""
     _version = VERSION_3_0
@@ -224,38 +225,12 @@ class ChimeraSubtractionMaps(EMProtocol):
                       label='Extra commands for chimera viewer',
                       help="Add extra commands in cmd file. Use for testing")
         form.addSection(label='Help')
-        form.addLine("Step 1:\nIn the sequence window your target "
-                         "sequence (and other additional sequences that you "
-                         "want to use in  the alignment) will appear aligned to "
-                         "the template's sequence. Select in the sequence window "
-                         "menu:\nStructure -> Modeller (homology)...;\nA new  "
-                         "window for Comparative Modeling with Modeller will "
-                         "appear. Select your specific sequence as the sequence "
-                         "to be modeled (target), and the input atomic structure"
-                         + '''
-        used as template for modeling. Select Run Modeller via web service 
-        and write the Modeller license key supplied (Academic users can 
-        register free of charge to receive a license key). Finally, press OK.
-        \nWAITING TIME: (you may see the status of your job in chimera main 
-        window, lower left corner.)\n\nStep 2:\nWhen the process finished, 
-        5 models will 
-        be automatically superimposed onto the template and model scores
-        will appear in Modeller Results window. In Chimera main menu -> 
-        Favorites -> Model panel will show you: #0 (coordinate axes); #1 (
-        template); #2.1 to 2.5 (models).Choose the one you like the best, 
-        for example model #2.1. To save it in Scipion, we need to change the 
-        model ID. In Chimera main menu: Favorites -> Command Line, write 
-        *combine #2.1 model #3 close t*. Then, you will see in Model panel 
-        that selected model #2.1 renamed to combination with ID #3. Save it 
-        as first guess in Scipion by executing the Chimera command 
-        *scipionwrite [model #n]*. In our example *scipionwrite model #3*.\n 
-        When you use the command line scipionwrite, the Chimera session will 
-        be saved by default. Additionally, you can save the Chimera session 
-        whenever you want by executing the command *scipionss*. You will be 
-        able to restore the saved session by using the protocol chimera 
-        restore session (SCIPION menu: Tools/Calculators/chimera restore 
-        session). Once you have save your favorite model you can press 
-        Quit in the Modeller Results window.''')
+        form.addSection(label='Help')
+        form.addLine(''' scipionwrite model #n [refmodel #p] [prefix stringAddedToFilename]
+                    scipionss
+                    scipionrs
+                    Type 'help command' in chimera command line for details (command is the command name)''')
+
 
     # --------------------------- INSERT steps functions --------------------
 
@@ -304,44 +279,39 @@ class ChimeraSubtractionMaps(EMProtocol):
         Chimera.createCoordinateAxisFile(dim, bildFileName=bildFileName,
                                          sampling=sampling)
         # input volume
-        chimeraModelId = 0
+        modelId = 0
         f.write("runCommand('open %s')\n" % (bildFileName))
         f.write("runCommand('cofr 0,0,0')\n")  # set center of coordinates
         # origin coordinates
-        chimeraModelMapM = chimeraModelId + 1 # 1, Minuend
+        modelMapM = modelId + 1 # 1, Minuend
         f.write("runCommand('open %s')\n" % self.fnVolName)
         f.write("runCommand('volume #%d style surface voxelSize %f')\n"
-                % (chimeraModelMapM, sampling))
+                % (modelMapM, sampling))
         x, y, z = self.vol.getShiftsFromOrigin()
         f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
-                % (chimeraModelMapM, x, y, z))
-        # input vol with its origin coordinates
-        chimeraModelMapS = chimeraModelMapM + 1  # 2 Subtrahend
+                % (modelMapM, x, y, z))
+
         if self.mapOrModel == 0:
+            # input map
+            # with its origin coordinates
+            modelMapS = modelMapM + 1  # 2 Subtrahend
             f.write("runCommand('open %s')\n" %
                     (self.subVolName))
             f.write("runCommand('volume #%d style surface voxelSize %f')\n"
-                    % (chimeraModelMapS, sampling))
+                    % (modelMapS, sampling))
             x, y, z = self.subVol.getShiftsFromOrigin()
             f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
-                        % (chimeraModelMapS, x, y, z))
-            chimeraModelMapDiff = chimeraModelMapS + 1  # 3 Diff map
-            f.write("runCommand('vop subtract #%d #%d modelId #%d "
-                    "minRMS true onGrid #%d')\n"
-                    % (chimeraModelMapM, chimeraModelMapS,
-                       chimeraModelMapDiff, chimeraModelId + 1))
-            f.write("runCommand('scipionwrite model #%d refmodel #%d " \
-                    "prefix difference_')\n"
-                    % (chimeraModelMapDiff, chimeraModelMapM))
+                        % (modelMapS, x, y, z))
         else:
-            f.write("runCommand('open %s')\n"  % (self.atomStructName))
-            chimeraModelAtomStruct = chimeraModelMapM + 1
+            f.write("runCommand('open %s')\n" % self.atomStructName)
+            # input atomic structure
+            modelAtomStruct = modelMapM + 1
             if self.selectChain == True:
                 # model and chain selected
                 if self.selectStructureChain.get() is not None:
                     chain = self.selectStructureChain.get()
                     self.selectedModel = chain.split(',')[0].split(':')[1].strip()
-                    chimeraModelAtomStruct = int(chimeraModelAtomStruct +
+                    modelAtomStruct = int(modelAtomStruct +
                                                  int(self.selectedModel))
                     self.selectedChain = \
                         chain.split(',')[1].split(':')[1].strip().split('"')[1]
@@ -349,64 +319,43 @@ class ChimeraSubtractionMaps(EMProtocol):
                         % (self.selectedChain, self.selectedModel,
                             os.path.basename(self.atomStructName)))
                     f.write("runCommand('sel #%d:.%s')\n"
-                            % (chimeraModelAtomStruct, self.selectedChain))
-                    f.write("runCommand('write format pdb selected relative %d #%d "
-                            "/tmp/chain.pdb')\n"
-                            % (chimeraModelId, chimeraModelAtomStruct))
-                    f.write("runCommand('open /tmp/chain.pdb')\n")
-                    chimeraModelAtomStructChain = chimeraModelAtomStruct + 1
+                            % (modelAtomStruct, self.selectedChain))
+                    tmpPath = self._getTmpPath('chain.pdb')
+                    f.write("runCommand('write format pdb selected relative %d #%d %s')\n"
+                            % (modelId, modelAtomStruct, tmpPath))
+                    f.write("runCommand('open %s')\n" % tmpPath)
+                    modelAtomStructChain = modelAtomStruct + 1
                     f.write("runCommand('scipionwrite model #%d refmodel #%d "
                             "prefix chain_%s_')\n"
-                            % (chimeraModelAtomStructChain, chimeraModelMapM,
+                            % (modelAtomStructChain, modelMapM,
                                self.selectedChain))
-                    if self.applySymmetry == True:
-                        if self.symmetryGroup.get() is not None:
+                    if self.selectAreaMap == True:
+                        if self.applySymmetry == True and self.symmetryGroup.get() is not None:
                             sym = CHIMERA_SYM_NAME[self.symmetryGroup.get()]
-                            if sym == "Cn" and self.symmetryOrder != 1:
-                                print("self.symmetryOrder: ", self.symmetryOrder)
-                                print("self.rangeDist: ", self.rangeDist)
-                                f.write("runCommand('sym #%d group C%d range %d')\n"
-                                        % (chimeraModelAtomStructChain,
-                                           self.symmetryOrder, self.rangeDist))
-                            elif sym == "Dn" and self.symOrder != 1:
-                                f.write("runCommand('sym #%d group d%d range %d')\n"
-                                        % (chimeraModelAtomStructChain,
-                                           self.symmetryOrder, self.rangeDist))
-                            elif sym == "T222" or self.sym == "TZ3":
-                                f.write("runCommand('sym #%d group t,%s range %d')\n"
-                                        % (chimeraModelAtomStructChain,
-                                           sym[1:], self.rangeDist))
-                            elif sym == "O":
-                                f.write("runCommand('sym #%d group O range %d')\n"
-                                        % chimeraModelAtomStructChain, self.rangeDist)
-                            elif sym == "I222" or sym == "I222r" or sym == "In25" or \
-                                    sym == "In25r" or sym == "I2n3" or sym == "I2n3r" or \
-                                    sym == "I2n5" or sym == "I2n5r":
-                                f.write("runCommand('sym #%d group i,%s range %d')\n"
-                                        % (chimeraModelAtomStructChain,
-                                           sym[1:], self.rangeDist))
-                            chimeraModelAtomStructChainSym = chimeraModelAtomStructChain + 2
-                            f.write("runCommand('combine #%d- modelId #%d')\n"
-                                    % (chimeraModelAtomStructChain, chimeraModelAtomStructChainSym))
-                            if self.selectAreaMap == True:
-                                chimeraModelIdZone = chimeraModelAtomStructChainSym + 1
-                                f.write("runCommand('vop zone #%d #%d %d modelId #%d')\n"
-                                        % (chimeraModelMapM, chimeraModelAtomStructChainSym,
-                                           self.radius, chimeraModelIdZone))
-                                f.write("runCommand('scipionwrite model #%d refmodel #%d " \
-                                        "prefix zone_')\n" % (chimeraModelIdZone,
-                                                              chimeraModelMapM))
-                                f.write("runCommand('close #%d')\n" % (chimeraModelAtomStructChain + 1))
-                                f.write("runCommand('close #%d')\n" % (chimeraModelAtomStructChainSym))
-                    else:
-                        if self.selectAreaMap == True:
-                            chimeraModelIdZone = chimeraModelAtomStructChain + 1
-                            f.write("runCommand('vop zone #%d #%d %d modelId #%d')\n"
-                                    % (chimeraModelMapM, chimeraModelAtomStructChain,
-                                    self.radius, chimeraModelIdZone))
+                            modelId = modelAtomStructChain
+                            self.symMethod(f, modelId, sym, self.symmetryOrder, self.rangeDist)
 
-                    chimeraModelAtomStructChainMap = chimeraModelIdZone + 1
-                    chimeraModelMapDiff = chimeraModelAtomStructChainMap + 1
+                            modelAtomStructChainSym = modelAtomStructChain + 2
+                            f.write("runCommand('combine #%d- modelId #%d')\n"
+                                    % (modelAtomStructChain, modelAtomStructChainSym))
+                            modelIdZone = modelAtomStructChainSym + 1
+                            f.write("runCommand('vop zone #%d #%d %d modelId #%d')\n"
+                                    % (modelMapM, modelAtomStructChainSym,
+                                       self.radius, modelIdZone))
+
+                            f.write("runCommand('close #%d')\n" % (modelAtomStructChain + 1))
+                            f.write("runCommand('close #%d')\n" % (modelAtomStructChainSym))
+                        else:
+                            modelIdZone = modelAtomStructChain + 1
+                            f.write("runCommand('vop zone #%d #%d %d modelId #%d')\n"
+                                    % (modelMapM, modelAtomStructChain,
+                                    self.radius, modelIdZone))
+
+                        f.write("runCommand('scipionwrite model #%d refmodel #%d " \
+                                "prefix zone_')\n" % (modelIdZone, modelMapM))
+                        modelMapS = modelIdZone + 1
+                    else:
+                        modelMapS = modelAtomStructChain + 1
 
                     if self.removeResidues == True:
                         if (self.firstResidueToRemove.get() is not None and
@@ -415,112 +364,154 @@ class ChimeraSubtractionMaps(EMProtocol):
                             split(":")[1].split(",")[0].strip()
                             lastResidue = self.lastResidueToRemove.get(). \
                                 split(":")[1].split(",")[0].strip()
-                            print("firstResidue: ", firstResidue)
-                            print("lastResidue: ", lastResidue)
                             f.write("runCommand('select #%d:%d-%d.%s')\n"
-                                    % (chimeraModelAtomStructChain,
+                                    % (modelAtomStructChain,
                                        int(firstResidue), int(lastResidue),
                                        self.selectedChain))
                             f.write("runCommand('del sel')\n")
                     if self.applySymmetry == True:
                         if self.symmetryGroup.get() is not None:
                             sym = CHIMERA_SYM_NAME[self.symmetryGroup.get()]
-                            if sym == "Cn" and self.symmetryOrder != 1:
-                                f.write("runCommand('sym #%d group C%d range %d')\n"
-                                        % (chimeraModelAtomStructChain,
-                                           self.symmetryOrder, self.rangeDist))
-                            elif sym == "Dn" and self.symOrder != 1:
-                                f.write("runCommand('sym #%d group d%d range %d')\n"
-                                        % (chimeraModelAtomStructChain,
-                                           self.symmetryOrder, self.rangeDist))
-                            elif sym == "T222" or self.sym == "TZ3":
-                                f.write("runCommand('sym #%d group t,%s range %d')\n"
-                                        % (chimeraModelAtomStructChain,
-                                           sym[1:], self.rangeDist))
-                            elif sym == "O":
-                                f.write("runCommand('sym #%d group O range %d')\n"
-                                        % chimeraModelAtomStructChain, self.rangeDist)
-                            elif sym == "I222" or sym == "I222r" or sym == "In25" or \
-                                    sym == "In25r" or sym == "I2n3" or sym == "I2n3r" or \
-                                    sym == "I2n5" or sym == "I2n5r":
-                                f.write("runCommand('sym #%d group i,%s range %d')\n"
-                                        % (chimeraModelAtomStructChain,
-                                           sym[1:], self.rangeDist))
-                            chimeraModelAtomStructChainSym = chimeraModelAtomStructChain + 2
+                            modelId = modelAtomStructChain
+                            self.symMethod(f, modelId, sym, self.symmetryOrder, self.rangeDist)
+                            modelAtomStructChainSym = modelAtomStructChain + 2
                             f.write("runCommand('combine #%d- modelId #%d')\n"
-                                    % (chimeraModelAtomStructChain, chimeraModelAtomStructChainSym))
-
+                                    % (modelAtomStructChain, modelAtomStructChainSym))
+                            f.write("runCommand('scipionwrite model #%d refmodel #%d "
+                                    "prefix sym_')\n"
+                                    % (modelAtomStructChainSym, modelMapM))
                             f.write("runCommand("
                                     "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
-                                    % (chimeraModelAtomStructChainSym, self.resolution, sampling,
-                                       chimeraModelAtomStructChainMap))
+                                    % (modelAtomStructChainSym, self.resolution, sampling,
+                                       modelMapS))
                     else:
                         f.write("runCommand("
                                 "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
-                                % (chimeraModelAtomStructChain, self.resolution, sampling,
-                                   chimeraModelAtomStructChainMap))
+                                % (modelAtomStructChain, self.resolution, sampling,
+                                   modelMapS))
                     f.write("runCommand('scipionwrite model #%d refmodel #%d "
                             "prefix molmap_chain%s_')\n"
-                            % (chimeraModelAtomStructChainMap, chimeraModelMapM,
+                            % (modelMapS, modelMapM,
                                self.selectedChain))
 
-                    if self.selectAreaMap == True:
-                        f.write("runCommand('vop subtract #%d #%d modelId #%d "
-                            "minRMS true onGrid #%d')\n"
-                            % (chimeraModelIdZone, chimeraModelAtomStructChainMap,
-                                chimeraModelMapDiff, chimeraModelMapM))
-                    else:
-                        f.write("runCommand('vop subtract #%d #%d modelId #%d "
-                                "minRMS true onGrid #%d')\n"
-                                % (chimeraModelMapM, chimeraModelAtomStructChainMap,
-                                   chimeraModelMapDiff, chimeraModelMapM))
-                    f.write("runCommand('scipionwrite model #%d refmodel #%d " \
-                            "prefix difference_')\n"
-                            % (chimeraModelMapDiff, chimeraModelMapM))
-        #             else:
-        #                 chimeraModelMapDiff = chimeraModelAtomStructChainMap + 1  # 3 Diff map
-        #                 f.write("runCommand('vop subtract #%d #%d modelId #%d "
-        #                         "minRMS true onGrid #%d')\n"
-        #                         % (chimeraModelMapM, chimeraModelAtomStructChainMap,
-        #                            chimeraModelMapDiff, chimeraModelMapM))
-        #                 f.write("runCommand('scipionwrite model #%d refmodel #%d " \
-        #                         "prefix difference_')\n"
-        #                         % (chimeraModelMapDiff, chimeraModelMapM))
-        #
-        #
-        #
-        #         # if self.removeResidues == True:
-        #         #     pass
-        #         # else:
-        #         #     f.write("runCommand('open %s')\n" )
-        #         #
-        #         #
-        #         # # f.write("runCommand('')")
-        #     else:
-        #         if self.selectAreaMap == True:
-        #             chimeraModelIdZone = chimeraModelAtomStruct + 1
-        #             f.write("runCommand('vop zone #%d #%d %d modelId #%d')\n"
-        #                     % (chimeraModelMapM, chimeraModelAtomStruct,
-        #                        self.radius, chimeraModelIdZone))
-        #             f.write("runCommand('scipionwrite model #%d refmodel #%d " \
-        #                     "prefix zone_')\n"
-        #                     % (chimeraModelIdZone, chimeraModelMapM))
-        #
-        #     if self.removeResidues == True:
-        #         pass
-        #
-        #
+            else:
+                f.write("runCommand('scipionwrite model #%d refmodel #%d')\n" \
+                        % (modelAtomStruct, modelMapM))
+                if self.selectAreaMap == True:
+                    if self.applySymmetry == True and self.symmetryGroup.get() is not None:
+                        sym = CHIMERA_SYM_NAME[self.symmetryGroup.get()]
+                        modelId = modelAtomStruct
+                        self.symMethod(f, modelId, sym, self.symmetryOrder, self.rangeDist)
+                        modelAtomStructChainSym = modelAtomStruct + 2
+                        f.write("runCommand('combine #%d- modelId #%d')\n"
+                                % (modelAtomStruct, modelAtomStructChainSym))
 
-        chimeraModelMapDiffFil = chimeraModelMapDiff + 1
+                        modelIdZone = modelAtomStructChainSym + 1
+                        f.write("runCommand('vop zone #%d #%d %d modelId #%d')\n"
+                                % (modelMapM, modelAtomStructChainSym,
+                                   self.radius, modelIdZone))
+
+                        f.write("runCommand('close #%d')\n" % (modelAtomStructChainSym))
+
+                    else:
+                        modelIdZone = modelAtomStruct + 1
+                        f.write("runCommand('vop zone #%d #%d %d modelId #%d')\n"
+                                % (modelMapM, modelAtomStruct,
+                                    self.radius, modelIdZone))
+
+                    f.write("runCommand('scipionwrite model #%d refmodel #%d " \
+                            "prefix zone_')\n" % (modelIdZone,
+                                                  modelMapM))
+                    modelMapS = modelIdZone + 1
+
+                else:
+                    if self.applySymmetry == True:
+                        modelMapS = modelAtomStruct + 3
+                    else:
+                        modelMapS = modelAtomStruct + 1
+
+                if self.removeResidues == True:
+                    if (self.inputStructureChain.get() is not None and
+                            self.firstResidueToRemove.get() is not None and
+                            self.lastResidueToRemove.get() is not None):
+                        chain = self.inputStructureChain.get()
+                        self.selectedModel = chain.split(',')[0].split(':')[1].strip()
+                        modelAtomStruct = int(modelAtomStruct +
+                                                     int(self.selectedModel))
+                        self.selectedChain = \
+                            chain.split(',')[1].split(':')[1].strip().split('"')[1]
+                        print("Selected chain: %s from model: %s from structure: %s" \
+                              % (self.selectedChain, self.selectedModel,
+                                 os.path.basename(self.atomStructName)))
+                        f.write("runCommand('sel #%d:.%s')\n"
+                                % (modelAtomStruct, self.selectedChain))
+                        firstResidue = self.firstResidueToRemove.get(). \
+                            split(":")[1].split(",")[0].strip()
+                        lastResidue = self.lastResidueToRemove.get(). \
+                            split(":")[1].split(",")[0].strip()
+                        f.write("runCommand('select #%d:%d-%d.%s')\n"
+                                % (modelAtomStruct,
+                                   int(firstResidue), int(lastResidue),
+                                   self.selectedChain))
+                        f.write("runCommand('del sel')\n")
+                        f.write("runCommand('scipionwrite model #%d refmodel #%d " \
+                                "prefix mutated_')\n"
+                                % (modelAtomStruct, modelMapM))
+
+                if self.applySymmetry == True:
+                    if self.symmetryGroup.get() is not None:
+                        sym = CHIMERA_SYM_NAME[self.symmetryGroup.get()]
+                        modelId = modelAtomStruct
+                        self.symMethod(f, modelId, sym, self.symmetryOrder, self.rangeDist)
+                        modelAtomStructChainSym = modelAtomStruct + 2
+                        f.write("runCommand('combine #%d- modelId #%d')\n"
+                                % (modelAtomStruct, modelAtomStructChainSym))
+
+                        f.write("runCommand("
+                                "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
+                                % (modelAtomStructChainSym, self.resolution, sampling,
+                                   modelMapS))
+                        f.write("runCommand('scipionwrite model #%d refmodel #%d "
+                                "prefix sym_')\n"
+                                % (modelAtomStructChainSym, modelMapM))
+                else:
+                    f.write("runCommand("
+                            "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
+                            % (modelAtomStruct, self.resolution, sampling,
+                               modelMapS))
+
+                f.write("runCommand('scipionwrite model #%d refmodel #%d "
+                        "prefix molmap_')\n"
+                        % (modelMapS, modelMapM))
+
+        # Generation of the differential map
+        modelMapDiff = modelMapS + 1
+        if self.selectAreaMap == True:
+            f.write("runCommand('vop subtract #%d #%d modelId #%d "
+                    "minRMS true onGrid #%d')\n"
+                    % (modelIdZone, modelMapS,
+                       modelMapDiff, modelMapM))
+        else:
+            f.write("runCommand('vop subtract #%d #%d modelId #%d "
+                    "minRMS true onGrid #%d')\n"
+                    % (modelMapM, modelMapS,
+                       modelMapDiff, modelMapM))
+
+        f.write("runCommand('scipionwrite model #%d refmodel #%d " \
+                "prefix difference_')\n"
+                % (modelMapDiff, modelMapM))
+
+        # Generation of the filtered map
+        modelMapDiffFil = modelMapDiff + 1
         if self.filterToApplyToDiffMap.get() == 0:
             f.write("runCommand('vop gaussian #%d sd %0.3f')\n"
-                    % (chimeraModelMapDiff, self.widthFilter.get()))
+                    % (modelMapDiff, self.widthFilter.get()))
         else:
             f.write("rc('vop laplacian #%d')\n"
-                    % (chimeraModelMapDiff))
+                    % (modelMapDiff))
         f.write("runCommand('scipionwrite model #%d refmodel #%d " \
                 "prefix filtered_')\n"
-                % (chimeraModelMapDiffFil, chimeraModelMapM))
+                % (modelMapDiffFil, modelMapM))
 
         # run the text:
         if len(self.extraCommands.get()) > 2:
@@ -537,13 +528,13 @@ class ChimeraSubtractionMaps(EMProtocol):
         Chimera.runProgram(Plugin.getProgram(), args)
 
     def createOutput(self):
-
+        # cHB = ChimeraProtBase()
+        # directory = self._getExtraPath()
+        # cHB.createOutput(directory)
         """ Register outputs.
         """
-
         # Check vol and pdb files
         directory = self._getExtraPath()
-        counter = 1
         for filename in sorted(os.listdir(directory)):
             if filename.endswith(".mrc"):
                 volFileName = os.path.join(directory, filename)
@@ -559,7 +550,6 @@ class ChimeraSubtractionMaps(EMProtocol):
                 vol.setOrigin(origin)
                 vol.setSamplingRate(sampling)
                 keyword = filename.split(".mrc")[0]
-                # counter += 1
                 kwargs = {keyword: vol}
                 self._defineOutputs(**kwargs)
 
@@ -568,10 +558,43 @@ class ChimeraSubtractionMaps(EMProtocol):
                 pdb = AtomStruct()
                 pdb.setFileName(path)
                 keyword = filename.split(".pdb")[0].replace(".","_")
-                #counter += 1
                 kwargs = {keyword: pdb}
                 self._defineOutputs(**kwargs)
 
+    def symMethod(self, f, modelId, sym, order=None, range=None):
+        if sym == "Cn" and order != 1:
+            f.write("runCommand('sym #%d group C%d range %d')\n"
+                    % (modelId, order, range))
+        elif sym == "Dn" and order != 1:
+            f.write("runCommand('sym #%d group d%d range %d')\n"
+                    % (modelId, order, range))
+        elif sym == "T222" or sym == "TZ3":
+            f.write("runCommand('sym #%d group t,%s range %d')\n"
+                    % (modelId, sym[1:], range))
+        elif sym == "O":
+            f.write("runCommand('sym #%d group O range %d')\n"
+                    % modelId, range)
+        elif sym == "I222" or sym == "I222r" or sym == "In25" or \
+                sym == "In25r" or sym == "I2n3" or sym == "I2n3r" or \
+                sym == "I2n5" or sym == "I2n5r":
+            f.write("runCommand('sym #%d group i,%s range %d')\n"
+                    % (modelId, sym[1:], range))
+
+    def _summary(self):
+        summary = []
+        if self.getOutputsSize() > 0:
+            directory = self._getExtraPath()
+            summary.append("Produced files:")
+            for filename in sorted(os.listdir(directory)):
+                if filename.endswith(".pdb"):
+                    summary.append(filename)
+            for filename in sorted(os.listdir(directory)):
+                if filename.endswith(".mrc"):
+                    summary.append(filename)
+            summary.append("we have some result")
+        else:
+            summary.append(Message.TEXT_NO_OUTPUT_FILES)
+        return summary
 
     def _validate(self):
         errors = super(ChimeraSubtractionMaps, self)._validate()
