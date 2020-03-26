@@ -352,7 +352,10 @@ class ChimeraSubtractionMaps(EMProtocol):
                                 "prefix zone_')\n" % (modelIdZone, modelMapM))
                         modelMapS = modelIdZone + 1
                     else:
-                        modelMapS = modelAtomStructChain + 1
+                        if self.applySymmetry == True:
+                            modelMapS = modelAtomStructChain + 3
+                        else:
+                            modelMapS = modelAtomStructChain + 1
 
                     if self.removeResidues == True:
                         if (self.firstResidueToRemove.get() is not None and
