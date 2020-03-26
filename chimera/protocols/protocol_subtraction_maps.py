@@ -223,7 +223,6 @@ class ChimeraSubtractionMaps(EMProtocol):
                       label='Extra commands for chimera viewer',
                       help="Add extra commands in cmd file. Use for testing")
         form.addSection(label='Help')
-        form.addSection(label='Help')
         form.addLine(''' scipionwrite model #n [refmodel #p] [prefix stringAddedToFilename]
                     scipionss
                     scipionrs
