@@ -512,7 +512,10 @@ class ChimeraSubtractionMaps(EMProtocol):
         f.write("runCommand('scipionwrite model #%d refmodel #%d " \
                 "prefix filtered_')\n"
                 % (modelMapDiffFil, modelMapM))
-
+        if self.inputPdbFiles is not None:
+            for atomStruct in self.inputPdbFiles:
+                f.write("runCommand('open %s')\n" %
+                        os.path.abspath(atomStruct.get().getFileName()))
         # run the text:
         if len(self.extraCommands.get()) > 2:
             f.write(self.extraCommands.get())
