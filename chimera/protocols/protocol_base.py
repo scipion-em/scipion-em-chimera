@@ -99,8 +99,7 @@ class ChimeraProtBase(EMProtocol):
 
         self._insertFunctionStep('prerequisitesStep')
         self._insertFunctionStep('runChimeraStep')
-        directory = self._getExtraPath()
-        self._insertFunctionStep('createOutput', directory)
+        self._insertFunctionStep('createOutput')
 
     # --------------------------- STEPS functions ---------------------------
 
@@ -164,13 +163,14 @@ class ChimeraProtBase(EMProtocol):
                 f.write("runCommand('open %s')\n" % vol.get().getFileName())
                 pdbModelCounter += 1
 
-        pdbFileToBeRefined = self.pdbFileToBeRefined.get()
-        f.write("runCommand('open %s')\n" % os.path.abspath(
-            pdbFileToBeRefined.getFileName()))
-        if pdbFileToBeRefined.hasOrigin():
-            x, y, z = (pdbFileToBeRefined.getOrigin().getShifts())
-            f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
-                    "coord #0')\n" % (x, y, z, pdbModelCounter))
+        if self.pdbFileToBeRefined.get() is not None:
+            pdbFileToBeRefined = self.pdbFileToBeRefined.get()
+            f.write("runCommand('open %s')\n" % os.path.abspath(
+                pdbFileToBeRefined.getFileName()))
+            if pdbFileToBeRefined.hasOrigin():
+                x, y, z = (pdbFileToBeRefined.getOrigin().getShifts())
+                f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
+                        "coord #0')\n" % (x, y, z, pdbModelCounter))
 
         # Alignment of sequence and structure
         if (hasattr(self, 'inputSequence') and
@@ -221,10 +221,11 @@ class ChimeraProtBase(EMProtocol):
         # run in the background
         Chimera.runProgram(Plugin.getProgram(), args)
 
-    def createOutput(self, directory):
+    def createOutput(self):
         """ Copy the PDB structure and register the output object.
         """
         # Check vol and pdb files
+        directory = self._getExtraPath()
         for filename in sorted(os.listdir(directory)):
             if filename.endswith(".mrc"):
                 volFileName = os.path.join(directory, filename)
