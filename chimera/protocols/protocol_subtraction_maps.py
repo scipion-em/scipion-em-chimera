@@ -90,6 +90,13 @@ class ChimeraSubtractionMaps(EMProtocol):
                           "or created from an atomic coordinates file (choose 'atomic structure'"
                           " If 3D Map is chosen, the sampling rate of minuend should be"
                           " equal to sampling rate of subtrahend")
+        form.addParam('level', FloatParam,
+                      expertLevel=LEVEL_ADVANCED,
+                      allowsNull=True,
+                      label='Contour level (subtrahend)',
+                      help='result = minuend − subtrahend. Calculation are made for those\n'
+                            'voxels inside a region created by this contour level\n'
+                            'empty -> chimera computes the level')
         form.addParam('inputVolume2', PointerParam, pointerClass="Volume",
                          condition=('mapOrModel==%d ' % 0),
                          important=True, allowsNull=True,
@@ -280,30 +287,32 @@ class ChimeraSubtractionMaps(EMProtocol):
         Chimera.createCoordinateAxisFile(dim, bildFileName=bildFileName,
                                          sampling=sampling)
         # origin coordinates
-        modelId = 0
+        modelId = 0 # axis
         f.write("runCommand('open %s')\n" % (bildFileName))
         f.write("runCommand('cofr 0,0,0')\n")  # set center of coordinates
         # input volume
-        modelMapM = modelId + 1 # 1, Minuend
+        modelMapM = modelId + 1 # 1, Minuend, result = minuend − subtrahend
         f.write("runCommand('open %s')\n" % self.fnVolName)
+        # value supplied by user if -1 then do not use it
         f.write("runCommand('volume #%d style surface voxelSize %f')\n"
                 % (modelMapM, sampling))
         x, y, z = self.vol.getShiftsFromOrigin()
         f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
                 % (modelMapM, x, y, z))
 
-        if self.mapOrModel == 0:
+        if self.mapOrModel == 0:  # subtrahend is a 3D Map
             # input map
             # with its origin coordinates
             modelMapS = modelMapM + 1  # 2 Subtrahend
             f.write("runCommand('open %s')\n" %
                     (self.subVolName))
+            # TODO: add level option -> "volume #%d level %f"
             f.write("runCommand('volume #%d style surface voxelSize %f')\n"
                     % (modelMapS, sampling))
             x, y, z = self.subVol.getShiftsFromOrigin()
             f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
                         % (modelMapS, x, y, z))
-        else:
+        else:  # subtrahend is an atomic structure
             f.write("runCommand('open %s')\n" % self.atomStructName)
             # input atomic structure
             modelAtomStruct = modelMapM + 1
@@ -330,13 +339,14 @@ class ChimeraSubtractionMaps(EMProtocol):
                             "prefix chain_%s_')\n"
                             % (modelAtomStructChain, modelMapM,
                                self.selectedChain))
-                    if self.selectAreaMap == True:
+                    if self.selectAreaMap == True:  # mask the minuend using the atomic structure
                         if self.applySymmetry == True and self.symmetryGroup.get() is not None:
                             sym = CHIMERA_SYM_NAME[self.symmetryGroup.get()]
                             modelId = modelAtomStructChain
                             self.symMethod(f, modelId, sym, self.symmetryOrder, self.rangeDist)
 
                             modelAtomStructChainSym = modelAtomStructChain + 2
+                            # create a new model with the result of the symmetrization
                             f.write("runCommand('combine #%d- modelId #%d')\n"
                                     % (modelAtomStructChain, modelAtomStructChainSym))
                             modelIdZone = modelAtomStructChainSym + 1
@@ -355,7 +365,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                         f.write("runCommand('scipionwrite model #%d refmodel #%d " \
                                 "prefix zone_')\n" % (modelIdZone, modelMapM))
                         modelMapS = modelIdZone + 1
-                    else:
+                    else:  # do not mask the minuend using the atomic structure
                         if self.applySymmetry == True:
                             modelMapS = modelAtomStructChain + 3
                         else:
@@ -409,7 +419,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                             % (modelMapS, modelMapM,
                                self.selectedChain))
 
-            else:
+            else:  # use whole atomic model
                 f.write("runCommand('scipionwrite model #%d refmodel #%d')\n" \
                         % (modelAtomStruct, modelMapM))
                 if self.selectAreaMap == True:
@@ -500,7 +510,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                                 "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
                                 % (modelAtomStructChainSym, self.resolution, sampling,
                                    modelMapS))
-                else:
+                else:  # no symmetry
                     f.write("runCommand("
                             "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
                             % (modelAtomStruct, self.resolution, sampling,
@@ -511,6 +521,9 @@ class ChimeraSubtractionMaps(EMProtocol):
                         % (modelMapS, modelMapM))
 
         # Generation of the differential map
+        if self.level.get() is not None:
+            f.write("runCommand('volume #%d level %f')\n" %
+                    (modelMapS, self.level))
         modelMapDiff = modelMapS + 1
         if self.selectAreaMap == True:
             f.write("runCommand('vop subtract #%d #%d modelId #%d "
@@ -538,11 +551,12 @@ class ChimeraSubtractionMaps(EMProtocol):
         f.write("runCommand('scipionwrite model #%d refmodel #%d " \
                 "prefix filtered_')\n"
                 % (modelMapDiffFil, modelMapM))
-        if self.inputPdbFiles is not None:
+        if self.inputPdbFiles is not None:  # Other atomic models different
+                                            # from the subtrahend
             for atomStruct in self.inputPdbFiles:
                 f.write("runCommand('open %s')\n" %
                         os.path.abspath(atomStruct.get().getFileName()))
-        # run the text:
+        # run the script:
         if len(self.extraCommands.get()) > 2:
             f.write(self.extraCommands.get())
             args = " --nogui --script " + self._getTmpPath(
