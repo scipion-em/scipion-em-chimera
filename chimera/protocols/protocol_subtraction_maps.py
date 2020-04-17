@@ -125,9 +125,13 @@ class ChimeraSubtractionMaps(EMProtocol):
                          default=False,
                          help="Select 'Yes' to remove a certain "
                               "number of residues of one of the chains "
-                              "of the atomic structure. these removed residues "
+                              "of the atomic structure. These removed residues "
                               "might help you to establish a control of "
-                              "appropriate levels of map density.\n")
+                              "appropriate levels of map density.\n"
+                              "In order to better visualize the area of removed"
+                              "residues, 10 residues will be highligthed before "
+                              "and after the first and the last residues selected,"
+                              " respectively.\n")
         form.addParam('inputStructureChain', StringParam,
                          condition=(('mapOrModel==%d and '
                                     'removeResidues==True and '
@@ -360,15 +364,18 @@ class ChimeraSubtractionMaps(EMProtocol):
                     if self.removeResidues == True:
                         if (self.firstResidueToRemove.get() is not None and
                                 self.lastResidueToRemove.get() is not None):
-                            firstResidue = self.firstResidueToRemove.get().\
+                            self.firstResidue = self.firstResidueToRemove.get().\
                             split(":")[1].split(",")[0].strip()
-                            lastResidue = self.lastResidueToRemove.get(). \
+                            self.lastResidue = self.lastResidueToRemove.get(). \
                                 split(":")[1].split(",")[0].strip()
                             f.write("runCommand('select #%d:%d-%d.%s')\n"
                                     % (modelAtomStructChain,
-                                       int(firstResidue), int(lastResidue),
+                                       int(self.firstResidue), int(self.lastResidue),
                                        self.selectedChain))
                             f.write("runCommand('del sel')\n")
+                            f.write("runCommand('select #%d:%d-%d.%s')\n" %
+                                    (modelAtomStructChain, int(self.firstResidue) - 10,
+                                     int(self.lastResidue) + 10, self.selectedChain))
                     if self.applySymmetry == True:
                         if self.symmetryGroup.get() is not None:
                             sym = CHIMERA_SYM_NAME[self.symmetryGroup.get()]
@@ -384,6 +391,14 @@ class ChimeraSubtractionMaps(EMProtocol):
                                     "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
                                     % (modelAtomStructChainSym, self.resolution, sampling,
                                        modelMapS))
+                            if self.removeResidues == True:
+                                if (self.firstResidueToRemove.get() is not None and
+                                        self.lastResidueToRemove.get() is not None):
+                                    f.write("runCommand('select #%d:%d-%d')\n" %
+                                            (modelAtomStructChainSym,
+                                             int(self.firstResidue) - 10,
+                                             int(self.lastResidue) + 10))
+
                     else:
                         f.write("runCommand("
                                 "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
@@ -445,18 +460,22 @@ class ChimeraSubtractionMaps(EMProtocol):
                                  os.path.basename(self.atomStructName)))
                         f.write("runCommand('sel #%d:.%s')\n"
                                 % (modelAtomStruct, self.selectedChain))
-                        firstResidue = self.firstResidueToRemove.get(). \
+                        self.firstResidue = self.firstResidueToRemove.get(). \
                             split(":")[1].split(",")[0].strip()
-                        lastResidue = self.lastResidueToRemove.get(). \
+                        self.lastResidue = self.lastResidueToRemove.get(). \
                             split(":")[1].split(",")[0].strip()
                         f.write("runCommand('select #%d:%d-%d.%s')\n"
                                 % (modelAtomStruct,
-                                   int(firstResidue), int(lastResidue),
+                                   int(self.firstResidue), int(self.lastResidue),
                                    self.selectedChain))
                         f.write("runCommand('del sel')\n")
                         f.write("runCommand('scipionwrite model #%d refmodel #%d " \
                                 "prefix mutated_')\n"
                                 % (modelAtomStruct, modelMapM))
+
+                        f.write("runCommand('select #%d:%d-%d.%s')\n" %
+                                (modelAtomStruct, int(self.firstResidue) - 10,
+                                 int(self.lastResidue) + 10, self.selectedChain))
 
                 if self.applySymmetry == True:
                     if self.symmetryGroup.get() is not None:
@@ -466,14 +485,21 @@ class ChimeraSubtractionMaps(EMProtocol):
                         modelAtomStructChainSym = modelAtomStruct + 2
                         f.write("runCommand('combine #%d- modelId #%d')\n"
                                 % (modelAtomStruct, modelAtomStructChainSym))
-
+                        f.write("runCommand('scipionwrite model #%d refmodel #%d "
+                                "prefix sym_')\n"
+                                % (modelAtomStructChainSym, modelMapM))
+                        if (self.inputStructureChain.get() is not None and
+                                self.firstResidueToRemove.get() is not None and
+                                self.lastResidueToRemove.get() is not None):
+                            f.write("runCommand('select #%d:%d-%d.%s')\n" %
+                                    (modelAtomStructChainSym,
+                                     int(self.firstResidue) - 10,
+                                     int(self.lastResidue) + 10,
+                                     self.selectedChain))
                         f.write("runCommand("
                                 "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
                                 % (modelAtomStructChainSym, self.resolution, sampling,
                                    modelMapS))
-                        f.write("runCommand('scipionwrite model #%d refmodel #%d "
-                                "prefix sym_')\n"
-                                % (modelAtomStructChainSym, modelMapM))
                 else:
                     f.write("runCommand("
                             "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
