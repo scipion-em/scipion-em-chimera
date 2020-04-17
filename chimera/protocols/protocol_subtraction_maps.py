@@ -42,7 +42,7 @@ from pyworkflow.protocol.params import (PointerParam,
                                         EnumParam,
                                         FloatParam,
                                         BooleanParam,
-                                        StringParam, MultiPointerParam)
+                                        StringParam, MultiPointerParam, Float)
 
 from pwem.constants import (SYM_DIHEDRAL_X)
 from ..constants import (CHIMERA_SYM_NAME, CHIMERA_I222r)
@@ -68,6 +68,94 @@ class ChimeraSubtractionMaps(EMProtocol):
     _label = 'map subtraction'
     _program = ""
     _version = VERSION_3_0
+    subtractionString = """
+from VolumeStatistics import mean_sd_rms
+from chimera import openModels
+from VolumeData import Array_Grid_Data
+from VolumeViewer.volume import volume_from_grid_data
+import numpy
+from numpy import greater_equal, multiply, dot as inner_product
+from numpy import array, ravel
+
+# get volume from model id
+
+def subtraction(minuendId, subtrahendId, contourLevel=-999999., outModelId=-1):
+    ''' subtract two volumes after adjust their respective ranges.
+        1) A mask is computed using the volume with modelid=subtrahendId 
+           and the countour level value.
+        2) Within the mask the average value of the voxels is computed 
+           for both models
+        3) The respective average value is subtracted to the whole volume
+        4) A multiplicative between both volumes is computed and applied
+        5) Second volume is substracted from first volume
+        6) Result is shown in chimera
+
+        Usage Example:
+        from chimera import runCommand
+        runCommand('open /home/roberto/Downloads/Vols/emd_21375_crop_ref.mrc')
+        runCommand('open /home/roberto/Downloads/Vols/i2pc_Level0_226_crop_ref.mrc')
+        subtraction(0, 1, contourLevel=None, outModelId=6)
+    '''
+    minuendModel = openModels.list(id=minuendId)[0]  #submodel if needed
+    subtrahendModel = openModels.list(id=subtrahendId)[0]  #submodel if needed
+
+    if contourLevel < -999998.:
+        contourLevel = subtrahendModel.surface_levels[0]
+
+    # get  matrix with voxel values
+    minuendMatrix = minuendModel.full_matrix()
+    subtrahendMatrix = subtrahendModel.full_matrix()
+    # check if sampling and size is the same
+    compatible1 = abs (minuendModel.data.step[0] - minuendModel.data.step[0]) < 0.01
+    s1 = minuendMatrix.shape
+    s2 = subtrahendMatrix.shape
+    compatible2 = (s1[0]==s2[0]) & (s1[1]==s2[1]) & (s1[1]==s2[1])
+    
+    if not (compatible1 & compatible2):
+        print("using vop subtract1")
+        print (minuendId, subtrahendId, outModelId, subtrahendId)
+        command = "vop subtract #%d #%d modelId #%d minRMS true onGrid #%d" % (minuendId, subtrahendId, outModelId, subtrahendId)
+        runCommand(command)
+        return
+    else:
+        print("using scipion volume subtraction" )
+    
+     
+    # test data, comment next two lines to operate
+    # with chimera volumes
+    # minuendMatrix = array([[1., 2., 3.], [4., 5., 6.]])
+    # subtrahendMatrix = minuendMatrix * 2 +1
+
+    # keep only values above thershold contourLevel
+    # create mask
+    mask = subtrahendMatrix > contourLevel  # matrix with true and false
+    minuendMean = minuendMatrix[mask].mean()
+    subtrahendMean = subtrahendMatrix[mask].mean()
+
+    # subtract mean from matrix. Important do not reuse matrices m0 or m1
+    shifted_matrix_minuend = minuendMatrix - minuendMean
+    shifted_matrix_subtrahend = subtrahendMatrix - subtrahendMean
+    innerProduct = inner_product(shifted_matrix_subtrahend[mask],    shifted_matrix_minuend[mask])
+    normalization =inner_product(shifted_matrix_subtrahend[mask], shifted_matrix_subtrahend[mask])
+
+
+    if normalization == 0:
+       f = 1
+    else:
+       f = innerProduct/normalization
+
+    new_matrix_subtrahend =  minuendMatrix - (shifted_matrix_subtrahend * f + minuendMean )
+
+    # attach matrix to grid
+    g0 = Array_Grid_Data(new_matrix_subtrahend, subtrahendModel.data.origin, subtrahendModel.data.step, subtrahendModel.data.cell_angles)
+
+    # create new volume
+    if outModelId == -1:
+        differenceVolume = volume_from_grid_data(g0)
+    else:
+        differenceVolume = volume_from_grid_data(g0, model_id=outModelId)
+
+"""
 
     MAP_OPTIONS = ['3D map', 'atomic structure']
     CHIMERA_FILTERS = ['Gaussian', 'Fourier Transform']
@@ -265,6 +353,7 @@ class ChimeraSubtractionMaps(EMProtocol):
             print("Map to subtract generated from the atomic structure:\n %s\n"
                   % self.atomStructName)
 
+
     def runChimeraStep(self):
         # building script file including the coordinate axes and the input
         # volume with samplingRate and Origin information
@@ -398,8 +487,8 @@ class ChimeraSubtractionMaps(EMProtocol):
                                     "prefix sym_')\n"
                                     % (modelAtomStructChainSym, modelMapM))
                             f.write("runCommand("
-                                    "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
-                                    % (modelAtomStructChainSym, self.resolution, sampling,
+                                    "'molmap #%d %0.3f onGrid #%d modelId #%d')\n"
+                                    % (modelAtomStructChainSym, self.resolution, modelMapM,
                                        modelMapS))
                             if self.removeResidues == True:
                                 if (self.firstResidueToRemove.get() is not None and
@@ -411,8 +500,8 @@ class ChimeraSubtractionMaps(EMProtocol):
 
                     else:
                         f.write("runCommand("
-                                "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
-                                % (modelAtomStructChain, self.resolution, sampling,
+                                "'molmap #%d %0.3f onGrid #%d modelId #%d')\n"
+                                % (modelAtomStructChain, self.resolution, modelMapM,
                                    modelMapS))
                     f.write("runCommand('scipionwrite model #%d refmodel #%d "
                             "prefix molmap_chain%s_')\n"
@@ -507,13 +596,13 @@ class ChimeraSubtractionMaps(EMProtocol):
                                      int(self.lastResidue) + 10,
                                      self.selectedChain))
                         f.write("runCommand("
-                                "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
-                                % (modelAtomStructChainSym, self.resolution, sampling,
+                                "'molmap #%d %0.3f onGrid #%d modelId #%d')\n"
+                                % (modelAtomStructChainSym, self.resolution, modelMapM,
                                    modelMapS))
                 else:  # no symmetry
                     f.write("runCommand("
-                            "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
-                            % (modelAtomStruct, self.resolution, sampling,
+                            "'molmap #%d %0.3f onGrid #%d modelId #%d')\n"
+                            % (modelAtomStruct, self.resolution, modelMapM,
                                modelMapS))
 
                 f.write("runCommand('scipionwrite model #%d refmodel #%d "
@@ -524,21 +613,33 @@ class ChimeraSubtractionMaps(EMProtocol):
         if self.level.get() is not None:
             f.write("runCommand('volume #%d level %f')\n" %
                     (modelMapS, self.level))
+        else:
+            self.level = Float(-999999.)
+        f.write(self.subtractionString)
         modelMapDiff = modelMapS + 1
         if self.selectAreaMap == True:
-            f.write("runCommand('vop subtract #%d #%d modelId #%d "
-                    "minRMS true onGrid #%d')\n"
-                    % (modelIdZone, modelMapS,
-                       modelMapDiff, modelMapM))
+            f.write("subtraction(%d, %d, contourLevel=%f, outModelId=%d)\n"%
+                    (modelIdZone, modelMapS, self.level, modelMapDiff)
+                    )
+            #f.write("runCommand('vop subtract #%d #%d modelId #%d "
+            #        "minRMS true onGrid #%d')\n"
+            #        % (modelIdZone, modelMapS,
+            #           modelMapDiff, modelMapM))
         else:
-            f.write("runCommand('vop subtract #%d #%d modelId #%d "
-                    "minRMS true onGrid #%d')\n"
-                    % (modelMapM, modelMapS,
-                       modelMapDiff, modelMapM))
+            f.write("subtraction(%d, %d, contourLevel=%f, outModelId=%d)\n"%
+                    (modelMapM, modelMapS, self.level, modelMapDiff)
+                    )
+            #f.write("runCommand('vop subtract #%d #%d modelId #%d "
+            #        "minRMS true onGrid #%d')\n"
+            #        % (modelMapM, modelMapS,
+            #           modelMapDiff, modelMapM))
 
         f.write("runCommand('scipionwrite model #%d refmodel #%d " \
                 "prefix difference_')\n"
                 % (modelMapDiff, modelMapM))
+
+
+
 
         # Generation of the filtered map
         modelMapDiffFil = modelMapDiff + 1
