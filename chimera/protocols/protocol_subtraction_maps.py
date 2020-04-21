@@ -500,7 +500,7 @@ def subtraction(minuendId, subtrahendId, contourLevel=-999999., outModelId=-1):
 
                     else:
                         f.write("runCommand("
-                                "'molmap #%d %0.3f gridSpacing %0.2f #%d modelId #%d')\n"
+                                "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
                                 % (modelAtomStructChain, self.resolution, sampling,
                                    modelMapS))
                     f.write("runCommand('scipionwrite model #%d refmodel #%d "
