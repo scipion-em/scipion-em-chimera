@@ -48,9 +48,11 @@ class Plugin(pwem.Plugin):
     @classmethod
     def getEnviron(cls):
         environ = pwutils.Environ(os.environ)
-        environ.update({'PATH': cls.getHome('bin'),
-                        'LD_LIBRARY_PATH': os.environ['REMOTE_MESA_LIB'],
-                        }, position=pwutils.Environ.BEGIN)
+        d = {}
+        d['PATH'] = cls.getHome('bin')
+        if "REMOTE_MESA_LIB" in os.environ:
+            d["LD_LIBRARY_PATH"] = os.environ['REMOTE_MESA_LIB']
+        environ.update(d, position=pwutils.Environ.BEGIN)
         return environ
 
     @classmethod
