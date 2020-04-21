@@ -487,8 +487,8 @@ def subtraction(minuendId, subtrahendId, contourLevel=-999999., outModelId=-1):
                                     "prefix sym_')\n"
                                     % (modelAtomStructChainSym, modelMapM))
                             f.write("runCommand("
-                                    "'molmap #%d %0.3f onGrid #%d modelId #%d')\n"
-                                    % (modelAtomStructChainSym, self.resolution, modelMapM,
+                                    "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
+                                    % (modelAtomStructChainSym, self.resolution, sampling,
                                        modelMapS))
                             if self.removeResidues == True:
                                 if (self.firstResidueToRemove.get() is not None and
@@ -500,8 +500,8 @@ def subtraction(minuendId, subtrahendId, contourLevel=-999999., outModelId=-1):
 
                     else:
                         f.write("runCommand("
-                                "'molmap #%d %0.3f onGrid #%d modelId #%d')\n"
-                                % (modelAtomStructChain, self.resolution, modelMapM,
+                                "'molmap #%d %0.3f gridSpacing %0.2f #%d modelId #%d')\n"
+                                % (modelAtomStructChain, self.resolution, sampling,
                                    modelMapS))
                     f.write("runCommand('scipionwrite model #%d refmodel #%d "
                             "prefix molmap_chain%s_')\n"
@@ -596,13 +596,13 @@ def subtraction(minuendId, subtrahendId, contourLevel=-999999., outModelId=-1):
                                      int(self.lastResidue) + 10,
                                      self.selectedChain))
                         f.write("runCommand("
-                                "'molmap #%d %0.3f onGrid #%d modelId #%d')\n"
-                                % (modelAtomStructChainSym, self.resolution, modelMapM,
+                                "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
+                                % (modelAtomStructChainSym, self.resolution, sampling,
                                    modelMapS))
                 else:  # no symmetry
                     f.write("runCommand("
-                            "'molmap #%d %0.3f onGrid #%d modelId #%d')\n"
-                            % (modelAtomStruct, self.resolution, modelMapM,
+                            "'molmap #%d %0.3f gridSpacing %0.2f modelId #%d')\n"
+                            % (modelAtomStruct, self.resolution, sampling,
                                modelMapS))
 
                 f.write("runCommand('scipionwrite model #%d refmodel #%d "
