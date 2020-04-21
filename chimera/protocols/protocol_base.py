@@ -320,9 +320,9 @@ def newFileName(template, model):
     # counter = 1
     # while os.path.isfile(template%counter):
     #    counter += 1
-    f = open('/tmp/kk', 'w')
-    f.write(template)
-    f.close()
+    #f = open('/tmp/kk', 'w')
+    #f.write(template)
+    #f.close()
     
     return template % model
 
@@ -387,18 +387,24 @@ def cmd_scipionWrite(scipionWrite,args):
 '''
 
 chimeraScriptMain = '''
-  def scipionWrite(model="%(modelID)s",refModel="%(refModelID)s", prefix=None):
-         
+  def scipionWrite(model="%(modelID)s",refModel="%(refModelID)s", prefix=None, savesession='1'):
+     #  savesession 1 -> save session
+     #  savesession 0 -> do not save session    
      # Save the PDB relative to the volume coordinate system
      # TODO: check if this Will work if the reference is a PDB?
      atomStructFileName = newFileName('%(pdbFileTemplate)s', model[1:])
      mapFileName = newFileName('%(chimeraMapTemplateFileName)s', model[1:])
      saveModel(model, refModel, atomStructFileName, mapFileName, prefix)
      # alternative way to save  the pdb file using a command
-
+     
+     if savesession == '1':
+        savesession = True
+     else:
+        savesession = False
      try:
-         if prefix is None or prefix != 'DONOTSAVESESSION':  # this is needed for the tests
-             saveSession('%(sessionFileName)s')
+         if savessesion:
+             if prefix is None or prefix != 'DONOTSAVESESSION':  # this is needed for the tests
+                 saveSession('%(sessionFileName)s')
      except Exception as e:
          f = open ('/tmp/chimera_error.txt','w')
          f.write(e.message)
