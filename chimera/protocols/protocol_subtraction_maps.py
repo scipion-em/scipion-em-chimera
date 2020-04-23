@@ -73,6 +73,100 @@ class ChimeraSubtractionMaps(EMProtocol):
     MAP_OPTIONS = ['3D map', 'atomic structure']
     CHIMERA_FILTERS = ['Gaussian', 'Fourier Transform']
 
+    subtractionString = """
+from VolumeStatistics import mean_sd_rms
+from chimera import openModels
+from chimera import replyobj
+
+from VolumeData import Array_Grid_Data
+from VolumeViewer.volume import volume_from_grid_data
+import numpy
+from numpy import greater_equal, multiply, dot as inner_product
+from numpy import array, ravel
+# get volume from model id
+def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
+    ''' subtract or mask two volumes after adjust their respective ranges.
+    
+        The mask part is close to the chimera command
+        vop zone invert. 
+        If doMask = True the program function uses vop subtract (chimera) 
+        Else:
+        1) A mask is computed using the volume with modelid=subtrahendId 
+           and the countour level value.
+        2) All voxels in minuendId are set to 0 for those
+           voxels inside the mask.
+        3) Result is shown in chimera
+        4) Volumes are assume to have the same sampling rate and dimensions
+        Usage Example:
+        from chimera import runCommand
+        runCommand('open /home/roberto/Downloads/Vols/emd_21375_crop_ref.mrc')
+        runCommand('open /home/roberto/Downloads/Vols/i2pc_Level0_226_crop_ref.mrc')
+        subtraction(0, 1, outModelId=6, doMask=False)
+        
+        Note this function is milar to chimera's vop zone invert
+        but can be used not only with PDBs but with 3D maps as subtrahend
+    '''
+    if not doMask:
+        command = "vop subtract #%d #%d modelId #%d minRMS true onGrid #%d" % (minuendId, subtrahendId, outModelId, minuendId)
+        runCommand(command)
+        return
+    
+    # get models from Ids
+    minuendModel = openModels.list(id=minuendId)[0]  #submodel if needed
+    subtrahendModel = openModels.list(id=subtrahendId)[0]  #submodel if needed
+    
+    # Get contour level from model
+    contourLevel = subtrahendModel.surface_levels[0]
+        
+    # get  matrix with voxel values
+    minuendMatrix = minuendModel.full_matrix()
+    subtrahendMatrix = subtrahendModel.full_matrix()
+    
+    # check if sampling and size is the same
+    compatible1 = abs (minuendModel.data.step[0] - minuendModel.data.step[0]) < 0.01
+    s1 = minuendMatrix.shape
+    s2 = subtrahendMatrix.shape
+    compatible2 = (s1[0]==s2[0]) & (s1[1]==s2[1]) & (s1[1]==s2[1])
+
+    if not (compatible1 & compatible2):
+        replyobj.status("Both volumes have incompatible size or sampling, using vop subtract")
+        command = "vop subtract #%d #%d modelId #%d minRMS true onGrid #%d" % (minuendId, subtrahendId, outModelId, minuendId)
+        runCommand(command)
+        return
+
+    # test data, comment next two lines to operate
+    # with chimera volumes
+    # minuendMatrix = array([[1., 2., 3.], [4., 5., 6.]])
+    # subtrahendMatrix = minuendMatrix * 2 +1
+    # contourLevel=6
+    
+    
+    # create mask
+    # keep only values above threshold contourLevel
+    mask = subtrahendMatrix > contourLevel  # matrix with true and false
+                                            # values less than counter
+                                            # are set to true
+    # set values to half the contourLevel                                           
+    minuendMatrix[mask] = 0.
+    
+    #innerProduct = inner_product(shifted_matrix_subtrahend[mask],    shifted_matrix_minuend[mask])
+    #normalization =inner_product(shifted_matrix_subtrahend[mask], shifted_matrix_subtrahend[mask])
+    #if normalization == 0:
+    #   f = 1
+    #else:
+    #   f = innerProduct/normalization
+    #new_matrix_subtrahend =  minuendMatrix - (shifted_matrix_subtrahend * f + minuendMean )
+    # attach matrix to grid
+    
+    g0 = Array_Grid_Data(minuendMatrix, minuendModel.data.origin, 
+                         minuendModel.data.step, minuendModel.data.cell_angles)
+    # create new volume
+    if outModelId == -1:
+        differenceVolume = volume_from_grid_data(g0)
+    else:
+        differenceVolume = volume_from_grid_data(g0, model_id=outModelId)
+"""
+
     # --------------------------- DEFINE param functions --------------------
     def _defineParams(self, form, doHelp=False):
 
@@ -91,6 +185,20 @@ class ChimeraSubtractionMaps(EMProtocol):
                           "or created from an atomic coordinates file (choose 'atomic structure'"
                           " If 3D Map is chosen, the sampling rate of minuend should be"
                           " equal to sampling rate of subtrahend")
+        form.addParam('doMask', BooleanParam,
+                      default=False,
+                      label='Subtract (No) or Mask (Yes)',
+                      help='You ay mask the minuend instead of subtract the minuend − subtrahend. '
+                           'The mask if created with all those points that belong to the '
+                           'subtrahend and are greater that the level (0 level is not not supplied)')
+        form.addParam('level', FloatParam,
+                      expertLevel=LEVEL_ADVANCED,
+                      default=0.001,
+                      allowsNull=True,
+                      label='Contour level (subtrahend)',
+                      help='result = minuend − subtrahend. Calculation are made for those\n'
+                           'voxels inside a region created by this contour level\n'
+                           'empty -> chimera computes the level')
         form.addParam('inputVolume2', PointerParam, pointerClass="Volume",
                          condition=('mapOrModel==%d ' % 0),
                          important=True, allowsNull=True,
@@ -99,8 +207,10 @@ class ChimeraSubtractionMaps(EMProtocol):
         form.addParam('resolution', FloatParam,
                          condition=('mapOrModel==%d' % 1),
                          label='Map resolution (A):',
-                         help="Thershold that will be used to low pass the 3D map created "
-                              "from the atomic structure. We recommend half the value of the"
+                         help=" The atomic structure file wil be used to create a 3D map. "
+                              " Each atom is described as a 3D Gaussian distribution of "
+                              " width proportional to the resolution and amplitude proportional "
+                              " to the atomic number. We recommend half the value of the"
                               " resolution obtained by FSC")
         form.addParam('pdbFileToBeRefined', PointerParam,
                       pointerClass="AtomStruct", allowsNull=True,
@@ -292,8 +402,8 @@ class ChimeraSubtractionMaps(EMProtocol):
         # input volume
         modelMapM = modelId + 1 # 1, Minuend, result = minuend − subtrahend
         f.write("runCommand('open %s')\n" % self.fnVolName)
-        # value supplied by user if -1 then do not use it
-        f.write("runCommand('volume #%d style surface voxelSize %f step 1')\n"
+        # step = 1 -> no  binning
+        f.write("runCommand('volume #%d style surface voxelSize %f')\n"
                 % (modelMapM, sampling))
         x, y, z = self.vol.getShiftsFromOrigin()
         f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
@@ -305,12 +415,14 @@ class ChimeraSubtractionMaps(EMProtocol):
             modelMapS = modelMapM + 1  # 2 Subtrahend
             f.write("runCommand('open %s')\n" %
                     (self.subVolName))
-            # TODO: add level option -> "volume #%d level %f"
             f.write("runCommand('volume #%d style surface voxelSize %f step 1')\n"
                     % (modelMapS, sampling))
             x, y, z = self.subVol.getShiftsFromOrigin()
             f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
                         % (modelMapS, x, y, z))
+            if self.level.get() is not None:
+                f.write("runCommand('volume #%d level %f')\n" %
+                        (modelMapS, self.level))
         else:  # subtrahend is an atomic structure
             f.write("runCommand('open %s')\n" % self.atomStructName)
             # input atomic structure
@@ -397,9 +509,12 @@ class ChimeraSubtractionMaps(EMProtocol):
                                     "prefix sym_  savesession 0')\n"
                                     % (modelAtomStructChainSym, modelMapM))
                             f.write("runCommand("
-                                    "'molmap #%d %0.3f onGrid #%d modelId #%d')\n"
-                                    % (modelAtomStructChainSym, self.resolution, modelMapM,
+                                    "'molmap #%d %0.3f gridSpacing %f modelId #%d')\n"
+                                    % (modelAtomStructChainSym, self.resolution, sampling,
                                        modelMapS))
+                            if self.level.get() is not None:
+                                f.write("runCommand('volume #%d level %f')\n" %
+                                        (modelMapS, self.level))
                             if self.removeResidues == True:
                                 if (self.firstResidueToRemove.get() is not None and
                                         self.lastResidueToRemove.get() is not None):
@@ -410,9 +525,12 @@ class ChimeraSubtractionMaps(EMProtocol):
 
                     else:
                         f.write("runCommand("
-                                "'molmap #%d %0.3f onGrid #%d modelId #%d')\n"
-                                % (modelAtomStructChain, self.resolution, modelMapM,
+                                "'molmap #%d %0.3f gridSpacing %f modelId #%d')\n"
+                                % (modelAtomStructChain, self.resolution, sampling,
                                    modelMapS))
+                        if self.level.get() is not None:
+                            f.write("runCommand('volume #%d level %f')\n" %
+                                    (modelMapS, self.level))
                     f.write("runCommand('scipionwrite model #%d refmodel #%d "
                             "prefix molmap_chain%s_  savesession 0')\n"
                             % (modelMapS, modelMapM,
@@ -506,40 +624,49 @@ class ChimeraSubtractionMaps(EMProtocol):
                                      int(self.lastResidue) + 10,
                                      self.selectedChain))
                         f.write("runCommand("
-                                "'molmap #%d %0.3f onGrid #%d modelId #%d')\n"
-                                % (modelAtomStructChainSym, self.resolution, modelMapM,
+                                "'molmap #%d %0.3f gridSpacing %f modelId #%d')\n"
+                                % (modelAtomStructChainSym, self.resolution, sampling,
                                    modelMapS))
+                        if self.level.get() is not None:
+                            f.write("runCommand('volume #%d level %f')\n" %
+                                    (modelMapS, self.level))
                 else:  # no symmetry
                     f.write("runCommand("
-                            "'molmap #%d %0.3f onGrid #%d modelId #%d')\n"
-                            % (modelAtomStruct, self.resolution, modelMapM,
+                            "'molmap #%d %0.3f gridSpacing %f modelId #%d')\n"
+                            % (modelAtomStruct, self.resolution, sampling,
                                modelMapS))
-
+                    if self.level.get() is not None:
+                        f.write("runCommand('volume #%d level %f')\n" %
+                                (modelMapS, self.level))
                 f.write("runCommand('scipionwrite model #%d refmodel #%d "
                         "prefix molmap_  savesession 0')\n"
                         % (modelMapS, modelMapM))
 
         # Generation of the differential map
+        f.write(self.subtractionString)
 
         modelMapDiff = modelMapS + 1
         if self.selectAreaMap == True:
-            f.write("runCommand('vop subtract #%d #%d modelId #%d "
-                    "minRMS true onGrid #%d')\n"
-                    % (modelIdZone, modelMapS,
-                       modelMapDiff, modelMapM))
+            f.write("subtraction(%d, %d, outModelId=%d, doMask=%r)\n" %
+                    (modelIdZone, modelMapS, modelMapDiff, self.doMask.get())
+                    )
+            #f.write("runCommand('vop subtract #%d #%d modelId #%d "
+            #        "minRMS true onGrid #%d')\n"
+            #        % (modelIdZone, modelMapS,
+            #           modelMapDiff, modelMapM))
         else:
-            f.write("runCommand('vop subtract #%d #%d modelId #%d "
-                    "minRMS true onGrid #%d')\n"
-                    % (modelMapM, modelMapS,
-                       modelMapDiff, modelMapM))
+            f.write("subtraction(%d, %d, outModelId=%d, doMask=%r)\n" %
+                    (modelMapM, modelMapS, modelMapDiff, self.doMask.get())
+                    )
+            #f.write("runCommand('vop subtract #%d #%d modelId #%d "
+            #        "minRMS true onGrid #%d')\n"
+            #        % (modelMapM, modelMapS,
+            #           modelMapDiff, modelMapM))
 
 
         f.write("runCommand('scipionwrite model #%d refmodel #%d " \
                 "prefix difference_  savesession 0')\n"
                 % (modelMapDiff, modelMapM))
-
-
-
 
         # Generation of the filtered map
         modelMapDiffFil = modelMapDiff + 1
