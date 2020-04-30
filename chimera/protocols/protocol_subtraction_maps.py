@@ -70,6 +70,7 @@ class ChimeraSubtractionMaps(EMProtocol):
     _program = ""
     _version = VERSION_3_0
 
+    PROTOCOL_OPTIONS = ['Subtraction', 'Mask']
     MAP_OPTIONS = ['3D map', 'atomic structure']
     CHIMERA_FILTERS = ['Gaussian', 'Fourier Transform']
 
@@ -84,12 +85,12 @@ import numpy
 from numpy import greater_equal, multiply, dot as inner_product
 from numpy import array, ravel
 # get volume from model id
-def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
+def subtraction(minuendId, subtrahendId, outModelId=-1, subtractOrMask=0):
     ''' subtract or mask two volumes after adjust their respective ranges.
     
         The mask part is close to the chimera command
         vop zone invert. 
-        If doMask = True the program function uses vop subtract (chimera) 
+        If subtractOrMask=1 the program function uses vop subtract (chimera) 
         Else:
         1) A mask is computed using the volume with modelid=subtrahendId 
            and the countour level value.
@@ -101,12 +102,12 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
         from chimera import runCommand
         runCommand('open /home/roberto/Downloads/Vols/emd_21375_crop_ref.mrc')
         runCommand('open /home/roberto/Downloads/Vols/i2pc_Level0_226_crop_ref.mrc')
-        subtraction(0, 1, outModelId=6, doMask=False)
+        subtraction(0, 1, outModelId=6, subtractOrMask=0)
         
         Note this function is milar to chimera's vop zone invert
         but can be used not only with PDBs but with 3D maps as subtrahend
     '''
-    if not doMask:
+    if subtractOrMask==0:
         command = "vop subtract #%d #%d modelId #%d minRMS true onGrid #%d" % (minuendId, subtrahendId, outModelId, minuendId)
         runCommand(command)
         return
@@ -176,29 +177,35 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
                       important=True,
                       help="difference 3D map = minuend − subtrahend"
                            "input here the minuend")
-        form.addParam('mapOrModel', EnumParam,
-                     choices=self.MAP_OPTIONS,
-                     display=EnumParam.DISPLAY_HLIST,
-                     default=0, label='Subtraction of',
-                     help="difference 3D Map = minuend − subtrahend. "
-                          "Subtrahend 3D map may be provided by the user (choose '3D map') "
-                          "or created from an atomic coordinates file (choose 'atomic structure'"
-                          " If 3D Map is chosen, the sampling rate of minuend should be"
-                          " equal to sampling rate of subtrahend")
-        form.addParam('doMask', BooleanParam,
-                      default=False,
-                      label='Subtract (No) or Mask (Yes)',
-                      help='You ay mask the minuend instead of subtract the minuend − subtrahend. '
-                           'The mask if created with all those points that belong to the '
-                           'subtrahend and are greater that the level (0 level is not not supplied)')
+        form.addParam('subtractOrMask', EnumParam,
+                      choices=self.PROTOCOL_OPTIONS,
+                      display=EnumParam.DISPLAY_HLIST,
+                      default=0,
+                      label='Select the operation to perform',
+                      help='You can select "Subtract" to get the result '
+                           'minuend − subtrahend, or "Mask" to mask the '
+                           'minuend.\nThis mask is created with all '
+                           'those points that belong to the subtrahend '
+                           'and are greater than the level (0 level is '
+                           'not supplied).')
         form.addParam('level', FloatParam,
                       expertLevel=LEVEL_ADVANCED,
+                      condition=('subtractOrMask==%d ' % 1),
                       default=0.001,
                       allowsNull=True,
                       label='Contour level (subtrahend)',
                       help='result = minuend − subtrahend. Calculation are made for those\n'
                            'voxels inside a region created by this contour level\n'
                            'empty -> chimera computes the level')
+        form.addParam('mapOrModel', EnumParam,
+                     choices=self.MAP_OPTIONS,
+                     display=EnumParam.DISPLAY_HLIST,
+                     default=0, label='Subtraction/Mask of',
+                     help="difference 3D Map = minuend − subtrahend. "
+                          "Subtrahend 3D map may be provided by the user (choose '3D map') "
+                          "or created from an atomic coordinates file (choose 'atomic structure'"
+                          " If 3D Map is chosen, the sampling rate of the minuend should be"
+                          " equal to the sampling rate of the subtrahend.")
         form.addParam('inputVolume2', PointerParam, pointerClass="Volume",
                          condition=('mapOrModel==%d ' % 0),
                          important=True, allowsNull=True,
@@ -345,7 +352,8 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
                     scipionwrite model #n [refmodel #p] [prefix stringAddedToFilename]
                     scipionss
                     scipionrs
-                    Type 'help command' in chimera command line for details (command is the command name)''')
+                    Type 'help command' in chimera command line for details 
+                    (command is the command name)''')
 
 
     # --------------------------- INSERT steps functions --------------------
@@ -373,7 +381,6 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
             print("Map to subtract generated from the atomic structure:\n %s\n"
                   % self.atomStructName)
 
-
     def runChimeraStep(self):
         # building script file including the coordinate axes and the input
         # volume with samplingRate and Origin information
@@ -388,7 +395,6 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
                          f,
                          self._getExtraPath(sessionFile),
                          )
-
         # building coordinate axes
         dim = self.vol.getDim()[0]
         sampling = self.vol.getSamplingRate()
@@ -420,7 +426,7 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
             x, y, z = self.subVol.getShiftsFromOrigin()
             f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
                         % (modelMapS, x, y, z))
-            if self.level.get() is not None:
+            if self.subtractOrMask == 1 and self.level.get() is not None:
                 f.write("runCommand('volume #%d level %f')\n" %
                         (modelMapS, self.level))
         else:  # subtrahend is an atomic structure
@@ -512,7 +518,7 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
                                     "'molmap #%d %0.3f gridSpacing %f modelId #%d')\n"
                                     % (modelAtomStructChainSym, self.resolution, sampling,
                                        modelMapS))
-                            if self.level.get() is not None:
+                            if self.subtractOrMask == 1 and self.level.get() is not None:
                                 f.write("runCommand('volume #%d level %f')\n" %
                                         (modelMapS, self.level))
                             if self.removeResidues == True:
@@ -528,7 +534,7 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
                                 "'molmap #%d %0.3f gridSpacing %f modelId #%d')\n"
                                 % (modelAtomStructChain, self.resolution, sampling,
                                    modelMapS))
-                        if self.level.get() is not None:
+                        if self.subtractOrMask == 1 and self.level.get() is not None:
                             f.write("runCommand('volume #%d level %f')\n" %
                                     (modelMapS, self.level))
                     f.write("runCommand('scipionwrite model #%d refmodel #%d "
@@ -627,7 +633,7 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
                                 "'molmap #%d %0.3f gridSpacing %f modelId #%d')\n"
                                 % (modelAtomStructChainSym, self.resolution, sampling,
                                    modelMapS))
-                        if self.level.get() is not None:
+                        if self.subtractOrMask == 1 and self.level.get() is not None:
                             f.write("runCommand('volume #%d level %f')\n" %
                                     (modelMapS, self.level))
                 else:  # no symmetry
@@ -635,7 +641,7 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
                             "'molmap #%d %0.3f gridSpacing %f modelId #%d')\n"
                             % (modelAtomStruct, self.resolution, sampling,
                                modelMapS))
-                    if self.level.get() is not None:
+                    if self.subtractOrMask == 1 and self.level.get() is not None:
                         f.write("runCommand('volume #%d level %f')\n" %
                                 (modelMapS, self.level))
                 f.write("runCommand('scipionwrite model #%d refmodel #%d "
@@ -647,16 +653,16 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
 
         modelMapDiff = modelMapS + 1
         if self.selectAreaMap == True:
-            f.write("subtraction(%d, %d, outModelId=%d, doMask=%r)\n" %
-                    (modelIdZone, modelMapS, modelMapDiff, self.doMask.get())
+            f.write("subtraction(%d, %d, outModelId=%d, subtractOrMask=%d)\n" %
+                    (modelIdZone, modelMapS, modelMapDiff, self.subtractOrMask.get())
                     )
             #f.write("runCommand('vop subtract #%d #%d modelId #%d "
             #        "minRMS true onGrid #%d')\n"
             #        % (modelIdZone, modelMapS,
             #           modelMapDiff, modelMapM))
         else:
-            f.write("subtraction(%d, %d, outModelId=%d, doMask=%r)\n" %
-                    (modelMapM, modelMapS, modelMapDiff, self.doMask.get())
+            f.write("subtraction(%d, %d, outModelId=%d, subtractOrMask=%r)\n" %
+                    (modelMapM, modelMapS, modelMapDiff, self.subtractOrMask.get())
                     )
             #f.write("runCommand('vop subtract #%d #%d modelId #%d "
             #        "minRMS true onGrid #%d')\n"
@@ -684,6 +690,9 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, doMask=False):
             for atomStruct in self.inputPdbFiles:
                 f.write("runCommand('open %s')\n" %
                         os.path.abspath(atomStruct.get().getFileName()))
+        # Finally save session
+        f.write("runCommand('scipionss')\n")
+
         # run the script:
         if len(self.extraCommands.get()) > 2:
             f.write(self.extraCommands.get())

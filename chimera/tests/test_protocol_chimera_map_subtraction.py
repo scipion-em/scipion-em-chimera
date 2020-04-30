@@ -664,3 +664,78 @@ class TestChimeraSubtractMap(TestImportData):
             protChimera7.difference_Map__6.getFileName()))
         self.assertTrue(os.path.exists(
             protChimera7.filtered_Map__7.getFileName()))
+
+        # protocol chimera mask
+        extraCommands = "runCommand('select all')\n"
+        args = {'extraCommands': extraCommands,
+                'inputVolume': volume,
+                'subtractOrMask': 1,
+                'level': 0.217,
+                'mapOrModel': 1,
+                'resolution': 3.2,
+                'pdbFileToBeRefined': protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3,
+                # 'selectChain': True,
+                # 'selectStructureChain': self.chainID,
+                'removeResidues': True,
+                'inputStructureChain': self.chainID,
+                'firstResidueToRemove': self.FirstResidue,
+                'lastResidueToRemove': self.LastResidue,
+                'applySymmetry': True,
+                'symmetryGroup': CHIMERA_CYCLIC,
+                'symmetryOrder': 2
+                }
+        protChimera8 = self.newProtocol(ChimeraSubtractionMaps, **args)
+        protChimera8.setObjLabel('chimera mask\n chainAB-sym-derived map\n'
+                                 'remove residues\nlevel 0.217\nno zone')
+        self.launchProtocol(protChimera8)
+        self.assertIsNotNone(
+            protChimera8.Atom_struct__2.getFileName(),
+            "There was a problem with the alignment")
+        self.assertTrue(os.path.exists(
+            protChimera8.mutated_Atom_struct__2.getFileName()))
+        self.assertTrue(os.path.exists(
+            protChimera8.sym_Atom_struct__4.getFileName()))
+        self.assertTrue(os.path.exists(
+            protChimera8.molmap_Map__5.getFileName()))
+        self.assertTrue(os.path.exists(
+            protChimera8.difference_Map__6.getFileName()))
+        self.assertTrue(os.path.exists(
+            protChimera8.filtered_Map__7.getFileName()))
+
+        # protocol chimera mask
+        extraCommands = "runCommand('select all')\n"
+        args = {'extraCommands': extraCommands,
+                'inputVolume': volume,
+                'subtractOrMask': 1,
+                'level': 2.0,
+                'mapOrModel': 1,
+                'resolution': 3.2,
+                'pdbFileToBeRefined': protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3,
+                # 'selectChain': True,
+                # 'selectStructureChain': self.chainID,
+                'removeResidues': True,
+                'inputStructureChain': self.chainID,
+                'firstResidueToRemove': self.FirstResidue,
+                'lastResidueToRemove': self.LastResidue,
+                'applySymmetry': True,
+                'symmetryGroup': CHIMERA_CYCLIC,
+                'symmetryOrder': 2
+                }
+        protChimera9 = self.newProtocol(ChimeraSubtractionMaps, **args)
+        protChimera9.setObjLabel('chimera mask\n chainAB-sym-derived map\n'
+                                 'remove residues\nlevel 2.0\nno zone')
+        self.launchProtocol(protChimera9)
+        self.assertIsNotNone(
+            protChimera9.Atom_struct__2.getFileName(),
+            "There was a problem with the alignment")
+        self.assertTrue(os.path.exists(
+            protChimera9.mutated_Atom_struct__2.getFileName()))
+        self.assertTrue(os.path.exists(
+            protChimera9.sym_Atom_struct__4.getFileName()))
+        self.assertTrue(os.path.exists(
+            protChimera9.molmap_Map__5.getFileName()))
+        self.assertTrue(os.path.exists(
+            protChimera9.difference_Map__6.getFileName()))
+        self.assertTrue(os.path.exists(
+            protChimera9.filtered_Map__7.getFileName()))
+
