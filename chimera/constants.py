@@ -30,7 +30,7 @@ CLUSTALO = 'clustalo'
 MUSCLE = 'muscle'
 
 # Supported Versions
-V1_10_1 = 'V1_10_1'
+V1_13_1 = 'V1_13_1'
 
 CHIMERA_TO_SCIPION = {}
 CHIMERA_CYCLIC = 0  # SYM_CYCLIC = 0
