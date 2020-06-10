@@ -147,20 +147,25 @@ class ChimeraProtBase(EMProtocol):
         # input vol with its origin coordinates
         pdbModelCounter = 1
         if _inputVol is not None:
-            pdbModelCounter += 1
             x_input, y_input, z_input = _inputVol.getShiftsFromOrigin()
             inputVolFileName = os.path.abspath(ImageHandler.removeFileType(
                 _inputVol.getFileName()))
             f.write("runCommand('open %s')\n" % inputVolFileName)
-            f.write("runCommand('volume #1 style surface voxelSize %f')\n"
-                    % _inputVol.getSamplingRate())
-            f.write("runCommand('volume #1 origin %0.2f,%0.2f,%0.2f')\n"
-                    % (x_input, y_input, z_input))
+            f.write("runCommand('volume #%d style surface voxelSize %f')\n"
+                    % (pdbModelCounter, _inputVol.getSamplingRate()))
+            f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
+                    % (pdbModelCounter, x_input, y_input, z_input))
 
         if self.inputVolumes is not None:
-            pdbModelCounter += 1
+            if _inputVol is not None:
+                pdbModelCounter += 1
             for vol in self.inputVolumes:
                 f.write("runCommand('open %s')\n" % vol.get().getFileName())
+                x, y, z = vol.get().getShiftsFromOrigin()
+                f.write("runCommand('volume #%d style surface voxelSize %f')\n"
+                        % (pdbModelCounter, vol.get().getSamplingRate()))
+                f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
+                        % (pdbModelCounter, x, y, z))
                 pdbModelCounter += 1
 
         if self.pdbFileToBeRefined.get() is not None:
