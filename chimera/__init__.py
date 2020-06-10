@@ -28,7 +28,7 @@ import os
 import pwem
 import pyworkflow.utils as pwutils
 
-from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_10_1
+from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_13_1
 
 
 _logo = "chimera_logo.png"
@@ -38,7 +38,7 @@ _references = ['Pettersen2004']
 class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
-    _supportedVersions = V1_10_1
+    _supportedVersions = V1_13_1
 
     @classmethod
     def _defineVariables(cls):
@@ -69,16 +69,16 @@ class Plugin(pwem.Plugin):
 
     @classmethod
     def isVersionActive(cls):
-        return cls.getActiveVersion().startswith(V1_10_1)
+        return cls.getActiveVersion().startswith(V1_13_1)
 
     @classmethod
     def defineBinaries(cls, env):
 
         SW_CH = env.getEmFolder()
-        chimera_1_10_1_command = [('./scipion_installer',
+        chimera_1_13_1_command = [('./scipion_installer',
                             '%s/chimera-1.13.1/bin/chimera' % SW_CH)]
 
         env.addPackage('chimera', version='1.13.1',
                        tar='chimera-1.13.1-linux_x86_64.tgz',
-                       commands=chimera_1_10_1_command,
+                       commands=chimera_1_13_1_command,
                        default=True)
