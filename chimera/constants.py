@@ -31,6 +31,7 @@ MUSCLE = 'muscle'
 
 # Supported Versions
 V1_13_1 = 'V1_13_1'
+V1_0 = 'V1_0'
 
 CHIMERA_TO_SCIPION = {}
 CHIMERA_CYCLIC = 0  # SYM_CYCLIC = 0
