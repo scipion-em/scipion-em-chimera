@@ -28,7 +28,6 @@ import os
 import pwem
 import pyworkflow.utils as pwutils
 
-from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_13_1
 from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_0
 
 
@@ -39,13 +38,11 @@ _references = ['Pettersen2004']
 class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
-    # _supportedVersions = V1_13_1
     _supportedVersions = V1_0
 
     @classmethod
     def _defineVariables(cls):
-        cls._defineEmVar(CHIMERA_HOME, 'chimera-1.13.1')
-        cls._defineEmVar(CHIMERA_HOME, 'chimerax')
+        cls._defineEmVar(CHIMERA_HOME, 'chimerax-1.0')
         cls._defineEmVar(CHIMERA_HEADLESS_HOME, 'chimera_headless')
 
     @classmethod
@@ -53,7 +50,7 @@ class Plugin(pwem.Plugin):
         environ = pwutils.Environ(os.environ)
         d = {}
         # d['PATH'] = cls.getHome('bin')
-        d['PATH'] = cls.getHome('/usr/bin')
+        d['PATH'] = cls.getHome('bin')
         if "REMOTE_MESA_LIB" in os.environ:
             d["LD_LIBRARY_PATH"] = os.environ['REMOTE_MESA_LIB']
         environ.update(d, position=pwutils.Environ.BEGIN)
@@ -66,28 +63,23 @@ class Plugin(pwem.Plugin):
         pwutils.runJob(None, program, args, env=env, cwd=cwd)
 
     @classmethod
-    # def getProgram(cls, progName="chimera"):
-    #     """ Return the program binary that will be used. """
-    #     cmd = cls.getHome('bin', progName)
-    #     return str(cmd)
-
     def getProgram(cls, progName="chimerax"):
         """ Return the program binary that will be used. """
-        cmd = cls.getHome('/usr/bin', progName)
+        cmd = cls.getHome('bin', progName)
         return str(cmd)
 
     @classmethod
     def isVersionActive(cls):
-        return cls.getActiveVersion().startswith(V1_13_1)
+        return cls.getActiveVersion().startswith(V1_0)
 
-    # @classmethod
-    # def defineBinaries(cls, env):
-    #
-    #     SW_CH = env.getEmFolder()
-    #     chimera_1_13_1_command = [('./scipion_installer',
-    #                         '%s/chimera-1.13.1/bin/chimera' % SW_CH)]
-    #
-    #     env.addPackage('chimera', version='1.13.1',
-    #                    tar='chimera-1.13.1-linux_x86_64.tgz',
-    #                    commands=chimera_1_13_1_command,
-    #                    default=True)
+    @classmethod
+    def defineBinaries(cls, env):
+
+        SW_CH = env.getEmFolder()
+        chimerax_1_0_command = [('./scipion_installer',
+                            '%s/chimerax-1.0/bin/chimerax' % SW_CH)]
+
+        env.addPackage('chimerax', version='1.0',
+                       tar='ucsf-chimerax_1.0_amd64.deb',
+                       commands=chimerax_1_0_command,
+                       default=True)
