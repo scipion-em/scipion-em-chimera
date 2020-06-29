@@ -279,7 +279,7 @@ class ChimeraProtBase(EMProtocol):
         # so scipionwrite is disabled
         config = configparser.ConfigParser()
         config.read(self._getExtraPath(chimeraConfigFileName))
-        config.set('chimerax', 'enablebundle', False)
+        config.set('chimerax', 'enablebundle', 'False')
         with open(self._getExtraPath(chimeraConfigFileName),
                   'w') as configfile:
             config.write(configfile)
