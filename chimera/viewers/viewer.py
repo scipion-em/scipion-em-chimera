@@ -101,7 +101,7 @@ class ChimeraViewerBase(Viewer):
         f.write("open %s\n" % bildFileName)
         f.write("cofr 0,0,0\n")  # set center of coordinates
         inputVolFileName = ''
-        counter = 2.
+        counter = 2
         if _inputVol is not None:
             # In case we have PDBs only, _inputVol is None:
             inputVolFileName = ImageHandler.removeFileType(_inputVol.getFileName())

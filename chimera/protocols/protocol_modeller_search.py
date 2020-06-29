@@ -159,7 +159,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                          "to be modeled (target), and the input atomic structure"
                          + '''
         used as template for modeling. Select Run Modeller via web service 
-        and write the Modeller license key supplied (Academic users can 
+        and write the Modeller license key supplied (Academic user can 
         register free of charge to receive a license key). Finally, press OK.
         \nWAITING TIME: (you may see the status of your job in chimera main 
         window, lower left corner.)\n\nStep 2:\nWhen the process finished, 
