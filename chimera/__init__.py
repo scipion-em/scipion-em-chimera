@@ -80,6 +80,6 @@ class Plugin(pwem.Plugin):
                             '%s/chimerax-1.0/bin/chimerax' % SW_CH)]
 
         env.addPackage('chimerax', version='1.0',
-                       tar='ucsf-chimerax_1.0_amd64.deb',
+                       tar='ChimeraX-1.0.tar.gz',
                        commands=chimerax_1_0_command,
                        default=True)
