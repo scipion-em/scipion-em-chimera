@@ -27,50 +27,50 @@
 
 import os
 
-from pyworkflow import VERSION_1_2
+from pyworkflow import VERSION_3_0
+
 try:
-    from pyworkflow.em.data import AtomStruct
-except:
-    from pyworkflow.em.data import PdbFile as AtomStruct
+    from pwem.objects import AtomStruct
+except ImportError:
+    from pwem.objects import PdbFile as AtomStruct
 
-from pyworkflow.em import Volume
-from pyworkflow.em.convert import ImageHandler
-from pyworkflow.em.data import Transform
-from pyworkflow.em.convert.headers import Ccp4Header
-from pyworkflow.em.protocol import EMProtocol
+from pwem.objects import Volume
+from pwem.emlib.image import ImageHandler
+from pwem.objects import Transform
+from pwem.convert.headers import Ccp4Header
+from pwem.protocols import EMProtocol
 
-from pyworkflow.em.viewers.viewer_chimera import (Chimera,
-                                                  chimeraScriptFileName,
-                                                  sessionFile,
-                                                  chimeraMapTemplateFileName,
-                                                  chimeraScriptFileName,
-                                                  chimeraPdbTemplateFileName)
+from pwem.viewers.viewer_chimera import (Chimera,
+                                         sessionFile,
+                                         chimeraMapTemplateFileName,
+                                         chimeraScriptFileName,
+                                         chimeraPdbTemplateFileName)
 
 from pyworkflow.protocol.params import (MultiPointerParam,
                                         PointerParam,
                                         StringParam)
 from pyworkflow.utils.properties import Message
 
-from chimera import Plugin
+from .. import Plugin
 
 
 class ChimeraProtBase(EMProtocol):
-    """Protocol to perform rigid fit using Chimera.
-        Execute command *scipionwrite [model #n] [refmodel #p]
-        [saverefmodel 0|1]* from command line in order to transferm fitted
-        pdb to scipion. Default values are model=#0,
-        refmodel =#1 and saverefmodel 0 (false).
-        model refers to the pdb file. refmodel to a 3Dmap"""
-    _version = VERSION_1_2
+    """Base class  for chimera protocol"""
+    _version = VERSION_3_0
 
     # --------------------------- DEFINE param functions --------------------
     def _defineParams(self, form, doHelp=True):
         form.addSection(label='Input')
         form.addParam('inputVolume', PointerParam, pointerClass="Volume",
                       label='Input Volume', allowsNull=True,
+                      important=True,
                       help="Volume to process")
+        form.addParam('inputVolumes', MultiPointerParam, pointerClass="Volume",
+                      label='Input additional Volumes', allowsNull=True,
+                      help="Other Volumes")
         form.addParam('pdbFileToBeRefined', PointerParam,
-                      pointerClass="AtomStruct",
+                      pointerClass="AtomStruct", allowsNull=True,
+                      important=True,
                       label='Atomic structure',
                       help="PDBx/mmCIF file that you can save after operating "
                            "with it.")
@@ -87,22 +87,12 @@ class ChimeraProtBase(EMProtocol):
                       help="Add extra commands in cmd file. Use for testing")
         if doHelp:
             form.addSection(label='Help')
-            form.addLine('''Execute command *scipionwrite [model #n] [refmodel #p] 
-            [saverefmodel 0|1]* from command line in order to transfer structures 
-            and 3D map volumes to SCIPION. 
-            In the particular case in which you have only a volume and a structure, 
-            default values are model #2, refmodel #1 and saverefmodel 0 (false). 
-            Model refers to the PDBx/mmCIF file, refmodel to a 3D map volume. 
-            If you have several structures and no volumes, you can save 
-            all of them by executing commands *scipionwrite [model #1]*, 
-            *scipionwrite [model #2]*, *scipionwrite [model #3]*, and so on.
-            When you use the command line scipionwrite, the Chimera session will 
-            be saved by default. Additionally, you can save the Chimera session 
-            whenever you want by executing the command *scipionss". You will be 
-            able to restore the saved session by using the protocol chimera restore 
-            session (SCIPION menu: Tools/Calculators/chimera restore session). ''')
+            form.addLine(''' scipionwrite model #n [refmodel #p] [prefix stringAddedToFilename]
+            scipionss
+            scipionrs
+            Type 'help command' in chimera command line for details (command is the command name)''')
 
-        return form #DO NOT remove this return
+        return form  # DO NOT remove this return
 
     # --------------------------- INSERT steps functions --------------------
     def _insertAllSteps(self):
@@ -130,7 +120,7 @@ class ChimeraProtBase(EMProtocol):
                          self._getExtraPath(chimeraPdbTemplateFileName),
                          self._getExtraPath(chimeraMapTemplateFileName),
                          f,
-                         self._getExtraPath(sessionFile)
+                         self._getExtraPath(sessionFile),
                          )
 
         if self.inputVolume.get() is None:
@@ -144,36 +134,48 @@ class ChimeraProtBase(EMProtocol):
             sampling = _inputVol.getSamplingRate()
         else:
             dim = 150  # eventually we will create a PDB library that
-                       # computes PDB dim
+            # computes PDB dim
             sampling = 1.
 
         tmpFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
         Chimera.createCoordinateAxisFile(dim,
-                                 bildFileName=tmpFileName,
-                                 sampling=sampling)
+                                         bildFileName=tmpFileName,
+                                         sampling=sampling)
         f.write("runCommand('open %s')\n" % tmpFileName)
         f.write("runCommand('cofr 0,0,0')\n")  # set center of coordinates
 
         # input vol with its origin coordinates
         pdbModelCounter = 1
         if _inputVol is not None:
-            pdbModelCounter += 1
             x_input, y_input, z_input = _inputVol.getShiftsFromOrigin()
             inputVolFileName = os.path.abspath(ImageHandler.removeFileType(
                 _inputVol.getFileName()))
             f.write("runCommand('open %s')\n" % inputVolFileName)
-            f.write("runCommand('volume #1 style surface voxelSize %f')\n"
-                    % _inputVol.getSamplingRate())
-            f.write("runCommand('volume #1 origin %0.2f,%0.2f,%0.2f')\n"
-                    % (x_input, y_input, z_input))
+            f.write("runCommand('volume #%d style surface voxelSize %f')\n"
+                    % (pdbModelCounter, _inputVol.getSamplingRate()))
+            f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
+                    % (pdbModelCounter, x_input, y_input, z_input))
 
-        pdbFileToBeRefined = self.pdbFileToBeRefined.get()
-        f.write("runCommand('open %s')\n" % os.path.abspath(
-            pdbFileToBeRefined.getFileName()))
-        if pdbFileToBeRefined.hasOrigin():
-            x, y, z = (pdbFileToBeRefined.getOrigin().getShifts())
-            f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
-                    "coord #0')\n" % (x, y, z, pdbModelCounter))
+        if self.inputVolumes is not None:
+            if _inputVol is not None:
+                pdbModelCounter += 1
+            for vol in self.inputVolumes:
+                f.write("runCommand('open %s')\n" % vol.get().getFileName())
+                x, y, z = vol.get().getShiftsFromOrigin()
+                f.write("runCommand('volume #%d style surface voxelSize %f')\n"
+                        % (pdbModelCounter, vol.get().getSamplingRate()))
+                f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
+                        % (pdbModelCounter, x, y, z))
+                pdbModelCounter += 1
+
+        if self.pdbFileToBeRefined.get() is not None:
+            pdbFileToBeRefined = self.pdbFileToBeRefined.get()
+            f.write("runCommand('open %s')\n" % os.path.abspath(
+                pdbFileToBeRefined.getFileName()))
+            if pdbFileToBeRefined.hasOrigin():
+                x, y, z = (pdbFileToBeRefined.getOrigin().getShifts())
+                f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
+                        "coord #0')\n" % (x, y, z, pdbModelCounter))
 
         # Alignment of sequence and structure
         if (hasattr(self, 'inputSequence') and
@@ -184,15 +186,15 @@ class ChimeraProtBase(EMProtocol):
                 if len(models) > 1:
                     f.write("runCommand('select #%d.%s:.%s')\n"
                             % (pdbModelCounter, str(self.selectedModel),
-                                str(self.selectedChain)))
+                               str(self.selectedChain)))
                 else:
                     f.write("runCommand('select #%d:.%s')\n"
                             % (pdbModelCounter, str(self.selectedChain)))
                 # f.write("runCommand('sequence selection')\n") # To open
-                                                                # only the
-                                                                # sequence of
-                                                                # the selected
-                                                                # chain
+                # only the
+                # sequence of
+                # the selected
+                # chain
                 if self._getOutFastaSequencesFile is not None:
                     alignmentFile = self._getOutFastaSequencesFile()
                     f.write("runCommand('open %s')\n" % alignmentFile)
@@ -206,6 +208,8 @@ class ChimeraProtBase(EMProtocol):
                 x, y, z = pdb.get().getOrigin().getShifts()
                 f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
                         "coord #0')\n" % (x, y, z, pdbModelCounter))
+            # TODO: Check this this this this this this
+            pdbModelCounter += 1
 
         # run the text:
         if len(self.extraCommands.get()) > 2:
@@ -225,85 +229,34 @@ class ChimeraProtBase(EMProtocol):
     def createOutput(self):
         """ Copy the PDB structure and register the output object.
         """
-
-        # outvolName, this volume may or may not exists
-        volFileName = self._getExtraPath((chimeraMapTemplateFileName) % 1)
-
-        # if we have outvol
-        if os.path.exists(volFileName):
-            # if we do not have an explicit inputvol check if it
-            # is a volume associated to the  pdb
-            if self.inputVolume.get() is None:
-                _inputVol = self.pdbFileToBeRefined.get().getVolume()
-            else:
-                _inputVol = self.inputVolume.get()
-            if _inputVol is not None: # we have inputVol
-                oldSampling = _inputVol.getSamplingRate()
-
-            vol = Volume()  # this is an output volume object
-            vol.setLocation(volFileName)
-
-            # fix mrc header
-            ccp4header = Ccp4Header(volFileName, readHeader=True)
-            sampling = ccp4header.computeSampling()
-            vol.setSamplingRate(sampling)
-
-            #find origin
-            if _inputVol is not None:
-                if self.inputVolume.get() is None:
-                    origin = self.pdbFileToBeRefined.get().getVolume(). \
-                        getOrigin(force=True)
-                else:
-                    origin = self.inputVolume.get().getOrigin(
-                        force=True)
-
-                newOrigin = vol.originResampled(origin, oldSampling)
-                vol.setOrigin(newOrigin)
-
-            else: # in this case there is no inputvol
-                  # but there is outputvol.
-                if self.pdbFileToBeRefined.get().hasOrigin():
-                    origin = self.pdbFileToBeRefined.get().getOrigin()
-                else:
-                    origin = Transform()
-                    shifts = ccp4header.getOrigin()
-                    origin.setShiftsTuple(shifts)
-
-                if origin is None:
-                    origin = vol.getOrigin(force=True)
-                vol.setOrigin(origin)
-
-            self._defineOutputs(output3Dmap=vol)
-
-            if self.inputVolume.get() is None:
-                self._defineSourceRelation(
-                    self.pdbFileToBeRefined.get(), vol)
-            else:
-                self._defineSourceRelation(self.inputVolume.get(), vol)
-        #we do not have output volume
-        else:
-            if self.inputVolume.get() is None:
-                vol = self.pdbFileToBeRefined.get().getVolume()
-            else:
-                vol = self.inputVolume.get()
-
-        # Now check pdb files
+        # Check vol and pdb files
         directory = self._getExtraPath()
-        counter = 1
         for filename in sorted(os.listdir(directory)):
+            if filename.endswith(".mrc"):
+                volFileName = os.path.join(directory, filename)
+                vol = Volume()
+                vol.setFileName(volFileName)
+
+                # fix mrc header
+                ccp4header = Ccp4Header(volFileName, readHeader=True)
+                sampling = ccp4header.computeSampling()
+                origin = Transform()
+                shifts = ccp4header.getOrigin()
+                origin.setShiftsTuple(shifts)
+                vol.setOrigin(origin)
+                vol.setSamplingRate(sampling)
+                keyword = filename.split(".mrc")[0]
+                kwargs = {keyword: vol}
+                self._defineOutputs(**kwargs)
+
             if filename.endswith(".pdb") or filename.endswith(".cif"):
                 path = os.path.join(directory, filename)
                 pdb = AtomStruct()
                 pdb.setFileName(path)
-                if vol is not None:
-                    pdb.setVolume(vol)
-                keyword = "outputPdb_%02d" % counter
-                counter += 1
+                keyword = filename.split(".pdb")[0].replace(".","_")
                 kwargs = {keyword: pdb}
                 self._defineOutputs(**kwargs)
-                self._defineSourceRelation(self.pdbFileToBeRefined.get(), pdb)
-                for pdbFile in self.inputPdbFiles:
-                    self._defineSourceRelation(pdbFile.get(), pdb)
+
 
     # --------------------------- INFO functions ----------------------------
     def _validate(self):
@@ -329,7 +282,7 @@ class ChimeraProtBase(EMProtocol):
     def _summary(self):
         # Think on how to update this summary with created PDB
         summary = []
-        if (self.getOutputsSize() > 0):
+        if self.getOutputsSize() > 0:
             directory = self._getExtraPath()
             counter = 1
             summary.append("Produced files:")
@@ -345,7 +298,7 @@ class ChimeraProtBase(EMProtocol):
         return summary
 
     def _methods(self):
-        methodsMsgs = []
+        methodsMsgs = list()
         methodsMsgs.append("TODO")
 
         return methodsMsgs
@@ -358,26 +311,60 @@ class ChimeraProtBase(EMProtocol):
         from distutils.spawn import find_executable
         return find_executable(name) is not None
 
+
 # define scipion_write command
 chimeraScriptHeader = '''
 import os
-import chimera
-from chimera import runCommand
-def newFileName(template):
-    counter = 1
-    while os.path.isfile(template%counter):
-        counter += 1
-    return template%counter
+import ntpath
+#import chimera
+from chimera import runCommand as rc
+from chimera import openModels
+from chimera import NonChimeraError
+
+def newFileName(template, model):
+    # counter = 1
+    # while os.path.isfile(template%counter):
+    #    counter += 1
+    #f = open('/tmp/kk', 'w')
+    #f.write(template)
+    #f.close()
+    
+    return template % model
 
 
 def saveSession(sessionFileName):
-    runCommand('save %s' % sessionFileName)
+    rc('save %s' % sessionFileName)
 
 def restoreSession(sessionFileName):
-    runCommand('open %s' % sessionFileName)
+    rc('open %s' % sessionFileName)
 
-def saveModel(model, refModel, fileName):
-    runCommand('write relative %s %s %s'%(refModel, model, fileName))
+def saveModel(_model, _refModel, fileName, mapFileName, prefix):
+    import _molecule
+    import VolumeViewer
+    if prefix is not None:
+        prefix = prefix.replace(".", "_dot_")
+    # parse modelID #id.subid
+    modelId = int(_model.split('.')[0][1:]) # object to be saved. Either pdb or 3d map.
+    modelSubId = 0
+    if _model.find('.') != -1:
+        modelSubId = int(_model[1]) 
+
+    # get model so we can asses if it is a 3D map or an atomic structure
+    model = openModels.list(id=modelId, subid=modelSubId)[0]
+    
+    if isinstance(model, _molecule.Molecule):
+        if prefix is not None:
+            fileName = os.path.join(ntpath.dirname(fileName),
+                                    prefix + ntpath.basename(fileName))
+        rc('write relative %s %s %s'%(_refModel, _model, fileName))
+    elif isinstance(model, VolumeViewer.volume.Volume):
+        if prefix is not None:
+            mapFileName = os.path.join(ntpath.dirname(mapFileName),
+                                       prefix + ntpath.basename(mapFileName))
+        _save_grid_data(model.data,"%s" % mapFileName )
+    else:
+        raise NonChimeraError("Can not write model %s" % (_model))
+
     
 def _save_grid_data(refModel_data, fileName):
     from VolumeData import save_grid_data
@@ -398,49 +385,35 @@ ChimeraExtension.py
 from chimera command line type one of the following three options
 scipionwrite
 scipionwrite model #n
-scipionwrite model #n refmodel #p saverefmodel 0/1
+scipionwrite model #n refmodel #p
 """
 def cmd_scipionWrite(scipionWrite,args):
   from Midas.midas_text import doExtensionFunc
 '''
 
 chimeraScriptMain = '''
-  def scipionWrite(model="#%(pdbID)d",refmodel="#%(_3DmapId)d",
-     saverefmodel=0):
-     # get model (pdb) id
+  def scipionWrite(model="%(modelID)s",refModel="%(refModelID)s", prefix=None, savesession='1'):
+     #  savesession 1 -> save session
+     #  savesession 0 -> do not save session    
+     # Save the PDB relative to the volume coordinate system
+     # TODO: check if this Will work if the reference is a PDB?
+     atomStructFileName = newFileName('%(pdbFileTemplate)s', model[1:])
+     mapFileName = newFileName('%(chimeraMapTemplateFileName)s', model[1:])
+     saveModel(model, refModel, atomStructFileName, mapFileName, prefix)
+     # alternative way to save  the pdb file using a command
+     
+     if savesession == '1':
+        savesession = True
+     else:
+        savesession = False
      try:
-         saveSession('%(sessionFileName)s')
+         if savessesion:
+             if prefix is None or prefix != 'DONOTSAVESESSION':  # this is needed for the tests
+                 saveSession('%(sessionFileName)s')
      except Exception as e:
          f = open ('/tmp/chimera_error.txt','w')
          f.write(e.message)
          f.close()
-         
-     # modelId = int(model[1:])# model to write  1
-     refModelId = int(refmodel[1:])# coordenate system refers to this model 0
-
-     # get actual models
-     # model    = chimera.openModels.list()[modelId]
-     # TODO: this ID is wrong if models before refmodel are modified
-     refModel = chimera.openModels.list()[refModelId]
-
-     #for m in chimera.openModels.list():
-     #    if m.id != modelId:
-     #        continue
-     #    else:
-     #        break
-     # Save the PDB relative to the volume coordinate system
-     # TODO: check if this Will work if the reference is a PDB?
-     # from Midas import write
-     fileName = newFileName('%(pdbFileTemplate)s')
-     saveModel(model, refModel, fileName)
-     # alternative way to save  the pdb file using a command
-     # run('write relative #1 #0 pdb_path')
-
-     # Save the map if sampling rate has been changed
-     if saverefmodel:
-         _save_grid_data(refModel.data,"%(chimeraMapTemplateFileName)s" )
-     # always save session when write
-     # beep(0.1)
 
   doExtensionFunc(scipionWrite,args)
 
@@ -460,22 +433,22 @@ def cmd_scipionRestoreSession(scipionRestoreSession,args):
 
   doExtensionFunc(scipionRestoreSession,args)
 
-
 from Midas.midas_text import addCommand
-addCommand('scipionwrite', cmd_scipionWrite, help="http://scipion.cnb.csic.es")
-addCommand('scipionss', cmd_scipionSaveSession, help="http://scipion.cnb.csic.es")
-addCommand('scipionrs', cmd_scipionRestoreSession, help="http://scipion.cnb.csic.es")
+addCommand('scipionwrite', cmd_scipionWrite, help="https://github.com/scipion-em/scipion-em-chimera/wiki/scipionwrite")
+addCommand('scipionw', cmd_scipionWrite, help="https://github.com/scipion-em/scipion-em-chimera/wiki/scipionwrite")
+addCommand('scipionss', cmd_scipionSaveSession, help="https://github.com/scipion-em/scipion-em-chimera/wiki/scipionss")
+addCommand('scipionrs', cmd_scipionRestoreSession, help="https://github.com/scipion-em/scipion-em-chimera/wiki/scipionrs")
 '''
 
 
-def createScriptFile(pdbID, _3DmapId,
+def createScriptFile(_modelID, _refModelID,
                      pdbFileTemplate, mapFileTemplate,
                      f, sessionFileName=''):
     f.write(chimeraScriptHeader)
-    d = {}
-    d['pdbID'] = pdbID
-    d['_3DmapId'] = _3DmapId
+    d = dict()
+    d['modelID'] = "#%d" % _modelID
+    d['refModelID'] = "#%d" % _refModelID
     d['pdbFileTemplate'] = pdbFileTemplate  # % 1
-    d['chimeraMapTemplateFileName'] = mapFileTemplate % 1
+    d['chimeraMapTemplateFileName'] = mapFileTemplate # % 1
     d['sessionFileName'] = sessionFileName
     f.write(chimeraScriptMain % d)

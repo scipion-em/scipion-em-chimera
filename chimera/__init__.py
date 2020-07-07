@@ -25,57 +25,41 @@
 
 import os
 
-import pyworkflow.em
+import pwem
 import pyworkflow.utils as pwutils
 
+from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_13_1
 
-from bibtex import _bibtex # Load bibtex dict with references
-
-from chimera.constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_10_1, MAXIT_HOME, MAXIT_TAR, MAXIT_URL, MAXIT
-
+__version__ = "3.0.1"
 _logo = "chimera_logo.png"
-
 _references = ['Pettersen2004']
 
-# The following class is required for Scipion to detect this Python module
-# as a Scipion Plugin. It needs to specify the PluginMeta __metaclass__
-# Some function related to the underlying package binaries need to be
-# implemented
 
-
-class Plugin(pyworkflow.em.Plugin):
+class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
-    _supportedVersions = V1_10_1
-
-    @classmethod
-    def getMaxitHome(cls):
-        return cls.getVar(MAXIT_HOME)
-
-    @classmethod
-    def getMaxitBin(cls):
-        return os.path.join(cls.getMaxitHome(), 'bin', MAXIT)
+    _supportedVersions = V1_13_1
 
     @classmethod
     def _defineVariables(cls):
         cls._defineEmVar(CHIMERA_HOME, 'chimera-1.13.1')
         cls._defineEmVar(CHIMERA_HEADLESS_HOME, 'chimera_headless')
-        cls._defineEmVar(MAXIT_HOME, os.path.join('maxit-10.1'))
-                                                  # 'maxit-10.1'))
 
     @classmethod
     def getEnviron(cls):
         environ = pwutils.Environ(os.environ)
-        environ.update({'PATH': cls.getHome('bin'),
-                        'LD_LIBRARY_PATH': os.environ['REMOTE_MESA_LIB'],
-                        }, position=pwutils.Environ.BEGIN)
+        d = {}
+        d['PATH'] = cls.getHome('bin')
+        if "REMOTE_MESA_LIB" in os.environ:
+            d["LD_LIBRARY_PATH"] = os.environ['REMOTE_MESA_LIB']
+        environ.update(d, position=pwutils.Environ.BEGIN)
         return environ
 
     @classmethod
-    def runChimeraProgram(cls, program, args=""):
+    def runChimeraProgram(cls, program, args="", cwd=None):
         """ Internal shortcut function to launch chimera program. """
         env = cls.getEnviron()
-        pwutils.runJob(None, program, args, env=env)
+        pwutils.runJob(None, program, args, env=env, cwd=cwd)
 
     @classmethod
     def getProgram(cls, progName="chimera"):
@@ -85,26 +69,16 @@ class Plugin(pyworkflow.em.Plugin):
 
     @classmethod
     def isVersionActive(cls):
-        return cls.getActiveVersion().startswith(V1_10_1)
+        return cls.getActiveVersion().startswith(V1_13_1)
 
     @classmethod
     def defineBinaries(cls, env):
 
         SW_CH = env.getEmFolder()
-        chimera_1_10_1_command = [('./scipion_installer',
+        chimera_1_13_1_command = [('./scipion_installer',
                             '%s/chimera-1.13.1/bin/chimera' % SW_CH)]
 
         env.addPackage('chimera', version='1.13.1',
                        tar='chimera-1.13.1-linux_x86_64.tgz',
-                       commands=chimera_1_10_1_command,
+                       commands=chimera_1_13_1_command,
                        default=True)
-
-        maxit_commands = [('make binary ' , ['bin/maxit'])]
-
-        env.addPackage('maxit', version='10.1',
-                       tar=MAXIT_TAR,
-                       url=MAXIT_URL,
-                       commands=maxit_commands,
-                       default=True)
-
-pyworkflow.em.Domain.registerPlugin(__name__)

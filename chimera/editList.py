@@ -16,6 +16,7 @@ textFont3 = ("Arial", 8, "bold")
 
 kkk = None
 
+
 class LabelWidget(tk.Entry):
     def __init__(self, master, x, y, text):
         self.text = tk.StringVar()
@@ -41,8 +42,9 @@ class EntryWidget(tk.Entry):
         self.grid(column=x, row=y)
         self.value.set("")
 
-class EntryGrid():
-    ''' Dialog box with Entry widgets arranged in columns and rows.'''
+
+class EntryGrid:
+    """ Dialog box with Entry widgets arranged in columns and rows."""
 
     def __init__(self, colList, rowList, form, formAttribute, title="Entry Grid"):
         self.cols = colList[:]
@@ -51,7 +53,7 @@ class EntryGrid():
         self.rowList = rowList
         self.win = tk.Toplevel()
         self.form = form
-        self.formAttribute= formAttribute
+        self.formAttribute = formAttribute
 
         self.win.wm_title(title)
 
@@ -65,16 +67,18 @@ class EntryGrid():
             for j in range(len(self.rowList)):
                 w = EntryWidget(self.mainFrame, i, j + 1)
                 self.gridDict[(i - 1, j)] = w.value
-                def handler(event, col=i-1, row=j):
+
+                def handler(event, col=i - 1, row=j):
                     return self.__entryhandler(col, row)
+
                 w.bind(sequence="<FocusOut>", func=handler)
 
         self.okButton = tk.Button(self.mainFrame, text="OK",
-                                       command=self.quit).grid(row=j + 2, column=1, pady=4)
+                                  command=self.quit).grid(row=j + 2, column=1, pady=4)
         self.data = collections.OrderedDict()
 
     def __entryhandler(self, col, row):
-        s = self.gridDict[(col,row)].get()
+        s = self.gridDict[(col, row)].get()
         if s.upper().strip() == "EXIT":
             self.win.destroy()
         elif s.upper().strip() == "TEST":
@@ -83,7 +87,7 @@ class EntryGrid():
             self.ico()
 
     def ico(self):
-        ''' enter right values for icosahedron '''
+        """ enter right values for icosahedron """
         labelDict = collections.OrderedDict()
 
         labelDict['A'] = 'h1'
@@ -109,17 +113,17 @@ class EntryGrid():
 
         counter = 0
         for row in self.rowList:
-            #print counter, row, labelDict[row]
-            self.set(0,counter,labelDict[row])
+            # print counter, row, labelDict[row]
+            self.set(0, counter, labelDict[row])
             counter += 1
 
     def test(self):
-        ''' enter right values for icosahedron '''
+        """ enter right values for icosahedron """
         for i in range(len(self.cols)):
             for j in range(len(self.rowList)):
-                self.set(i,j,"")
+                self.set(i, j, "")
                 self.win.update_idletasks()
-                self.set(i,j,i+1+j)
+                self.set(i, j, i + 1 + j)
                 self.win.update_idletasks()
 
     def __str__(self):
@@ -127,6 +131,7 @@ class EntryGrid():
 
     def quit(self):
         for k, v in zip(self.rowList, self.gridDict.values()):
+            # for k, v in zip(self.rowList, list(self.gridDict.values())):
             self.data[k] = v.get()
         value = json.dumps(self.data)
         self.form.setVar(self.formAttribute, value)
@@ -151,7 +156,7 @@ class EntryGrid():
             w.bind(sequence="<KeyRelease>", func=handler)
 
     def __headerhandler(self, col, row, text):
-        ''' has no effect when Entry state=readonly '''
+        """ has no effect when Entry state=readonly """
         self.hdrDict[(col, row)].text.set(text)
 
     def get(self, x, y):

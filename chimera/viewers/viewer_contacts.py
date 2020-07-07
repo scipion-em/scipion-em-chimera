@@ -1,21 +1,22 @@
-from pyworkflow.em.viewers import Chimera
+from pwem.viewers import Chimera
 from pyworkflow.protocol.params import EnumParam, BooleanParam, \
     LabelParam, IntParam
 from pyworkflow.viewer import DESKTOP_TKINTER, WEB_DJANGO, ProtocolViewer
-from pyworkflow.utils import importFromPlugin
+from pwem import Domain
 
-from chimera.protocols.protocol_contacts import ChimeraProtContacts
+from ..protocols.protocol_contacts import ChimeraProtContacts
 from pyworkflow.gui.text import _open_cmd
 import os
+
 
 class ChimeraProtContactsViewer(ProtocolViewer):
     _label = 'Contacts Viewer'
     _environments = [DESKTOP_TKINTER, WEB_DJANGO]
     _targets = [ChimeraProtContacts]
 
-    def __init__(self,  **kwargs):
+    def __init__(self, **kwargs):
 
-        ProtocolViewer.__init__(self,  **kwargs)
+        ProtocolViewer.__init__(self, **kwargs)
         self.c, self.conn = self.protocol.prepareDataBase(drop=False)
         # compute all pairs of chains that interact
         # this information is needed for the menu
@@ -25,53 +26,53 @@ class ChimeraProtContactsViewer(ProtocolViewer):
         form.addSection(label="Display Results")
         group = form.addGroup('3D Visualization')
         group.addParam('displayModel', LabelParam,
-                      label="View models in Chimera",
-                      help="Display of input atomic structure and its respective"
-                           " symmetrized models.")
+                       label="View models in Chimera",
+                       help="Display of input atomic structure and its respective"
+                            " symmetrized models.")
         group = form.addGroup('Interacting chains')
         group.addParam('displayPairChains', LabelParam,
-                      label="Summary list of all Interacting Chains",
-                      help="Display the interacting chains, and "
-                           "the number of atoms involved in these interactions.")
+                       label="Summary list of all Interacting Chains",
+                       help="Display the interacting chains, and "
+                            "the number of atoms involved in these interactions.")
         group = form.addGroup('Contacts between interacting chains')
         group.addParam("doInvert", BooleanParam, label="Swap chain columns in the summary of contacts",
-                      default=False,
-                      help="Set to YES to swap the first chain by the second one.\n")
+                       default=False,
+                       help="Set to YES to swap the first chain by the second one.\n")
         group.addParam('aaDistance', IntParam,
-                      label='Distance to group residues (Number of residues)',
-                      default=4,
-                      help='If two residues are closer than this distance (number of residues),'
-                           ' then those two residues will be grouped.')
+                       label='Distance to group residues (Number of residues)',
+                       default=4,
+                       help='If two residues are closer than this distance (number of residues),'
+                            ' then those two residues will be grouped.')
         group.addParam('chainPair', EnumParam,
-                      choices=self.pairChains,
-                      default=0,
-                      label="Select two interacting chains and get the summary of contacts",
-                      help="Format of the interacting chains in the display window:\n"
-                           "# modelName1, chainLabelName1, chainName1 # modelName2, "
-                           "chainLabelName2, chainName2\n\n"
-                           "Output list format:\n"
-                           "Title: 'RESULTS for: # modelName1, chainLabelName1, chainName1 "
-                           "# modelName2, chainLabelName2, chainName2'\n"
-                           "Below the title, several paragraphs grouping residues are"
-                           " shown according to the distance to group residues selected by "
-                           "the user. Columns in each paragraph:\nnumberOfatoms, "
-                           "chainLabelName1, modelName1, chainName1, residueName1, "
-                           "chainLabelName2, modelName2, chainName2, residueName2.\n"
-                           "Meaning of question marks below each group:\n'?': First and last "
-                           "residues are separated by more than 20 residues.\n'????':  First "
-                           "and last residues are separated by less than 20 residues.")
-
+                       choices=self.pairChains,
+                       default=0,
+                       label="Select two interacting chains and get the summary of contacts",
+                       help="Format of the interacting chains in the display window:\n"
+                            "# modelName1, chainLabelName1, chainName1 # modelName2, "
+                            "chainLabelName2, chainName2\n\n"
+                            "Output list format:\n"
+                            "Title: 'RESULTS for: # modelName1, chainLabelName1, chainName1 "
+                            "# modelName2, chainLabelName2, chainName2'\n"
+                            "Below the title, several paragraphs grouping residues are"
+                            " shown according to the distance to group residues selected by "
+                            "the user. Columns in each paragraph:\nnumberOfatoms, "
+                            "chainLabelName1, modelName1, chainName1, residueName1, "
+                            "chainLabelName2, modelName2, chainName2, residueName2.\n"
+                            "Meaning of question marks below each group:\n'?': First and last "
+                            "residues are separated by more than 20 residues.\n'????':  First "
+                            "and last residues are separated by less than 20 residues.")
 
     def _getVisualizeDict(self):
-        return{
+        return {
             'displayModel': self._displayModel,
             'chainPair': self._chainPair,
             'displayPairChains': self._visualizeChainPairFile
         }
 
     def _displayModel(self, e=None):
-        bildFileName = os.path.abspath(self.protocol._getTmpPath(
-            "axis_output.bild"))
+        # bildFileName = os.path.abspath(self.protocol._getTmpPath(
+        #    "axis_output.bild"))
+        bildFileName = self.protocol._getTmpPath("axis_output.bild")
 
         # Axis Dim
         dim = 150.
@@ -82,19 +83,25 @@ class ChimeraProtContactsViewer(ProtocolViewer):
 
         fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
         f = open(fnCmd, 'w')
+        # change to workingDir
+        # If we do not use cd and the project name has an space
+        # the protocol fails even if we pass absolute paths
+        f.write('cd %s\n' % os.getcwd())
         # reference axis model = 0
         f.write("open %s\n" % bildFileName)
         f.write("cofr 0,0,0\n")  # set center of coordinates
-        f.write("open %s\n" % os.path.abspath(
-            self.protocol.pdbFileToBeRefined.get().getFileName()))
+        # f.write("open %s\n" % os.path.abspath(
+        #     self.protocol.pdbFileToBeRefined.get().getFileName()))
+        f.write("open %s\n" % self.protocol.pdbFileToBeRefined.get().getFileName())
 
         if self.protocol.SYMMETRY.get() and \
                 os.path.exists(self.protocol.getSymmetrizedModelName()):
             f.write("open %s\n" % self.protocol.getSymmetrizedModelName())
         f.close()
         # run in the background
-        chimeraPlugin = importFromPlugin('chimera', 'Plugin', doRaise=True)
-        chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), fnCmd + "&")
+        chimeraPlugin = Domain.importFromPlugin('chimera', 'Plugin', doRaise=True)
+        chimeraPlugin.runChimeraProgram(chimeraPlugin.getProgram(), fnCmd + "&",
+                                        cwd=os.getcwd())
         return []
 
     def _visualizeChainPairFile(self, e=None):
@@ -141,13 +148,13 @@ ORDER BY protId_1, modelId_1, chainId_1,
         else:
             row = self.all_pair_chains[self.chainPair.get()]
             command = commandDisplayInteractions.format(row[1],
-                                                    row[2],
-                                                    row[3],
-                                                    row[4],
-                                                    row[5],
-                                                    row[6]
-                                                    )
-            #print command
+                                                        row[2],
+                                                        row[3],
+                                                        row[4],
+                                                        row[5],
+                                                        row[6]
+                                                        )
+            # print command
             rows_count = self.c.execute(command)
             all_rows = self.c.fetchall()
 
@@ -220,8 +227,7 @@ ORDER BY protId_1, modelId_1, chainId_1,
         f.close()
         _open_cmd(self.getInteractionFileName(), self.getTkRoot())
 
-
-    def _displayPairChains(self,):
+    def _displayPairChains(self, ):
         # auxiliary view name
         viewPairChain = 'atoms_interacting_per_pair_of_chains'
 
@@ -231,7 +237,7 @@ ORDER BY protId_1, modelId_1, chainId_1,
         self.c.execute(sqlCommand)
 
         # create view with pair of chains
-        commandDisplayPairChains="""
+        commandDisplayPairChains = """
 CREATE VIEW {viewName} AS
 SELECT count(*) as AAs,  modelId_1, protId_1, chainId_1, modelId_2,  protId_2,  chainId_2
 FROM view_ND_2
@@ -241,7 +247,7 @@ GROUP BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2
         self.c.execute(commandDisplayPairChains)
 
         # remove duplicates and execute command
-        commandDisplayPairChainsNR="""
+        commandDisplayPairChainsNR = """
 SELECT *
 FROM {viewName}
 
@@ -280,14 +286,14 @@ ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
                                                                  prot_2=row[5],
                                                                  chain_2=row[6])
                            )
-        if self.protocol.SYMMETRY.get() and not\
+        if self.protocol.SYMMETRY.get() and not \
                 os.path.exists(self.protocol.getSymmetrizedModelName()):
             f.write("No contacts found by applying symmetry: Is the symmetry "
                     "center equal to the origin of coordinates?\n")
             choices.append("No contacts found by applying symmetry: Is the symmetry "
                            "center equal to the origin of coordinates?")
         f.close()
-        return choices # list with pairs of chains
+        return choices  # list with pairs of chains
 
     def getPairChainsFileName(self):
         return self.protocol._getTmpPath('pairChainsFile.txt')

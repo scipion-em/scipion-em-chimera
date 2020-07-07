@@ -25,10 +25,6 @@
 # *
 # **************************************************************************
 """
-Bibtex string file for Gautomatch package.
-"""
-
-_bibtexStr = """
 @article{Pettersen2004,
    Author="Pettersen, E. F.  and Goddard, T. D.  and Huang, C. C.  and Couch, G. S.  and Greenblatt, D. M.  and Meng, E. C.  and Ferrin, T. E. ",
    Title="{{U}{C}{S}{F} {C}himera--a visualization system for exploratory research and analysis}",
@@ -42,7 +38,3 @@ _bibtexStr = """
    url = "http://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.20084"
 }
 """
-
-from pyworkflow.utils import parseBibTex
-
-_bibtex = parseBibTex(_bibtexStr)  

@@ -24,13 +24,15 @@
 
 
 import os
-from pyworkflow.em.constants import (SYM_I222, SYM_I2n3,
-                                     SYM_CYCLIC, SYM_DIHEDRAL, SYM_TETRAHEDRAL,
-                                     SYM_OCTAHEDRAL)
+from ..constants import (CHIMERA_I222, CHIMERA_I2n3,
+                         CHIMERA_CYCLIC,
+                         CHIMERA_DIHEDRAL_X,
+                         CHIMERA_TETRAHEDRAL,
+                         CHIMERA_OCTAHEDRAL)
 
-from chimera.protocols import ChimeraProtContacts
+from ..protocols import ChimeraProtContacts
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
-from pyworkflow.em.protocol.protocol_import import ProtImportPdb
+from pwem.protocols.protocol_import import ProtImportPdb
 
 
 class TestImportBase(BaseTest):
@@ -39,9 +41,11 @@ class TestImportBase(BaseTest):
         setupTestProject(cls)
         cls.dsModBuild = DataSet.getDataSet('model_building_tutorial')
 
+
 class TestImportData(TestImportBase):
     """ Import atomic structures(PDBx/mmCIF files)
     """
+
     def _importStructureFromPDBId(self, pdbID):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_ID,
                 'pdbId': pdbID
@@ -51,7 +55,6 @@ class TestImportData(TestImportBase):
         self.launchProtocol(protImportPDB)
         self.assertTrue(protImportPDB.outputPdb.getFileName())
         return protImportPDB.outputPdb
-
 
     def _importStructureFromFile(self, fileName):
         args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_FILES,
@@ -80,7 +83,6 @@ class TestChimeraContact(TestImportData):
                                   '"D": "chainD", "D002": "HEM_D"}',
                 'applySymmetry': False
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('5ni1_HEM\nno sym\ncontacts')
         self.launchProtocol(protContacts)
@@ -102,10 +104,9 @@ class TestChimeraContact(TestImportData):
                                   '"C": "chainC", "C002": "HEM_C", '
                                   '"D": "chainD", "D002": "HEM_D"}',
                 'applySymmetry': True,
-                'symmetryGroup': SYM_CYCLIC,
+                'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 1
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('5ni1_HEM\nerror b\nno sym\ncontacts')
         self.launchProtocol(protContacts)
@@ -127,18 +128,17 @@ class TestChimeraContact(TestImportData):
                                   '"C": "chainC", "C002": "HEM_C", '
                                   '"D": "chainD", "D002": "HEM_D"}',
                 'applySymmetry': True,
-                'symmetryGroup': SYM_CYCLIC,
+                'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 0
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('5ni1_HEM\nerror c\nno sym\ncontacts')
         try:
             self.launchProtocol(protContacts)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " Error: Symmetry Order should be a positive integer.\n"
+            print("This test should return a error message as '"
+                  " Error: Symmetry Order should be a positive integer.\n")
 
             return
         self.assertTrue(False)
@@ -149,12 +149,11 @@ class TestChimeraContact(TestImportData):
         pdb1 = self._importStructureFromFile('PDBx_mmCIF/5ni1_unit_cell_HEM.cif')
         args = {'pdbFileToBeRefined': pdb1,
                 'chainStructure': '{"A": "chainA", "A002": "HEM_A", '
-                                   '"B": "chainB", "B002": "HEM_B"}',
+                                  '"B": "chainB", "B002": "HEM_B"}',
                 'applySymmetry': True,
-                'symmetryGroup': SYM_CYCLIC,
+                'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('5ni1_unit_cell_HEM\nsym C2\ncontacts')
         self.launchProtocol(protContacts)
@@ -175,10 +174,9 @@ class TestChimeraContact(TestImportData):
                 'chainStructure': '{"A": "chainA", "B": "chainB", '
                                   '"C": "chainC", "D": "chainD"}',
                 'applySymmetry': True,
-                'symmetryGroup': SYM_CYCLIC,
+                'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('5ni1\nsym C2\ncenter of sym wrong\ncontacts')
         self.launchProtocol(protContacts)
@@ -201,7 +199,6 @@ class TestChimeraContact(TestImportData):
                                   '"M": "down", "N": "down", "O": "down", "P": "down"}',
                 'applySymmetry': False,
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1a6d_whole\nno sym\ncontacts')
         self.launchProtocol(protContacts)
@@ -223,10 +220,9 @@ class TestChimeraContact(TestImportData):
                                   '"I": "down", "J": "up", "K": "up", "L": "up", '
                                   '"M": "down", "N": "down", "O": "down", "P": "down"}',
                 'applySymmetry': True,
-                'symmetryGroup': SYM_DIHEDRAL,
+                'symmetryGroup': CHIMERA_DIHEDRAL_X,
                 'symmetryOrder': 1
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1a6d_whole\nerror b\nno sym\ncontacts')
         self.launchProtocol(protContacts)
@@ -248,10 +244,9 @@ class TestChimeraContact(TestImportData):
                                   '"I": "down", "J": "up", "K": "up", "L": "up", '
                                   '"M": "down", "N": "down", "O": "down", "P": "down"}',
                 'applySymmetry': True,
-                'symmetryGroup': SYM_DIHEDRAL,
+                'symmetryGroup': CHIMERA_DIHEDRAL_X,
                 'symmetryOrder': 0
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1a6d_whole\nerror c\nno sym\ncontacts')
 
@@ -259,8 +254,8 @@ class TestChimeraContact(TestImportData):
             self.launchProtocol(protContacts)
         except Exception as e:
             self.assertTrue(True)
-            print "This test should return a error message as '" \
-                  " Error: Symmetry Order should be a positive integer.\n"
+            print("This test should return a error message as '"
+                  " Error: Symmetry Order should be a positive integer.\n")
 
             return
         self.assertTrue(False)
@@ -272,10 +267,9 @@ class TestChimeraContact(TestImportData):
         args = {'pdbFileToBeRefined': pdb1,
                 'chainStructure': '{"A": "chainA", "B": "chainB"}',
                 'applySymmetry': True,
-                'symmetryGroup': SYM_DIHEDRAL,
+                'symmetryGroup': CHIMERA_DIHEDRAL_X,
                 'symmetryOrder': 4
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1a6d_unit_cell\nsym D4\ncontacts')
         self.launchProtocol(protContacts)
@@ -301,9 +295,8 @@ class TestChimeraContact(TestImportData):
                                   '"Q": "up", "R": "up", "S": "down", "T": "down", '
                                   '"U": "up", "V": "up", "W": "down", "X": "down"}',
                 'applySymmetry': False,
-                'symmetryGroup': SYM_OCTAHEDRAL
+                'symmetryGroup': CHIMERA_OCTAHEDRAL
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1eab_whole\nno sym\ncontacts')
         self.launchProtocol(protContacts)
@@ -324,9 +317,8 @@ class TestChimeraContact(TestImportData):
         args = {'pdbFileToBeRefined': pdb1,
                 'chainStructure': '{"A": "chainA"}',
                 'applySymmetry': True,
-                'symmetryGroup': SYM_OCTAHEDRAL
+                'symmetryGroup': CHIMERA_OCTAHEDRAL
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1eab_unit_cell\nsym O\ncontacts')
         self.launchProtocol(protContacts)
@@ -349,9 +341,8 @@ class TestChimeraContact(TestImportData):
                                   '"G": "chainG", "H": "chainH", "I": "chainI", '
                                   '"J": "chainJ", "K": "chainK", "L": "chainL"}',
                 'applySymmetry': False,
-                'symmetryGroup': SYM_TETRAHEDRAL
+                'symmetryGroup': CHIMERA_TETRAHEDRAL
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('6n1r\nno sym\ncontacts')
         self.launchProtocol(protContacts)
@@ -363,7 +354,6 @@ class TestChimeraContact(TestImportData):
         row = c.fetchone()
         self.assertEqual(int(row[0]), 7282)
 
-
     def testContactsSymT(self):
         # import PDB; unit cell of the tetrahedral aminopeptidase from P. horikoshii)
         # (1y0r); Ligands: Zn, As
@@ -372,9 +362,8 @@ class TestChimeraContact(TestImportData):
         args = {'pdbFileToBeRefined': pdb1,
                 'chainStructure': '{"A": "chainA"}',
                 'applySymmetry': True,
-                'symmetryGroup': SYM_TETRAHEDRAL
+                'symmetryGroup': CHIMERA_TETRAHEDRAL
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('1y0r_unit_cell\nsym T\ncontacts')
         self.launchProtocol(protContacts)
@@ -393,10 +382,10 @@ class TestChimeraContact(TestImportData):
         cell and any protein of the neighbour unit cells.
         """
         # import structure of the unit cell of a icosahedral virus
-        pdb1 = self._importStructureFromPDBId('6b1t') # A
+        pdb1 = self._importStructureFromPDBId('6b1t')  # A
         args = {'pdbFileToBeRefined': pdb1,
                 'applySymmetry': True,
-                'symmetryGroup': SYM_I222,
+                'symmetryGroup': CHIMERA_I222,
                 # symmetry group of the whole virus, once you have applied
                 # symmetry to the unit cell
                 'chainStructure': '{"A": "h1", "B": "h1", "C": "h1", '
@@ -411,7 +400,6 @@ class TestChimeraContact(TestImportData):
                                   '"X": "x", "Y": "vi"}'
                 # labeling of unit cell chains
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('6b1t\nicosahedral virus\nsym I222\ncontacts ')
         self.launchProtocol(protContacts)
@@ -430,10 +418,10 @@ class TestChimeraContact(TestImportData):
         cell and any protein of the neighbour unit cells.
         """
         # import structure of the unit cell of a icosahedral virus
-        pdb1 = self._importStructureFromPDBId('6b1t') # A
+        pdb1 = self._importStructureFromPDBId('6b1t')  # A
         args = {'pdbFileToBeRefined': pdb1,
                 'applySymmetry': True,
-                'symmetryGroup': SYM_I2n3,
+                'symmetryGroup': CHIMERA_I2n3,
                 # symmetry group of the whole virus, once you have applied
                 # symmetry to the unit cell
                 'chainStructure': '{"A": "h1", "B": "h1", "C": "h1", '
@@ -448,7 +436,6 @@ class TestChimeraContact(TestImportData):
                                   '"X": "x", "Y": "vi"}'
                 # labeling of unit cell chains
                 }
-
         protContacts = self.newProtocol(ChimeraProtContacts, **args)
         protContacts.setObjLabel('6b1t\nicosahedral virus\nsym I2n3\ncontacts ')
         self.launchProtocol(protContacts)

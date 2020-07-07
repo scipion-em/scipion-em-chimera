@@ -25,15 +25,16 @@
 # *
 # **************************************************************************
 
-from protocol_base import createScriptFile
+from .protocol_base import createScriptFile
 from pyworkflow.protocol.params import PointerParam, StringParam
 import os
-from pyworkflow.em.viewers.viewer_chimera import (Chimera,
-                                                  chimeraScriptFileName,
-                                                  chimeraPdbTemplateFileName,
-                                                  chimeraMapTemplateFileName,
-                                                  sessionFile)
-from protocol_base import ChimeraProtBase
+from pwem.viewers.viewer_chimera import (Chimera,
+                                         chimeraScriptFileName,
+                                         chimeraPdbTemplateFileName,
+                                         chimeraMapTemplateFileName,
+                                         sessionFile)
+from .protocol_base import ChimeraProtBase
+
 
 class ChimeraProtRestore(ChimeraProtBase):
     """This protocol opens Chimera and restores a session
@@ -49,11 +50,11 @@ class ChimeraProtRestore(ChimeraProtBase):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('inputProtocol', PointerParam,
-                  label="Input protocols", important=True,
-                  pointerClass='ChimeraProtOperate, '
-                               'ChimeraProtRigidFit, '
-                               'ChimeraModelFromTemplate',
-                  help="protocol to be reloaded")
+                      label="Input protocols", important=True,
+                      pointerClass='ChimeraProtOperate, '
+                                   'ChimeraProtRigidFit, '
+                                   'ChimeraModelFromTemplate',
+                      help="protocol to be reloaded")
 
         form.addParam('extraCommands', StringParam,
                       default='',
@@ -77,7 +78,7 @@ class ChimeraProtRestore(ChimeraProtBase):
         """
         """
         self.parentProt = self.inputProtocol.get()
-        self.parentProt.setProject(self.getProject()) # I do not really
+        self.parentProt.setProject(self.getProject())  # I do not really
         # understand this line
 
         self.inputVolume = self.parentProt.inputVolume
@@ -85,7 +86,7 @@ class ChimeraProtRestore(ChimeraProtBase):
         self.inputPdbFiles = self.parentProt.inputPdbFiles
 
     def runChimeraStep(self):
-        #create CMD file
+        # create CMD file
         parentSessionFileName = self.parentProt._getExtraPath(sessionFile)
         sessionFileName = self._getExtraPath(sessionFile)
         f = open(self._getTmpPath(chimeraScriptFileName), "w")
@@ -99,7 +100,7 @@ class ChimeraProtRestore(ChimeraProtBase):
                          sessionFileName
                          )
 
-        f.write("restoreSession('%s')\n"%parentSessionFileName)
+        f.write("restoreSession('%s')\n" % parentSessionFileName)
 
         if len(self.extraCommands.get()) > 2:
             f.write(self.extraCommands.get())
@@ -120,11 +121,11 @@ class ChimeraProtRestore(ChimeraProtBase):
     def _validate(self):
         errors = super(ChimeraProtRestore, self)._validate()
         parentProt = self.inputProtocol.get()
-        parentProt.setProject(self.getProject()) # I do not really understand
-                                                 # this line
+        parentProt.setProject(self.getProject())  # I do not really understand
+        # this line
         sessionFileName = parentProt._getExtraPath(sessionFile)
         # Check SESSION.py exists
-        if (not os.path.exists(sessionFileName)):
+        if not os.path.exists(sessionFileName):
             errors.append("Error: No session saved by protocol: %s\n"
                           % parentProt.getObjLabel())
 

@@ -1,5 +1,6 @@
-from viewer import (ChimeraProtRigidFitViewer,
-                    ChimeraProtOperateViewer,
-                    ChimeraRestoreViewer,
-                    ChimeraModelFromTemplateViewer)
-from viewer_contacts import ChimeraProtContactsViewer
+from .viewer import (ChimeraProtRigidFitViewer,
+                     ChimeraProtOperateViewer,
+                     ChimeraRestoreViewer,
+                     ChimeraModelFromTemplateViewer,
+                     ChimeraSubtractionMapsViewer)
+from .viewer_contacts import ChimeraProtContactsViewer

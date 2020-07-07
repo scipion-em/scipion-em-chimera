@@ -31,12 +31,12 @@
 # Modeller server in order to get five independent models. The user has to
 # select and save one of them.
 
-from chimera.protocols import ChimeraModelFromTemplate
-from pyworkflow.em.protocol.protocol_import import ProtImportPdb
-from pyworkflow.em.protocol.protocol_import.sequence import \
+from ..protocols import ChimeraModelFromTemplate
+from pwem.protocols.protocol_import import ProtImportPdb
+from pwem.protocols.protocol_import.sequence import \
     ProtImportSequence
 from pyworkflow.tests import *
-from pyworkflow.em.convert.sequence import indexToAlphabet
+from pwem.convert.sequence import indexToAlphabet
 
 
 class TestImportBase(BaseTest):
@@ -45,13 +45,13 @@ class TestImportBase(BaseTest):
         setupTestProject(cls)
         cls.dsModBuild = DataSet.getDataSet('model_building_tutorial')
 
+
 class TestImportData(TestImportBase):
     """ Import atomic structures(PDBx/mmCIF files) and sequences
     """
     NAME = "User_Name"
     pdbID1 = "3lqd"  # Protein
     pdbID2 = "1aoi"  # DNA and protein
-
 
     def _importStructurePDBWoVol1(self):
         """Import the structure 3lqd (Protein structure)"""
@@ -84,7 +84,7 @@ class TestImportData(TestImportBase):
                     'PDBx_mmCIF/1g03.cif'),
                 }
         protImportPDB = self.newProtocol(ProtImportPdb, **args)
-        protImportPDB.setObjLabel('import structure\n 1aoi')
+        protImportPDB.setObjLabel('import structure\n 1g03')
         self.launchProtocol(protImportPDB)
         structure3_PDB = protImportPDB.outputPdb
         return structure3_PDB
@@ -164,11 +164,11 @@ class TestImportData(TestImportBase):
                          )
         return sequence
 
-class TestChimeraModellerSearch(TestImportData):
 
-    CHAIN1 = "[model: 0, chain: B, 148 residues]" # Protein
-    CHAIN2 = "[model: 0, chain: A, 98 residues]" # Protein
-    CHAIN3 = "[model: 7, chain: A, 134 residues]" # Protein
+class TestChimeraModellerSearch(TestImportData):
+    CHAIN1 = "[model: 0, chain: B, 148 residues]"  # Protein
+    CHAIN2 = "[model: 0, chain: A, 98 residues]"  # Protein
+    CHAIN3 = "[model: 7, chain: A, 134 residues]"  # Protein
     message = """*******************************************
 This test requires human intervention. By default is disabled
 so automatic checking do not fail but should be executed
@@ -190,7 +190,7 @@ structure -> modeller (homology)
 8) In command line type:  scipionwrite model #2.1 ,enter>
 9) close chimera 
 ************************************************"""
-    DISABLE_TEST = True 
+    DISABLE_TEST = True
 
     def testImportChainFromStructureAndSequence1(self):
         """
@@ -203,12 +203,12 @@ structure -> modeller (homology)
         args = {'pdbFileToBeRefined': structure1_PDB,
                 'inputStructureChain': self.CHAIN1,
                 'inputSequence': sequence1
-               }
+                }
         prot1 = self.newProtocol(ChimeraModelFromTemplate, **args)
         prot1.setObjLabel('1_structure chain seq,\n and seq from '
                           'user file\n')
         if self.DISABLE_TEST:
-            print self.message
+            print(self.message)
         else:
             self.launchProtocol(prot1)
 
@@ -224,12 +224,12 @@ structure -> modeller (homology)
         args = {'pdbFileToBeRefined': structure2_PDB,
                 'inputStructureChain': self.CHAIN2,
                 'inputSequence': sequence2
-               }
+                }
         prot2 = self.newProtocol(ChimeraModelFromTemplate, **args)
         prot2.setObjLabel('2_structure chain seq,\n and seq from '
                           'user file\n')
         if self.DISABLE_TEST:
-            print self.message
+            print(self.message)
         else:
             self.launchProtocol(prot2)
 
@@ -249,6 +249,6 @@ structure -> modeller (homology)
         prot3.setObjLabel('3_structure chain seq,\n and seq from '
                           'user file\n')
         if self.DISABLE_TEST:
-            print self.message
+            print(self.message)
         else:
             self.launchProtocol(prot3)
