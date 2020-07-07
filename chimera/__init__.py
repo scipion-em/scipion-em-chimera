@@ -75,11 +75,7 @@ class Plugin(pwem.Plugin):
     @classmethod
     def defineBinaries(cls, env):
 
-        SW_CH = env.getEmFolder()
-        chimerax_1_0_command = [('./scipion_installer',
-                            '%s/chimerax-1.0/bin/chimerax' % SW_CH)]
-
         env.addPackage('chimerax', version='1.0',
                        tar='ChimeraX-1.0.tar.gz',
-                       commands=chimerax_1_0_command,
+                       buildDir='chimerax-1.0',
                        default=True)
