@@ -63,7 +63,7 @@ class Plugin(pwem.Plugin):
         pwutils.runJob(None, program, args, env=env, cwd=cwd)
 
     @classmethod
-    def getProgram(cls, progName="chimerax"):
+    def getProgram(cls, progName="ChimeraX"):
         """ Return the program binary that will be used. """
         cmd = cls.getHome('bin', progName)
         return str(cmd)
