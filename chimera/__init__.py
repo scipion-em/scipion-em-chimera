@@ -75,7 +75,8 @@ class Plugin(pwem.Plugin):
 
     @classmethod
     def defineBinaries(cls, env):
-        getChimeraScript = os.path.join(os.path.dirname(__file__), "getchimera.py")
+        getChimeraScript = os.path.join(os.path.dirname(__file__),
+                                        "getchimera.py")
 
         chimera_cmds = [("cd ..", []),
                         ("python " + getChimeraScript, "ChimeraX-1.0.tar.gz"),
