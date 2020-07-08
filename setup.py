@@ -42,7 +42,7 @@ setup(
         'Development Status :: 3 - Alpha',
         'Programming Language :: Python :: 3'
     ],
-    install_requires=['scipion-em'],  # Optional
+    install_requires=['scipion-em', 'pywebview[qt]'],  # Optional
     entry_points={
             'pyworkflow.plugin': 'chimera = chimera'
         },

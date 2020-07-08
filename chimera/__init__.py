@@ -27,6 +27,7 @@ import os
 
 import pwem
 import pyworkflow.utils as pwutils
+from scipion.install.funcs import VOID_TGZ
 
 from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_0
 
@@ -74,8 +75,13 @@ class Plugin(pwem.Plugin):
 
     @classmethod
     def defineBinaries(cls, env):
+        getChimeraScript = os.path.join(os.path.dirname(__file__), "getchimera.py")
 
+        chimera_cmds = [("cd ..", []),
+                        ("python " + getChimeraScript, "ChimeraX-1.0.tar.gz"),
+                        ("tar -xf ChimeraX-1.0.tar.gz", "chimerax-1.0")]
         env.addPackage('chimerax', version='1.0',
-                       tar='ChimeraX-1.0.tar.gz',
+                       tar=VOID_TGZ,
                        buildDir='chimerax-1.0',
-                       default=True)
+                       default=True,
+                       commands=chimera_cmds)
