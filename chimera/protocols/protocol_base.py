@@ -272,7 +272,10 @@ class ChimeraProtBase(EMProtocol):
                 path = os.path.join(directory, filename)
                 pdb = AtomStruct()
                 pdb.setFileName(path)
-                keyword = filename.split(".pdb")[0].replace(".","_")
+                if filename.endswith(".cif"):
+                    keyword = filename.split(".cif")[0].replace(".","_")
+                else:
+                    keyword = filename.split(".pdb")[0].replace(".", "_")
                 kwargs = {keyword: pdb}
                 self._defineOutputs(**kwargs)
         # upodate config file flag enablebundle
