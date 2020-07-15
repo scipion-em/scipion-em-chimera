@@ -158,18 +158,17 @@ class ChimeraProtBase(EMProtocol):
                     % (pdbModelCounter, x_input, y_input, z_input))
 
         if self.inputVolumes is not None:
-            if _inputVol is not None:
-                pdbModelCounter += 1
             for vol in self.inputVolumes:
+                pdbModelCounter += 1
                 f.write("runCommand('open %s')\n" % vol.get().getFileName())
                 x, y, z = vol.get().getShiftsFromOrigin()
                 f.write("runCommand('volume #%d style surface voxelSize %f')\n"
                         % (pdbModelCounter, vol.get().getSamplingRate()))
                 f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
                         % (pdbModelCounter, x, y, z))
-                pdbModelCounter += 1
 
         if self.pdbFileToBeRefined.get() is not None:
+            pdbModelCounter += 1
             pdbFileToBeRefined = self.pdbFileToBeRefined.get()
             f.write("runCommand('open %s')\n" % os.path.abspath(
                 pdbFileToBeRefined.getFileName()))
@@ -201,8 +200,8 @@ class ChimeraProtBase(EMProtocol):
                     f.write("runCommand('open %s')\n" % alignmentFile)
 
         # other pdb files
-        pdbModelCounter += 1
         for pdb in self.inputPdbFiles:
+            pdbModelCounter += 1
             f.write("runCommand('open %s')\n" % os.path.abspath(pdb.get(
             ).getFileName()))
             if pdb.get().hasOrigin():
@@ -210,7 +209,6 @@ class ChimeraProtBase(EMProtocol):
                 f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
                         "coord #0')\n" % (x, y, z, pdbModelCounter))
             # TODO: Check this this this this this this
-            pdbModelCounter += 1
 
         # run the text:
         if len(self.extraCommands.get()) > 2:
