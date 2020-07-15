@@ -145,8 +145,9 @@ class ChimeraProtBase(EMProtocol):
         f.write("runCommand('cofr 0,0,0')\n")  # set center of coordinates
 
         # input vol with its origin coordinates
-        pdbModelCounter = 1
+        pdbModelCounter = 0
         if _inputVol is not None:
+            pdbModelCounter += 1
             x_input, y_input, z_input = _inputVol.getShiftsFromOrigin()
             inputVolFileName = os.path.abspath(ImageHandler.removeFileType(
                 _inputVol.getFileName()))
