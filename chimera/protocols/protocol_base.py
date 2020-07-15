@@ -182,6 +182,7 @@ class ChimeraProtBase(EMProtocol):
                 hasattr(self, 'inputStructureChain')):
             if (self.inputSequence.get() is not None and
                     self.inputStructureChain.get() is not None):
+                pdbModelCounter = 2
                 models = self.structureHandler.getModelsChains()
                 if len(models) > 1:
                     f.write("runCommand('select #%d.%s:.%s')\n"
