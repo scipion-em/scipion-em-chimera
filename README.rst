@@ -11,7 +11,7 @@ Chimera  is a program for interactive visualization and analysis of molecular st
 Install this plugin
 ===================
 
-You will need to use `2.0.0 <https://github.com/I2PC/scipion/releases/tag/v2.0>`_ version of Scipion to run these protocols. To install the plugin, you have two options:
+You will need to use Scipion 3.0 version to run these protocols. To install the plugin, you have two options:
 
 - **Stable version**  
 
