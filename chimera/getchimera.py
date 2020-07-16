@@ -11,7 +11,6 @@ def getChimeraX():
     def on_loaded():
         window = webview.windows[0]
         loadedUrl = window.get_current_url()
-        print(loadedUrl)
         if loadedUrl == "https://www.cgl.ucsf.edu/chimerax/cgi-bin/secure/chimerax-get.py":
             anchors = window.get_elements("a")
             downloadAnchor = anchors[0]
@@ -19,6 +18,8 @@ def getChimeraX():
             window.destroy()
             if "chimerax-get.py" in downloadUrl:
                 os.system('wget "%s" -nv -c -O %s' %(downloadUrl, TGZ))
+            else:
+                print("Licence declined. Installation can't continue.")
 
     if os.path.exists(TGZ):
         print(TGZ, " found. Skipping download.")
@@ -29,7 +30,11 @@ def getChimeraX():
                                    'https://www.cgl.ucsf.edu/chimerax/cgi-bin/secure/chimerax-get.py?file=linux/ChimeraX-1.0.tar.gz',
                                    on_top=True)
     window.loaded += on_loaded
-    webview.start()
+    webview.start(gui='qt')
 
 if __name__ == '__main__':
-    getChimeraX()
+    try:
+        getChimeraX()
+    except Exception as e:
+        print("There was an error trying to launch Chimera license agreement page (%s)" % str(e))
+        print('Please, follow this link (https://github.com/scipion-em/scipion-em-chimera) for instructions to connect Scipion with ChimeraX' )
