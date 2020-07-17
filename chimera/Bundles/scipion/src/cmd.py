@@ -9,11 +9,14 @@ from chimerax.atomic.structure import AtomicStructure # model type atomic struct
 
 import os
 import ntpath
-chimeraConfigFileName = "chimera.ini"
+# When a test is executed the default working directory is tmp even if extra has been
+# passed as ChimeraX argument. The following hack bypasses that problem.
+chimeraConfigFileName = "../extra/chimera.ini"
 
 def readConfigFile(session, configFileName):
     config = configparser.ConfigParser()
     config.read(configFileName)
+
     d = {}
     if not config.has_section('chimerax'):
         session.logger.info("No section chimerax")
@@ -25,7 +28,7 @@ def readConfigFile(session, configFileName):
         d['sessionfile'] = config.get("chimerax", "sessionFile")
         d['protid'] = config.getint("chimerax", "protId")
         d['enablebundle'] = config.getboolean("chimerax", "enablebundle")
-    session.logger.info("d=%s" % str(d))
+    # session.logger.info("d=%s" % str(d))
     return d
 
 def scipionwrite(session, model, prefix=None):
@@ -34,7 +37,7 @@ def scipionwrite(session, model, prefix=None):
 
     d = readConfigFile(session, chimeraConfigFileName)
     if not d['enablebundle']:
-        session.logger.error("scipionwriter cannot be called from Analyze or Viewers")
+        session.logger.error("scipionwrite cannot be called from Analyze or Viewers")
         return
 
     model = model[0] # model is a tuple, let us get the major model id
@@ -60,9 +63,10 @@ def scipionwrite(session, model, prefix=None):
     session.logger.info(command)
     run(session, command)
 
-    session.logger.info("Saving session")
-    command = 'save %s' % d['sessionfile']
-    run(session, command)
+    if not (prefix == "DONOTSAVESESSION_"):
+        session.logger.info("Saving session")
+        command = 'save %s' % d['sessionfile']
+        run(session, command)
 
 scipionwrite_desc = CmdDesc(
     required = [('model', TopModelsArg)],
@@ -77,7 +81,7 @@ def scipionss(session):
     session.logger.info("Saving session")
     d = readConfigFile(session, chimeraConfigFileName)
     if not d['enablebundle']:
-        session.logger.error("scipionwriter cannot be called from Analyze or Viewers")
+        session.logger.error("scipionwrite cannot be called from Analyze or Viewers")
         return
 
     command = 'save %s' % d['sessionfile']
@@ -93,7 +97,7 @@ def scipionrs(session):
     session.logger.info("Restoring session")
     d = readConfigFile(session, chimeraConfigFileName)
     if not d['enablebundle']:
-        session.logger.error("scipionwriter cannot be called from Analyze or Viewers")
+        session.logger.error("scipionwrite cannot be called from Analyze or Viewers")
         return
 
     command = 'open %s' % d['sessionfile']

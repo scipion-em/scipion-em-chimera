@@ -44,8 +44,7 @@ from pwem.viewers.viewer_chimera import (Chimera,
                                          sessionFile,
                                          chimeraMapTemplateFileName,
                                          chimeraScriptFileName,
-                                         chimeraPdbTemplateFileName,
-                                         chimeraConfigFileName)
+                                         chimeraPdbTemplateFileName)
 
 from pyworkflow.protocol.params import (MultiPointerParam,
                                         PointerParam,
@@ -136,8 +135,9 @@ class ChimeraProtBase(EMProtocol):
         f.write("cofr 0,0,0\n")  # set center of coordinates
 
         # input vol with its origin coordinates
-        pdbModelCounter = 2
+        pdbModelCounter = 1
         if _inputVol is not None:
+            pdbModelCounter += 1
             x_input, y_input, z_input = _inputVol.getShiftsFromOrigin()
             inputVolFileName = os.path.abspath(ImageHandler.removeFileType(
                 _inputVol.getFileName()))
@@ -148,18 +148,17 @@ class ChimeraProtBase(EMProtocol):
                     % (pdbModelCounter, x_input, y_input, z_input))
 
         if self.inputVolumes is not None:
-            if _inputVol is not None:
-                pdbModelCounter += 1
             for vol in self.inputVolumes:
+                pdbModelCounter += 1
                 f.write("open %s\n" % vol.get().getFileName())
                 x, y, z = vol.get().getShiftsFromOrigin()
                 f.write("volume #%d style surface voxelSize %f\n"
                         % (pdbModelCounter, vol.get().getSamplingRate()))
                 f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n"
                         % (pdbModelCounter, x, y, z))
-                pdbModelCounter += 1
 
         if self.pdbFileToBeRefined.get() is not None:
+            pdbModelCounter += 1
             pdbFileToBeRefined = self.pdbFileToBeRefined.get()
             f.write("open %s\n" % os.path.abspath(
                 pdbFileToBeRefined.getFileName()))
@@ -187,8 +186,8 @@ class ChimeraProtBase(EMProtocol):
                     f.write("open %s\n" % alignmentFile)
 
         # other pdb files
-        pdbModelCounter += 1
         for pdb in self.inputPdbFiles:
+            pdbModelCounter += 1
             f.write("open %s\n" % os.path.abspath(pdb.get(
             ).getFileName()))
             if pdb.get().hasOrigin():
@@ -196,7 +195,6 @@ class ChimeraProtBase(EMProtocol):
                 f.write("move %0.2f,%0.2f,%0.2f model #%d "
                         "coord #0\n" % (x, y, z, pdbModelCounter))
             # TODO: Check this this this this this this
-            pdbModelCounter += 1
 
         # Go to extra dir and save there the output of
         # scipionwrite
@@ -272,7 +270,10 @@ class ChimeraProtBase(EMProtocol):
                 path = os.path.join(directory, filename)
                 pdb = AtomStruct()
                 pdb.setFileName(path)
-                keyword = filename.split(".pdb")[0].replace(".","_")
+                if filename.endswith(".cif"):
+                    keyword = filename.split(".cif")[0].replace(".","_")
+                else:
+                    keyword = filename.split(".pdb")[0].replace(".", "_")
                 kwargs = {keyword: pdb}
                 self._defineOutputs(**kwargs)
         # upodate config file flag enablebundle

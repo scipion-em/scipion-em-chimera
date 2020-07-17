@@ -27,12 +27,14 @@ import os
 
 import pwem
 import pyworkflow.utils as pwutils
+from scipion.install.funcs import VOID_TGZ
 
 from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_0
 
 
 _logo = "chimera_logo.png"
 _references = ['Pettersen2004']
+__version__ = '3.0.1'
 
 
 class Plugin(pwem.Plugin):
@@ -63,7 +65,7 @@ class Plugin(pwem.Plugin):
         pwutils.runJob(None, program, args, env=env, cwd=cwd)
 
     @classmethod
-    def getProgram(cls, progName="chimerax"):
+    def getProgram(cls, progName="ChimeraX"):
         """ Return the program binary that will be used. """
         cmd = cls.getHome('bin', progName)
         return str(cmd)
@@ -74,12 +76,13 @@ class Plugin(pwem.Plugin):
 
     @classmethod
     def defineBinaries(cls, env):
+        getChimeraScript = os.path.join(os.path.dirname(__file__),
+                                        "getchimera.py")
 
-        SW_CH = env.getEmFolder()
-        chimerax_1_0_command = [('./scipion_installer',
-                            '%s/chimerax-1.0/bin/chimerax' % SW_CH)]
-
+        chimera_cmds = [("cd .. && python " + getChimeraScript, "../ChimeraX-1.0.tar.gz"),
+                        ("cd .. && tar -xf ChimeraX-1.0.tar.gz", "bin/ChimeraX")]
         env.addPackage('chimerax', version='1.0',
-                       tar='ChimeraX-1.0.tar.gz',
-                       commands=chimerax_1_0_command,
-                       default=True)
+                       tar=VOID_TGZ,
+                       buildDir='chimerax-1.0',
+                       default=True,
+                       commands=chimera_cmds)
