@@ -44,8 +44,7 @@ from pwem.viewers.viewer_chimera import (Chimera,
                                          sessionFile,
                                          chimeraMapTemplateFileName,
                                          chimeraScriptFileName,
-                                         chimeraPdbTemplateFileName,
-                                         chimeraConfigFileName)
+                                         chimeraPdbTemplateFileName)
 
 from pyworkflow.protocol.params import (MultiPointerParam,
                                         PointerParam,
