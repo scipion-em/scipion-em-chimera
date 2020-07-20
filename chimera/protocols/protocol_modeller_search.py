@@ -56,7 +56,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
 
     SEQUENCEFILENAME = '_sequence.fasta'
     INFILE = "unaligned.fasta"
-    OUTFILE = "aligned.fasta"
+    OUTFILE = "aligned.clustal"
     TWOSEQUENCES = 0
     MULTIPLESEQUENCES = 1
     ProgramToAlign1 = ['Bio.pairwise2', 'Clustal Omega', 'MUSCLE']
