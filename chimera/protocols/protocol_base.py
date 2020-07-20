@@ -173,14 +173,10 @@ class ChimeraProtBase(EMProtocol):
                 hasattr(self, 'inputStructureChain')):
             if (self.inputSequence.get() is not None and
                     self.inputStructureChain.get() is not None):
-                models = self.structureHandler.getModelsChains()
-                if len(models) > 1:
-                    f.write("select #%d.%s:.%s\n"
-                            % (pdbModelCounter, str(self.selectedModel),
-                               str(self.selectedChain)))
-                else:
-                    f.write("select #%d:.%s\n"
-                            % (pdbModelCounter, str(self.selectedChain)))
+                pdbModelCounter = 3
+                f.write("select #%s/%s\n"
+                        % (str(self.selectedModel),
+                           str(self.selectedChain)))
 
                 if self._getOutFastaSequencesFile is not None:
                     alignmentFile = self._getOutFastaSequencesFile()
