@@ -29,6 +29,8 @@ import os
 
 from pyworkflow import VERSION_3_0
 
+from ..constants import CHIMERA_CONFIG_FILE
+
 try:
     from pwem.objects import AtomStruct
 except ImportError:
@@ -44,8 +46,7 @@ from pwem.viewers.viewer_chimera import (Chimera,
                                          sessionFile,
                                          chimeraMapTemplateFileName,
                                          chimeraScriptFileName,
-                                         chimeraPdbTemplateFileName,
-                                         chimeraConfigFileName)
+                                         chimeraPdbTemplateFileName)
 
 from pyworkflow.protocol.params import (MultiPointerParam,
                                         PointerParam,
@@ -219,7 +220,7 @@ class ChimeraProtBase(EMProtocol):
                               # set to True when
                               # protocol finished
                               # viewers will check this configuration file
-        with open(self._getExtraPath(chimeraConfigFileName),
+        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
                   'w') as configfile:
             config.write(configfile)
 
@@ -276,9 +277,9 @@ class ChimeraProtBase(EMProtocol):
         # upodate config file flag enablebundle
         # so scipionwrite is disabled
         config = configparser.ConfigParser()
-        config.read(self._getExtraPath(chimeraConfigFileName))
+        config.read(self._getExtraPath(CHIMERA_CONFIG_FILE))
         config.set('chimerax', 'enablebundle', 'False')
-        with open(self._getExtraPath(chimeraConfigFileName),
+        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
                   'w') as configfile:
             config.write(configfile)
     # --------------------------- INFO functions ----------------------------

@@ -10,19 +10,23 @@ from setuptools import setup, find_packages
 # To use a consistent encoding
 from codecs import open
 from os import path
-
+from chimera import __version__
 here = path.abspath(path.dirname(__file__))
 
 # Get the long description from the README file
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
+
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
 
 setup(
     name='scipion-em-chimera',  # Required
-    version='3.0.0',  # Required
+    version=__version__,  # Required
     description='Plugin to use chimera programs within the Scipion framework',  # Required
     long_description=long_description,  # Optional
     url='https://github.com/scipion-em/scipion-em-chimera',  # Optional
@@ -42,7 +46,7 @@ setup(
         'Development Status :: 3 - Alpha',
         'Programming Language :: Python :: 3'
     ],
-    install_requires=['scipion-em', 'pywebview[qt]'],  # Optional
+    install_requires=[requirements], # Optional
     entry_points={
             'pyworkflow.plugin': 'chimera = chimera'
         },

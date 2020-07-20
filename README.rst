@@ -2,22 +2,22 @@
 Chimera scipion plugin
 ================================
 
-This plugin allows to use chimera commands within the Scipion framework.
+This plugin allows to use chimeraX commands within the Scipion framework.
 
-Chimera  is a program for interactive visualization and analysis of molecular structures and related data. It is developed by the Resource for Biocomputing, Visualization, and Informatics (see `Chimera home page <https://www.cgl.ucsf.edu/chimera/>`_ for details).
+Chimera  is a program for interactive visualization and analysis of molecular structures and related data. It is developed by the Resource for Biocomputing, Visualization, and Informatics (see `ChimeraX home page <https://www.cgl.ucsf.edu/chimerax/>`_ for details).
 
 
 ===================
 Install this plugin
 ===================
 
-You will need to use `2.0.0 <https://github.com/I2PC/scipion/releases/tag/v2.0>`_ version of Scipion to run these protocols. To install the plugin, you have two options:
+You will need to use `3.0.0 <https://scipion-em.github.io/docs/release-3.0.0/>`_ version of Scipion to run these protocols. To install the plugin, you have two options:
 
 - **Stable version**  
 
 .. code-block:: 
 
-      scipion installp -p scipion-em-chimera
+      scipion3 installp -p scipion-em-chimera
       
 OR
 
@@ -35,16 +35,18 @@ OR
 
 .. code-block::
 
-            scipion installp -p path_to_scipion-em-chimera --devel
+            scipion3 installp -p path_to_scipion-em-chimera --devel
 
 - **Binary files** 
 
-Chimera binaries will be installed automatically with the plugin, but you can also link an existing installation. 
-Default installation path assumed is *software/em/chimera-1.13.1*, if you want to change it, set *CHIMERA_HOME* in *scipion.conf* file to the folder where Chimera is installed.
+Chimera binaries could be installed automatically with the plugin after accepting ChimeraX licence terms,
+but you can also link an existing installation. Default installation path assumed is *software/em/chimerax-1.0,
+if you want to change it, set *CHIMERA_HOME* in *scipion.conf* file to the folder where ChimeraX is installed
+or link your chimerax folder to *software/em/chimerax-1.0.
 
 - **Tests**
 
-Tested with Chimera version: 1.13.1.
+Tested with ChimeraX version: 1.0.
 
 To check the installation, simply run the following Scipion tests: 
 
@@ -53,9 +55,9 @@ To check the installation, simply run the following Scipion tests:
 * scipion test chimera.tests.test_protocol_modeller_search
 * scipion test chimera.tests.test_protocol_contact
 
-- **Supported versions of Chimera**
+- **Supported versions of ChimeraX**
 
-1.13.1
+1.0
 
 
 =========

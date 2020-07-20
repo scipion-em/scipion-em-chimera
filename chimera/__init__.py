@@ -31,9 +31,10 @@ from scipion.install.funcs import VOID_TGZ
 
 from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_0
 
-
+__version__ = "3.0.1"
 _logo = "chimera_logo.png"
 _references = ['Pettersen2004']
+__version__ = '3.0.1'
 
 
 class Plugin(pwem.Plugin):
@@ -78,9 +79,8 @@ class Plugin(pwem.Plugin):
         getChimeraScript = os.path.join(os.path.dirname(__file__),
                                         "getchimera.py")
 
-        chimera_cmds = [("cd ..", []),
-                        ("python " + getChimeraScript, "ChimeraX-1.0.tar.gz"),
-                        ("tar -xf ChimeraX-1.0.tar.gz", "chimerax-1.0")]
+        chimera_cmds = [("cd .. && python " + getChimeraScript, "../ChimeraX-1.0.tar.gz"),
+                        ("cd .. && tar -xf ChimeraX-1.0.tar.gz", "bin/ChimeraX")]
         env.addPackage('chimerax', version='1.0',
                        tar=VOID_TGZ,
                        buildDir='chimerax-1.0',
