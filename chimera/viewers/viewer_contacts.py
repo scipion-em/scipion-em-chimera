@@ -81,7 +81,7 @@ class ChimeraProtContactsViewer(ProtocolViewer):
                                          bildFileName=bildFileName,
                                          sampling=sampling)
 
-        fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
+        fnCmd = self.protocol._getTmpPath("chimera_output.cxc")
         f = open(fnCmd, 'w')
         # change to workingDir
         # If we do not use cd and the project name has an space

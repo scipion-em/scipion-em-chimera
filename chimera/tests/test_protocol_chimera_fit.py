@@ -160,14 +160,14 @@ class TestChimeraFit2(TestImportData):
 
         # create auxiliary CMD file for chimera fit
         extraCommands = ""
-        extraCommands += "runCommand('move -24.11,-45.76,-24.60 model #2 " \
-                         "coord #1')\n"
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('scipionwrite model #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "move -24.11,-45.76,-24.60 model #3 " \
+                         "coord #2\n"
+        extraCommands += "fit #3 in #2\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "scipionwrite #2 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
 
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
@@ -179,10 +179,10 @@ class TestChimeraFit2(TestImportData):
                                 'and model')
         self.launchProtocol(protChimera)
         self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__2.getFileName(),
+            protChimera.DONOTSAVESESSION_Atom_struct__3_000425.getFileName(),
             "There was a problem with the alignment")
         self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__1.getFileName()))
+            protChimera.DONOTSAVESESSION_Map__2_000425.getFileName()))
 
     def testChimeraFitFromVolAndmmCIFWithSavingVol(self):
         """ This test checks that chimera runs with a volume provided
@@ -192,14 +192,14 @@ class TestChimeraFit2(TestImportData):
         volume = self._importVolume()
         structure1_mmCIF = self._importStructuremmCIFWoVol()
         extraCommands = ""
-        extraCommands += "runCommand('move -24.11,-45.76,-24.60 model #2 " \
-                         "coord #1')\n"
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('scipionwrite model #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "move -24.11,-45.76,-24.60 model #3 " \
+                         "coord #2\n"
+        extraCommands += "fit #3 in #2\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "scipionwrite #2 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
 
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
@@ -210,10 +210,10 @@ class TestChimeraFit2(TestImportData):
                                 'and model')
         self.launchProtocol(protChimera)
         self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__2.getFileName(),
+            protChimera.DONOTSAVESESSION_Atom_struct__3_000559.getFileName(),
             "There was a problem with the alignment")
         self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__1.getFileName()))
+            protChimera.DONOTSAVESESSION_Map__2_000559.getFileName()))
 
     def testChimeraFitFromVolAssocToPDBWithSavingVol(self):
         # This test checks that chimera runs when a volume is provided
@@ -222,14 +222,14 @@ class TestChimeraFit2(TestImportData):
 
         structure2_PDB = self._importStructurePDBWithVol()
         extraCommands = ""
-        extraCommands += "runCommand('move -24.11,-45.76,-24.60 model #2 " \
-                         "coord #1')\n"
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('scipionwrite model #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "move -24.11,-45.76,-24.60 model #3 " \
+                         "coord #2\n"
+        extraCommands += "fit #3 in #2\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "scipionwrite #2 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
 
         args = {'extraCommands': extraCommands,
                 'pdbFileToBeRefined': structure2_PDB
@@ -239,10 +239,10 @@ class TestChimeraFit2(TestImportData):
                                 'save volume and model')
         self.launchProtocol(protChimera)
         self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__2.getFileName(),
+            protChimera.DONOTSAVESESSION_Atom_struct__3_000919.getFileName(),
             "There was a problem with the alignment")
         self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__1.getFileName()))
+            protChimera.DONOTSAVESESSION_Map__2_000919.getFileName()))
 
     def testChimeraFitFromVolAssocTommCIFWithSavingVol(self):
         # This test checks that chimera runs when a volume is provided
@@ -251,14 +251,14 @@ class TestChimeraFit2(TestImportData):
 
         structure2_mmCIF = self._importStructuremmCIFWithVol()
         extraCommands = ""
-        extraCommands += "runCommand('move -24.11,-45.76,-24.60 model #2 " \
-                         "coord #1')\n"
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('scipionwrite model #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "move -24.11,-45.76,-24.60 model #3 " \
+                         "coord #2\n"
+        extraCommands += "fit #3 in #2\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "scipionwrite #2 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
 
         args = {'extraCommands': extraCommands,
                 'pdbFileToBeRefined': structure2_mmCIF
@@ -268,10 +268,10 @@ class TestChimeraFit2(TestImportData):
                                 'save volume and model')
         self.launchProtocol(protChimera)
         self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__2.getFileName(),
+            protChimera.DONOTSAVESESSION_Atom_struct__3_001061.getFileName(),
             "There was a problem with the alignment")
         self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__1.getFileName()))
+            protChimera.DONOTSAVESESSION_Map__2_001061.getFileName()))
 
     def testChimeraFitFromPDBWithoutVol(self):
         # This test corroborates that chimera does not run unless a volume
@@ -338,14 +338,14 @@ class TestChimeraFit2(TestImportData):
         _pdbFiles.append(structure4_PDB)
 
         extraCommands = ""
-        extraCommands += "runCommand('move -24.11,-45.76,-24.60 model #2 " \
-                         "coord #1')\n"
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('scipionwrite model #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "move -24.11,-45.76,-24.60 model #3 " \
+                         "coord #2\n"
+        extraCommands += "fit #3 in #2\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "scipionwrite #2 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
 
         args = {'extraCommands': extraCommands,
                 'pdbFileToBeRefined': structure2_PDB,
@@ -356,10 +356,10 @@ class TestChimeraFit2(TestImportData):
                                 'plus other pdbs\n save volume and model')
         self.launchProtocol(protChimera)
         self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__2.getFileName(),
+            protChimera.DONOTSAVESESSION_Atom_struct__3_000773.getFileName(),
             "There was a problem with the alignment")
         self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__1.getFileName()))
+            protChimera.DONOTSAVESESSION_Map__2_000773.getFileName()))
 
     def testChimeraFitFromChimeraPDB(self):
         # This test checks that chimera runs with objects not imported
@@ -370,14 +370,14 @@ class TestChimeraFit2(TestImportData):
         volume = self._importVolume()
         structure1_PDB = self._importStructurePDBWoVol()
         extraCommands = ""
-        extraCommands += "runCommand('move -24.11,-45.76,-24.60 model #2 " \
-                         "coord #1')\n"
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('scipionwrite model #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "move -24.11,-45.76,-24.60 model #3 " \
+                         "coord #2\n"
+        extraCommands += "fit #3 in #2\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "scipionwrite #2 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
 
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
@@ -387,17 +387,17 @@ class TestChimeraFit2(TestImportData):
         protChimera.setObjLabel("chimera fit \npdb and volume\n save volume "
                                 "and model")
         self.launchProtocol(protChimera)
-        structure2_PDB = protChimera.DONOTSAVESESSION_Atom_struct__2
-        map2 = protChimera.DONOTSAVESESSION_Map__1
+        structure2_PDB = protChimera.DONOTSAVESESSION_Atom_struct__3_000090
+        map2 = protChimera.DONOTSAVESESSION_Map__2_000090
 
         extraCommands = ""
-        extraCommands += "runCommand('move 24.11,45.76,24.60 model #2 " \
-                         "coord #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('scipionwrite model #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "move 24.11,45.76,24.60 model #3 " \
+                         "coord #2\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "scipionwrite #2 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
         args = {'extraCommands': extraCommands,
                 'inputVolume': map2,
                 'pdbFileToBeRefined': structure2_PDB,
@@ -409,15 +409,15 @@ class TestChimeraFit2(TestImportData):
                                 "\nsave "
                                 "volume and model")
         self.launchProtocol(protChimera)
-        structure3_PDB = protChimera.DONOTSAVESESSION_Atom_struct__2
-        map3 = protChimera.DONOTSAVESESSION_Map__1
+        structure3_PDB = protChimera.DONOTSAVESESSION_Atom_struct__3_000136
+        map3 = protChimera.DONOTSAVESESSION_Map__2_000136
         extraCommands = ""
-        extraCommands += "runCommand('move -24.11,-45.76,-24.60 model #2 " \
-                         "coord #1')\n"
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "move -24.11,-45.76,-24.60 model #3 " \
+                         "coord #2\n"
+        extraCommands += "fit #3 in #2\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
         args = {'extraCommands': extraCommands,
                 'inputVolume': map3,
                 'pdbFileToBeRefined': structure3_PDB,
@@ -427,14 +427,14 @@ class TestChimeraFit2(TestImportData):
                                 "save only model")
         self.launchProtocol(protChimera)
 
-        structure4_PDB = protChimera.DONOTSAVESESSION_Atom_struct__2
+        structure4_PDB = protChimera.DONOTSAVESESSION_Atom_struct__3_000182
         extraCommands = ""
-        extraCommands += "runCommand('volume #1 voxelSize 1.55')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('scipionwrite model #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "volume #2 voxelSize 1.55\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "scipionwrite #2 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
         args = {'extraCommands': extraCommands,
                 'inputVolume': map3,
                 'pdbFileToBeRefined': structure4_PDB,
@@ -445,7 +445,7 @@ class TestChimeraFit2(TestImportData):
                                 "and model\n")
         self.launchProtocol(protChimera)
         self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__2.getFileName(),
+            protChimera.DONOTSAVESESSION_Atom_struct__3_000220.getFileName(),
             "There was a problem with the alignment")
         self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__1.getFileName()))
+            protChimera.DONOTSAVESESSION_Map__2_000220.getFileName()))

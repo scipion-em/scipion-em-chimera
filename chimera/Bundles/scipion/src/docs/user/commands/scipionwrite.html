@@ -1,0 +1,55 @@
+<html><head>
+<link rel="stylesheet" type="text/css" href="../userdocs.css" />
+<title>Command: scipionwrite</title>
+</head><body>
+
+<a name="top"></a>
+<a href="../index.html">
+<img width="60px" src="../ChimeraX-docs-icon.svg" alt="ChimeraX docs icon"
+class="clRight" title="User Guide Index"/></a>
+
+<h3><a href="../index.html#commands">Command</a>: scipionwrite</h3>
+<h3 class="usage"><a href="usageconventions.html">Usage</a>:
+<br><b>scipionwrite </b>
+&nbsp;<a href="atomspec.html#hierarchy"><i>model</i></a>
+other-options
+</h3>
+
+<p>
+The scipionwrite command saves a map (volume data) or  atomic coordinates
+to a file that will be automatically imported by <a href="http://scipion.i2pc.es">
+    Scipion</a>. It also saves a ChimeraX session that may be recovered by
+     the command <a href="scipionrs">scipionrs</a> or the Scipion protocol
+    <b>chimera restore session</b>.
+</p>
+
+<h3>Other-options</h3>
+<p>
+    If the parameter <b>prefix</b> followed by a string is
+    used then string is prepended to the name of the output file
+</p>
+
+<h3>
+    Examples
+</h3>
+    <blockquote>
+    <b>scipionwrite #2 prefix dnabc</b>
+    </blockquote>
+<p>
+    will save the model <b>#2</b> in a file that starts
+    with the string <b>dnabc</b>
+</p>
+
+    <blockquote>
+    <b>scipionwrite #2.1 prefix sub_dna</b>
+    </blockquote>
+<p>
+    will save the sub-model <b>#2.1</b> in a file that starts
+    with the string <b>sub_dna</b>
+</p>
+
+
+<hr>
+<address>scipion@cnb.csic.es</address>
+</body>
+</html>

@@ -29,6 +29,8 @@ import os
 
 from pyworkflow import VERSION_3_0
 
+from ..constants import CHIMERA_CONFIG_FILE
+
 try:
     from pwem.objects import AtomStruct
 except ImportError:
@@ -52,7 +54,7 @@ from pyworkflow.protocol.params import (MultiPointerParam,
 from pyworkflow.utils.properties import Message
 
 from .. import Plugin
-
+import configparser
 
 class ChimeraProtBase(EMProtocol):
     """Base class  for chimera protocol"""
@@ -112,16 +114,6 @@ class ChimeraProtBase(EMProtocol):
         # building script file including the coordinate axes and the input
         # volume with samplingRate and Origin information
         f = open(self._getTmpPath(chimeraScriptFileName), "w")
-        f.write("from chimera import runCommand\n")
-
-        # create coherent header
-        createScriptFile(1,  # model id pdb
-                         1,  # model id 3D map
-                         self._getExtraPath(chimeraPdbTemplateFileName),
-                         self._getExtraPath(chimeraMapTemplateFileName),
-                         f,
-                         self._getExtraPath(sessionFile),
-                         )
 
         if self.inputVolume.get() is None:
             _inputVol = self.pdbFileToBeRefined.get().getVolume()
@@ -141,90 +133,113 @@ class ChimeraProtBase(EMProtocol):
         Chimera.createCoordinateAxisFile(dim,
                                          bildFileName=tmpFileName,
                                          sampling=sampling)
-        f.write("runCommand('open %s')\n" % tmpFileName)
-        f.write("runCommand('cofr 0,0,0')\n")  # set center of coordinates
+        f.write("open %s\n" % tmpFileName)
+        f.write("cofr 0,0,0\n")  # set center of coordinates
 
         # input vol with its origin coordinates
-        pdbModelCounter = 0
+        pdbModelCounter = 1
         if _inputVol is not None:
             pdbModelCounter += 1
             x_input, y_input, z_input = _inputVol.getShiftsFromOrigin()
             inputVolFileName = os.path.abspath(ImageHandler.removeFileType(
                 _inputVol.getFileName()))
-            f.write("runCommand('open %s')\n" % inputVolFileName)
-            f.write("runCommand('volume #%d style surface voxelSize %f')\n"
+            f.write("open %s\n" % inputVolFileName)
+            f.write("volume #%d style surface voxelSize %f\n"
                     % (pdbModelCounter, _inputVol.getSamplingRate()))
-            f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
+            f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n"
                     % (pdbModelCounter, x_input, y_input, z_input))
 
         if self.inputVolumes is not None:
             for vol in self.inputVolumes:
                 pdbModelCounter += 1
-                f.write("runCommand('open %s')\n" % vol.get().getFileName())
+                f.write("open %s\n" % vol.get().getFileName())
                 x, y, z = vol.get().getShiftsFromOrigin()
-                f.write("runCommand('volume #%d style surface voxelSize %f')\n"
+                f.write("volume #%d style surface voxelSize %f\n"
                         % (pdbModelCounter, vol.get().getSamplingRate()))
-                f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
+                f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n"
                         % (pdbModelCounter, x, y, z))
 
         if self.pdbFileToBeRefined.get() is not None:
             pdbModelCounter += 1
             pdbFileToBeRefined = self.pdbFileToBeRefined.get()
-            f.write("runCommand('open %s')\n" % os.path.abspath(
+            f.write("open %s\n" % os.path.abspath(
                 pdbFileToBeRefined.getFileName()))
             if pdbFileToBeRefined.hasOrigin():
                 x, y, z = (pdbFileToBeRefined.getOrigin().getShifts())
-                f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
-                        "coord #0')\n" % (x, y, z, pdbModelCounter))
+                f.write("move %0.2f,%0.2f,%0.2f model #%d "
+                        "coord #0\n" % (x, y, z, pdbModelCounter))
 
         # Alignment of sequence and structure
         if (hasattr(self, 'inputSequence') and
                 hasattr(self, 'inputStructureChain')):
             if (self.inputSequence.get() is not None and
                     self.inputStructureChain.get() is not None):
-                pdbModelCounter = 2
-                models = self.structureHandler.getModelsChains()
-                if len(models) > 1:
-                    f.write("runCommand('select #%d.%s:.%s')\n"
-                            % (pdbModelCounter, str(self.selectedModel),
-                               str(self.selectedChain)))
-                else:
-                    f.write("runCommand('select #%d:.%s')\n"
-                            % (pdbModelCounter, str(self.selectedChain)))
-                # f.write("runCommand('sequence selection')\n") # To open
-                # only the
-                # sequence of
-                # the selected
-                # chain
+                pdbModelCounter = 3
+                f.write("select #%s/%s\n"
+                        % (str(self.selectedModel),
+                           str(self.selectedChain)))
+
                 if self._getOutFastaSequencesFile is not None:
                     alignmentFile = self._getOutFastaSequencesFile()
-                    f.write("runCommand('open %s')\n" % alignmentFile)
+                    f.write("open %s\n" % alignmentFile)
 
         # other pdb files
         for pdb in self.inputPdbFiles:
             pdbModelCounter += 1
-            f.write("runCommand('open %s')\n" % os.path.abspath(pdb.get(
+            f.write("open %s\n" % os.path.abspath(pdb.get(
             ).getFileName()))
             if pdb.get().hasOrigin():
                 x, y, z = pdb.get().getOrigin().getShifts()
-                f.write("runCommand('move %0.2f,%0.2f,%0.2f model #%d "
-                        "coord #0')\n" % (x, y, z, pdbModelCounter))
+                f.write("move %0.2f,%0.2f,%0.2f model #%d "
+                        "coord #0\n" % (x, y, z, pdbModelCounter))
             # TODO: Check this this this this this this
 
+        # Go to extra dir and save there the output of
+        # scipionwrite
+        #f.write('cd %s' % os.path.abspath(
+        #    self._getExtraPath()))
+        # save config file with information
+        # this is information is pased from scipion to chimerax
+        config = configparser.ConfigParser()
+        _chimeraPdbTemplateFileName = \
+            os.path.abspath(self._getExtraPath(
+                chimeraPdbTemplateFileName))
+        _chimeraMapTemplateFileName = \
+            os.path.abspath(self._getExtraPath(
+                chimeraMapTemplateFileName))
+        _sessionFile = os.path.abspath(
+            self._getExtraPath(sessionFile))
+        protId = self.getObjId()
+        config['chimerax'] = {'chimerapdbtemplatefilename':
+                                  _chimeraPdbTemplateFileName % protId,
+                              'chimeramaptemplatefilename':
+                                  _chimeraMapTemplateFileName % protId,
+                              'sessionfile': _sessionFile,
+                              'enablebundle': True,
+                              'protid': self.getObjId()}
+                              # set to True when
+                              # protocol finished
+                              # viewers will check this configuration file
+        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
+                  'w') as configfile:
+            config.write(configfile)
+
         # run the text:
+        _chimeraScriptFileName = os.path.abspath(
+            self._getTmpPath(chimeraScriptFileName))
         if len(self.extraCommands.get()) > 2:
             f.write(self.extraCommands.get())
-            args = " --nogui --script " + self._getTmpPath(
-                chimeraScriptFileName)
+            args = " --nogui " + _chimeraScriptFileName
         else:
-            args = " --script " + self._getTmpPath(chimeraScriptFileName)
+            args = " " + _chimeraScriptFileName
 
         f.close()
 
         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
 
         # run in the background
-        Chimera.runProgram(Plugin.getProgram(), args)
+        cwd = os.path.abspath(self._getExtraPath())
+        Chimera.runProgram(Plugin.getProgram(), args, cwd=cwd)
 
     def createOutput(self):
         """ Copy the PDB structure and register the output object.
@@ -253,11 +268,20 @@ class ChimeraProtBase(EMProtocol):
                 path = os.path.join(directory, filename)
                 pdb = AtomStruct()
                 pdb.setFileName(path)
-                keyword = filename.split(".pdb")[0].replace(".","_")
+                if filename.endswith(".cif"):
+                    keyword = filename.split(".cif")[0].replace(".","_")
+                else:
+                    keyword = filename.split(".pdb")[0].replace(".", "_")
                 kwargs = {keyword: pdb}
                 self._defineOutputs(**kwargs)
-
-
+        # upodate config file flag enablebundle
+        # so scipionwrite is disabled
+        config = configparser.ConfigParser()
+        config.read(self._getExtraPath(CHIMERA_CONFIG_FILE))
+        config.set('chimerax', 'enablebundle', 'False')
+        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
+                  'w') as configfile:
+            config.write(configfile)
     # --------------------------- INFO functions ----------------------------
     def _validate(self):
         errors = []

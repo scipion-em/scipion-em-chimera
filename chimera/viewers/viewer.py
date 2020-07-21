@@ -92,7 +92,7 @@ class ChimeraViewerBase(Viewer):
         Chimera.createCoordinateAxisFile(dim,
                                          bildFileName=bildFileName,
                                          sampling=sampling)
-        fnCmd = self.protocol._getTmpPath("chimera_output.cmd")
+        fnCmd = self.protocol._getTmpPath("chimera_output.cxc")
         f = open(fnCmd, 'w')
         # change to workingDir
         # If we do not use cd and the project name has an space
@@ -101,7 +101,7 @@ class ChimeraViewerBase(Viewer):
         f.write("open %s\n" % bildFileName)
         f.write("cofr 0,0,0\n")  # set center of coordinates
         inputVolFileName = ''
-        counter = 1.
+        counter = 2
         if _inputVol is not None:
             # In case we have PDBs only, _inputVol is None:
             inputVolFileName = ImageHandler.removeFileType(_inputVol.getFileName())
@@ -114,7 +114,7 @@ class ChimeraViewerBase(Viewer):
                     "volume #%d origin %0.2f,%0.2f,%0.2f\n"
                     % (counter, _inputVol.getSamplingRate(), counter, x, y, z))
         else:
-            counter = 0
+            counter = 1
 
         for filename in sorted(os.listdir(directory)):
             if filename.endswith(".mrc") and filename != inputVolFileName:
@@ -155,7 +155,7 @@ class ChimeraRestoreViewer(Viewer):
     _targets = [ChimeraProtRestore]
 
     def _visualize(self, obj, **args):
-        fnCmd = self.protocol._getTmpPath("chimera_restore_session.cmd")
+        fnCmd = self.protocol._getTmpPath("chimera_restore_session.cxc")
         f = open(fnCmd, 'w')
         # change to workingDir
         # If we do not use cd and the project name has an space

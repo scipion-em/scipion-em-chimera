@@ -1,0 +1,61 @@
+<!--
+ChimeraX bundle names must start with "ChimeraX-"
+to avoid clashes with package names in pypi.python.org.
+When uploaded to the ChimeraX toolshed, the bundle
+will be displayed without the ChimeraX- prefix.
+
+Tutorial
+https://www.cgl.ucsf.edu/chimerax/docs/devel/tutorials/tutorial_hello.htm
+-->
+
+<BundleInfo name="ChimeraX-ScipionExtensions"
+            version="1.2" package="chimerax.scipionExtensions"
+            minSessionVersion="1" maxSessionVersion="10">
+
+  <!-- Additional information about bundle source -->
+  <Author>Roberto Marabini</Author>
+  <Email>scipion@cnb.csic.es</Email>
+  <URL>http://scipion.i2pc.es/</URL>
+
+  <!-- Synopsis is a one-line description
+       Description is a full multi-line description -->
+  <Synopsis>Command to allow interaction between scipion and chimera</Synopsis>
+  <Description>scipionwrite: saves model file
+    scipionss: saves chimera session
+    scipionrs: restores chimera sesion
+  </Description>
+
+  <!-- Categories is a list where this bundle should appear -->
+  <Categories>
+    <Category name="General"/>
+  </Categories>
+
+  <!-- DataFiles is a list of additional files to include in bundle -->
+  <DataFiles>
+    <DataFile>docs/user/commands/scipionwrite.html</DataFile>
+    <DataFile>docs/user/commands/scipionss.html</DataFile>
+    <DataFile>docs/user/commands/scipionrs.html</DataFile>
+  </DataFiles>
+
+  <!-- Dependencies on other ChimeraX/Python packages -->
+  <Dependencies>
+    <Dependency name="ChimeraX-Core" version="~=1.0"/>
+  </Dependencies>
+
+  <Classifiers>
+    <!-- Development Status should be compatible with bundle version number -->
+    <PythonClassifier>Development Status :: 3 - Alpha</PythonClassifier>
+    <PythonClassifier>License :: Freeware</PythonClassifier>
+    <!-- ChimeraX classifiers describe supplied functionality -->
+    <ChimeraXClassifier>ChimeraX :: Command :: scipionwrite :: General ::
+        Save a model file (3dmap or atomic model) so Scipion may import it
+    </ChimeraXClassifier>
+    <ChimeraXClassifier>ChimeraX :: Command :: scipionss :: General ::
+        Save session, it may be recovered from scipion
+    </ChimeraXClassifier>
+    <ChimeraXClassifier>ChimeraX :: Command :: scipionrs :: General ::
+        Restore last chimera session saved with scipionss
+    </ChimeraXClassifier>
+  </Classifiers>
+
+</BundleInfo>
