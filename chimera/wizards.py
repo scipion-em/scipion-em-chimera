@@ -39,7 +39,8 @@ class GetStructureChainsWizardChimera(GetStructureChainsWizard):
                 (ChimeraSubtractionMaps, ['inputStructureChain'])]
 
 class GetStructureChains2WizardChimera(GetStructureChainsWizard):
-    _targets = [(ChimeraSubtractionMaps, ['selectStructureChain'])]
+    _targets = [(ChimeraSubtractionMaps, ['selectStructureChain']),
+                (ChimeraModelFromTemplate, ['selectStructureChain'])]
 
     def show(self, form, *params):
         protocol = form.protocol
@@ -57,7 +58,9 @@ class GetStructureChains2WizardChimera(GetStructureChainsWizard):
         dlg = dialog.ListDialog(form.root, "Model chains", provider,
                                 "Select one of the chains (model, chain, "
                                 "number of chain residues)")
+
         form.setVar('selectStructureChain', dlg.values[0].get())
+
 
 class ProtContactsWizardChimera(Wizard):
     """ Return a table with two columns. First one is the chain id second one may

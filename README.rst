@@ -55,7 +55,7 @@ To check the installation, simply run the following Scipion tests:
 * scipion test chimera.tests.test_protocol_modeller_search
 * scipion test chimera.tests.test_protocol_contact
 
-- **Supported versions of Chimera**
+- **Supported versions of ChimeraX**
 
 1.0
 
