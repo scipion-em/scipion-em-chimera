@@ -78,9 +78,15 @@ class Plugin(pwem.Plugin):
     def defineBinaries(cls, env):
         getChimeraScript = os.path.join(os.path.dirname(__file__),
                                         "getchimera.py")
-
+        pathToPlugin = os.path.join(os.path.dirname(__file__),
+                                        "Bundles", "scipion")
+        pathToBinary = cls.getProgram()
+        installPLuginsCommand = "%s --nogui --exit " \
+                                "--cmd 'devel install %s'" % (pathToBinary, pathToPlugin)
         chimera_cmds = [("cd .. && python " + getChimeraScript, "../ChimeraX-1.0.tar.gz"),
-                        ("cd .. && tar -xf ChimeraX-1.0.tar.gz", "bin/ChimeraX")]
+                        ("cd .. && tar -xf ChimeraX-1.0.tar.gz", "bin/ChimeraX"),
+                        (installPLuginsCommand, [])
+                        ]
         env.addPackage('chimerax', version='1.0',
                        tar=VOID_TGZ,
                        buildDir='chimerax-1.0',
