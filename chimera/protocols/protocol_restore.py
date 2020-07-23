@@ -24,6 +24,7 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
+import configparser
 
 from .protocol_base import createScriptFile
 from pyworkflow.protocol.params import PointerParam, StringParam
@@ -34,6 +35,7 @@ from pwem.viewers.viewer_chimera import (Chimera,
                                          chimeraMapTemplateFileName,
                                          sessionFile)
 from .protocol_base import ChimeraProtBase
+from ..constants import CHIMERA_CONFIG_FILE
 
 
 class ChimeraProtRestore(ChimeraProtBase):
@@ -89,31 +91,52 @@ class ChimeraProtRestore(ChimeraProtBase):
         # create CMD file
         parentSessionFileName = self.parentProt._getExtraPath(sessionFile)
         sessionFileName = self._getExtraPath(sessionFile)
-        f = open(self._getTmpPath(chimeraScriptFileName), "w")
-        f.write("from chimera import runCommand\n")
+        # f = open(self._getTmpPath(chimeraScriptFileName), "w")
         # create coherent header
-        createScriptFile(1,  # model id pdb
-                         1,  # model id 3D map
-                         self._getExtraPath(chimeraPdbTemplateFileName),
-                         self._getExtraPath(chimeraMapTemplateFileName),
-                         f,
-                         sessionFileName
-                         )
+        # createScriptFile(1,  # model id pdb
+        #                  1,  # model id 3D map
+        #                  self._getExtraPath(chimeraPdbTemplateFileName),
+        #                  self._getExtraPath(chimeraMapTemplateFileName),
+        #                  f,
+        #                  sessionFileName
+        #                  )
 
-        f.write("restoreSession('%s')\n" % parentSessionFileName)
+        # f.write("open %s\n" % os.path.abspath(parentSessionFileName))
 
-        if len(self.extraCommands.get()) > 2:
-            f.write(self.extraCommands.get())
-            args = " --nogui --script " + self._getTmpPath(
-                chimeraScriptFileName)
-        else:
-            args = " --script " + self._getTmpPath(chimeraScriptFileName)
-        f.close()
+        # if len(self.extraCommands.get()) > 2:
+        #     f.write(self.extraCommands.get())
+        #     args = " --nogui --cmd " + self._getTmpPath(
+        #         chimeraScriptFileName)
+        # else:
+        #     args = " --cmd " + self._getTmpPath(chimeraScriptFileName)
+        # f.close()
         program = Chimera.getProgram()
-        self._log.info('Launching: ' + program + ' ' + args)
+        # self._log.info('Launching: ' + program + ' ' + args)
+
+        config = configparser.ConfigParser()
+        _chimeraPdbTemplateFileName = \
+            os.path.abspath(self._getExtraPath(
+                chimeraPdbTemplateFileName))
+        _chimeraMapTemplateFileName = \
+            os.path.abspath(self._getExtraPath(
+                chimeraMapTemplateFileName))
+        _sessionFile = os.path.abspath(
+            self._getExtraPath(sessionFile))
+        protId = self.getObjId()
+        config['chimerax'] = {'chimerapdbtemplatefilename':
+                                  _chimeraPdbTemplateFileName % protId,
+                              'chimeramaptemplatefilename':
+                                  _chimeraMapTemplateFileName % protId,
+                              'sessionfile': _sessionFile,
+                              'enablebundle': True,
+                              'protid': self.getObjId()}
+        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
+                  'w') as configfile:
+            config.write(configfile)
 
         # run in the background
-        Chimera.runProgram(program, args)
+        cwd = os.path.abspath(self._getExtraPath())
+        Chimera.runProgram(program, os.path.abspath(parentSessionFileName), cwd=cwd)
 
     def createOutput(self):
         super(ChimeraProtRestore, self).createOutput()
