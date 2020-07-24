@@ -26,7 +26,6 @@
 # **************************************************************************
 import configparser
 
-from .protocol_base import createScriptFile
 from pyworkflow.protocol.params import PointerParam, StringParam
 import os
 from pwem.viewers.viewer_chimera import (Chimera,

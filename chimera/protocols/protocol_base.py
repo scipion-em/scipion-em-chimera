@@ -383,6 +383,10 @@ class ChimeraProtBase(EMProtocol):
         return find_executable(name) is not None
 
 
+# TODO: all lines below ths pint should
+# be deleted, please delete them after protocol_substraction_maps
+# is updated
+
 # define scipion_write command
 chimeraScriptHeader = '''
 import os
