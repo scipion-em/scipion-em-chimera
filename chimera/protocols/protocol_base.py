@@ -299,7 +299,7 @@ class ChimeraProtBase(EMProtocol):
             errors.append("and set CHIMERA_HOME variables properly.")
             if program is not None:
                 errors.append("Current value:")
-                errors.append("CHIMERA_HOME = %s" % os.environ['CHIMERA_HOME'])
+                errors.append("CHIMERA_HOME = %s" % Plugin.getHome())
 
         return errors
 
