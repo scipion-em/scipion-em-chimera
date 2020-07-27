@@ -170,18 +170,65 @@ class ChimeraProtBase(EMProtocol):
                         "coord #0\n" % (x, y, z, pdbModelCounter))
 
         # Alignment of sequence and structure
-        if (hasattr(self, 'inputSequence') and
+        if (hasattr(self, 'inputSequence1') and
                 hasattr(self, 'inputStructureChain')):
-            if (self.inputSequence.get() is not None and
-                    self.inputStructureChain.get() is not None):
-                pdbModelCounter = 3
-                f.write("select #%s/%s\n"
-                        % (str(self.selectedModel),
-                           str(self.selectedChain)))
+            if (self.inputSequence1.get() is not None and
+                self.inputStructureChain.get() is not None):
+                pdbModelCounter = 2
+                if str(self.selectedModel) != '0':
+                    f.write("select #%s.%s/%s\n"
+                            % (pdbModelCounter,
+                               str(self.selectedModel + 1),
+                               str(self.selectedChain1)))
+                else:
+                    f.write("select #%s/%s\n"
+                            % (pdbModelCounter,
+                               str(self.selectedChain1)))
 
                 if self._getOutFastaSequencesFile is not None:
-                    alignmentFile = self._getOutFastaSequencesFile()
-                    f.write("open %s\n" % alignmentFile)
+                    alignmentFile1 = self._getOutFastaSequencesFile(self.OUTFILE1)
+                    f.write("open %s\n" % alignmentFile1)
+                    f.write("sequence disassociate #%s %s\n" %
+                            (pdbModelCounter,
+                            alignmentFile1.split("/")[-1]))
+                    if str(self.selectedModel) != '0':
+                        f.write("sequence associate #%s.%s/%s %s:1\n" %
+                                (pdbModelCounter,
+                                 str(self.selectedModel + 1),
+                                 str(self.selectedChain1),
+                                 alignmentFile1.split("/")[-1]))
+                    else:
+                        f.write("sequence associate #%s/%s %s:1\n" %
+                                (pdbModelCounter,
+                                 str(self.selectedChain1),
+                                 alignmentFile1.split("/")[-1]))
+
+            if (self.additionalTargetSequence.get() is True and
+                self.inputSequence2.get() is not None and
+                self.inputStructureChain.get() is not None):
+                f.write("select clear\n")
+                f.write("select #%s/%s,%s\n"
+                        % (pdbModelCounter,
+                           str(self.selectedChain1),
+                           str(self.selectedChain2)))
+
+                if self._getOutFastaSequencesFile is not None:
+                    alignmentFile2 = self._getOutFastaSequencesFile(self.OUTFILE2)
+                    f.write("open %s\n" % alignmentFile2)
+                    f.write("sequence disassociate #%s %s\n" %
+                            (pdbModelCounter,
+                            alignmentFile2.split("/")[-1]))
+                    if str(self.selectedModel) != '0':
+                        f.write("sequence associate #%s.%s/%s %s:1\n" %
+                                (pdbModelCounter,
+                                 str(self.selectedModel + 1),
+                                 str(self.selectedChain2),
+                                 alignmentFile2.split("/")[-1]))
+                    else:
+                        f.write("sequence associate #%s/%s %s:1\n" %
+                                (pdbModelCounter,
+                                 str(self.selectedChain2),
+                                 alignmentFile2.split("/")[-1]))
 
         # other pdb files
         for pdb in self.inputPdbFiles:
@@ -335,6 +382,10 @@ class ChimeraProtBase(EMProtocol):
         from distutils.spawn import find_executable
         return find_executable(name) is not None
 
+
+# TODO: all lines below ths pint should
+# be deleted, please delete them after protocol_substraction_maps
+# is updated
 
 # define scipion_write command
 chimeraScriptHeader = '''

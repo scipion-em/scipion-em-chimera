@@ -30,7 +30,7 @@ def getChimeraX():
         downloadUrl = match.group(1)
         downloadUrl = DOMAIN + downloadUrl
         print("Downloading chimera from " + downloadUrl)
-        os.system('wget "%s" -nv -c -O %s' % (downloadUrl, TGZ))
+        os.system('wget "%s"  --progress=bar -c -O %s' % (downloadUrl, TGZ))
         sys.exit()
 
     if os.path.exists(TGZ):
@@ -43,6 +43,7 @@ def getChimeraX():
     licenseHTML = re.sub("<script.*/script>", "", licenseHTML, flags=re.DOTALL)
 
     root = tk.Tk()
+    root.title("ChimeraX Binary Installation: License Page")
     frame = root
     frame.rowconfigure(0, weight=1)
     html_label = HTMLLabel(frame, html=licenseHTML)

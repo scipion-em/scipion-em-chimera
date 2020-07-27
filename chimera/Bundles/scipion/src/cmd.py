@@ -19,15 +19,15 @@ def readConfigFile(session, configFileName):
 
     d = {}
     if not config.has_section('chimerax'):
-        session.logger.info("No section chimerax")
+        # session.logger.info("No section chimerax")
         d['enablebundle'] = False
     else:
-        session.logger.info("Yes section chimera")
+        # session.logger.info("Yes section chimera")
+        d['enablebundle'] = config.getboolean("chimerax", "enablebundle")
         d['chimerapdbtemplatefilename'] = config.get("chimerax", "chimeraPdbTemplateFileName")
         d['chimeramaptemplatefilename'] = config.get("chimerax", "chimeraMapTemplateFileName")
         d['sessionfile'] = config.get("chimerax", "sessionFile")
         d['protid'] = config.getint("chimerax", "protId")
-        d['enablebundle'] = config.getboolean("chimerax", "enablebundle")
     # session.logger.info("d=%s" % str(d))
     return d
 
