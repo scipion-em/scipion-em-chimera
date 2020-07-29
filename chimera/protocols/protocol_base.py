@@ -346,7 +346,7 @@ class ChimeraProtBase(EMProtocol):
             errors.append("and set CHIMERA_HOME variables properly.")
             if program is not None:
                 errors.append("Current value:")
-                errors.append("CHIMERA_HOME = %s" % os.environ['CHIMERA_HOME'])
+                errors.append("CHIMERA_HOME = %s" % Plugin.getHome())
 
         return errors
 
@@ -382,6 +382,10 @@ class ChimeraProtBase(EMProtocol):
         from distutils.spawn import find_executable
         return find_executable(name) is not None
 
+
+# TODO: all lines below ths pint should
+# be deleted, please delete them after protocol_substraction_maps
+# is updated
 
 # define scipion_write command
 chimeraScriptHeader = '''
