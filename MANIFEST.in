@@ -2,3 +2,6 @@ include *.txt
 include *.rst
 include LICENSE
 include chimera/protocols.conf
+include chimera/Bundles/scipion/*
+include chimera/Bundles/scipion/src/*
+include chimera/Bundles/scipion/src/docs/user/commands/*
