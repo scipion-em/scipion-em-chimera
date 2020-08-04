@@ -52,6 +52,11 @@ class TestImportData(TestImportBase):
     NAME = "User_Name"
     pdbID1 = "3lqd"  # Protein
     pdbID2 = "1aoi"  # DNA and protein
+    UNIPROTID1 = "Q15116" # Programmed cell death protein 1
+    UNIPROTID2 = "P01832" # Polymeric immunoglobulin receptor
+    UNIPROTID3 = "Q2LC89"
+    UNIPROTID4 = "Q9BQ51" # Programmed cell death 1 ligand 2
+    UNIPROTID5 = "Q9NZQ7" # Programmed cell death 1 ligand 1
 
     def _importStructurePDBWoVol1(self):
         """Import the structure 3lqd (Protein structure)"""
@@ -88,6 +93,17 @@ class TestImportData(TestImportBase):
         self.launchProtocol(protImportPDB)
         structure3_PDB = protImportPDB.outputPdb
         return structure3_PDB
+
+    def _importStructurePDBWoVol4(self):
+        """Import the structure 3bp5 (mouse PD-1 and PD-L2 complex)"""
+        args = {'inputPdbData': ProtImportPdb.IMPORT_FROM_ID,
+                'pdbId': '3BP5'
+                }
+        protImportPDB = self.newProtocol(ProtImportPdb, **args)
+        protImportPDB.setObjLabel('import structure\n 3bp5')
+        self.launchProtocol(protImportPDB)
+        structure4_PDB = protImportPDB.outputPdb
+        return structure4_PDB
 
     def _importAminoacidSequence1(self):
         """Import the sequence derived from the mutation
@@ -164,11 +180,161 @@ class TestImportData(TestImportBase):
                          )
         return sequence
 
+    def _importAminoacidSequence4(self):
+        """Import the sequence derived from UniProtKB ID Q15116
+        """
+        args = {'inputSequenceName': self.NAME,
+                'inputProteinSequence':
+                    ProtImportSequence.IMPORT_FROM_UNIPROT,
+                'uniProtSequence': self.UNIPROTID1
+                }
+        protSequence = self.newProtocol(ProtImportSequence, **args)
+        protSequence.setObjLabel('import aminoacid seq,\nQ15116\n'
+                                 'from UniProtKB')
+        self.launchProtocol(protSequence)
+        sequence = protSequence.outputSequence
+        self.assertEqual("Q15116", sequence.getId())
+        self.assertEqual("User_Name", sequence.getSeqName())
+        self.assertEqual("Programmed cell death protein 1",
+                         sequence.getDescription())
+        self.assertEqual("MQIPQAPWPV", sequence.getSequence()[:10])
+        self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
+                         indexToAlphabet(sequence.getIsAminoacids(),
+                                         sequence.getAlphabet()).letters
+                         )
+        return sequence
+
+    def _importAminoacidSequence5(self):
+        """
+         Import the sequence of chain A of atomic structure 3rrq.cif
+         """
+        args = {'inputSequenceName': self.NAME,
+                'inputProteinSequence':
+                    ProtImportSequence.IMPORT_FROM_STRUCTURE,
+                'inputStructureSequence':
+                    ProtImportSequence.IMPORT_STRUCTURE_FROM_ID,
+                'pdbId': '3RRQ',
+                'inputStructureChain':
+                    '{"model": 0, "chain": "A", "residues": 108}'
+                }
+        protSequence = self.newProtocol(ProtImportSequence, **args)
+        protSequence.setObjLabel('import aminoacid seq,\n from 3RRQ\n'
+                           'atomic structure')
+        self.launchProtocol(protSequence)
+        sequence = protSequence.outputSequence
+
+        self.assertEqual("3rrq__0_A", sequence.getId())
+        self.assertEqual("User_Name", sequence.getSeqName())
+        self.assertEqual("", sequence.getDescription())
+        self.assertEqual("NPPTFSPALL", sequence.getSequence()[:10])
+        self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
+                         indexToAlphabet(sequence.getIsAminoacids(),
+                                         sequence.getAlphabet()).letters)
+        return sequence
+
+    def _importAminoacidSequence6(self):
+        """Import the sequence derived from UniProtKB ID P01832
+        """
+        args = {'inputSequenceName': self.NAME,
+                'inputProteinSequence':
+                    ProtImportSequence.IMPORT_FROM_UNIPROT,
+                'uniProtSequence': self.UNIPROTID2
+                }
+        protSequence = self.newProtocol(ProtImportSequence, **args)
+        protSequence.setObjLabel('import aminoacid seq,\nP01832\n'
+                                 'from UniProtKB')
+        self.launchProtocol(protSequence)
+        sequence = protSequence.outputSequence
+        self.assertEqual("P01832", sequence.getId())
+        self.assertEqual("User_Name", sequence.getSeqName())
+        self.assertEqual("Polymeric immunoglobulin receptor",
+                         sequence.getDescription())
+        self.assertEqual("MALFLLTCLL", sequence.getSequence()[:10])
+        self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
+                         indexToAlphabet(sequence.getIsAminoacids(),
+                                         sequence.getAlphabet()).letters
+                         )
+        return sequence
+
+    def _importAminoacidSequence7(self):
+        """Import the sequence derived from UniProtKB ID Q15116
+        """
+        args = {'inputSequenceName': self.NAME,
+                'inputProteinSequence':
+                    ProtImportSequence.IMPORT_FROM_UNIPROT,
+                'uniProtSequence': self.UNIPROTID3
+                }
+        protSequence = self.newProtocol(ProtImportSequence, **args)
+        protSequence.setObjLabel('import aminoacid seq,\nQ12LC89\n'
+                                 'from UniProtKB')
+        self.launchProtocol(protSequence)
+        sequence = protSequence.outputSequence
+        self.assertEqual("Q2LC89", sequence.getId())
+        self.assertEqual("User_Name", sequence.getSeqName())
+        self.assertEqual("PD-1-ligand 2",
+                         sequence.getDescription())
+        self.assertEqual("LQLHQIAALF", sequence.getSequence()[:10])
+        self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
+                         indexToAlphabet(sequence.getIsAminoacids(),
+                                         sequence.getAlphabet()).letters
+                         )
+        return sequence
+
+    def _importAminoacidSequence8(self):
+        """Import the sequence derived from UniProtKB ID Q9BQ51
+        """
+        args = {'inputSequenceName': self.NAME,
+                'inputProteinSequence':
+                    ProtImportSequence.IMPORT_FROM_UNIPROT,
+                'uniProtSequence': self.UNIPROTID4
+                }
+        protSequence = self.newProtocol(ProtImportSequence, **args)
+        protSequence.setObjLabel('import aminoacid seq,\nQ9BQ51\n'
+                                 'from UniProtKB')
+        self.launchProtocol(protSequence)
+        sequence = protSequence.outputSequence
+        self.assertEqual("Q9BQ51", sequence.getId())
+        self.assertEqual("User_Name", sequence.getSeqName())
+        self.assertEqual("Programmed cell death 1 ligand 2",
+                         sequence.getDescription())
+        self.assertEqual("MIFLLLMLSL", sequence.getSequence()[:10])
+        self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
+                         indexToAlphabet(sequence.getIsAminoacids(),
+                                         sequence.getAlphabet()).letters
+                         )
+        return sequence
+
+    def _importAminoacidSequence9(self):
+        """Import the sequence derived from UniProtKB ID Q9NZQ7
+        """
+        args = {'inputSequenceName': self.NAME,
+                'inputProteinSequence':
+                    ProtImportSequence.IMPORT_FROM_UNIPROT,
+                'uniProtSequence': self.UNIPROTID5
+                }
+        protSequence = self.newProtocol(ProtImportSequence, **args)
+        protSequence.setObjLabel('import aminoacid seq,\nQ9NZQ7\n'
+                                 'from UniProtKB')
+        self.launchProtocol(protSequence)
+        sequence = protSequence.outputSequence
+        self.assertEqual("Q9NZQ7", sequence.getId())
+        self.assertEqual("User_Name", sequence.getSeqName())
+        self.assertEqual("Programmed cell death 1 ligand 1",
+                         sequence.getDescription())
+        self.assertEqual("MRIFAVFIFM", sequence.getSequence()[:10])
+        self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
+                         indexToAlphabet(sequence.getIsAminoacids(),
+                                         sequence.getAlphabet()).letters
+                         )
+        return sequence
+
 
 class TestChimeraModellerSearch(TestImportData):
-    CHAIN1 = "[model: 0, chain: B, 148 residues]"  # Protein
-    CHAIN2 = "[model: 0, chain: A, 98 residues]"  # Protein
-    CHAIN3 = "[model: 7, chain: A, 134 residues]"  # Protein
+    CHAIN1 = '{"model": 0, "chain": "B", "residues": 146}'  # Protein
+    CHAIN2 = '{"model": 0, "chain": "A", "residues": 98}'  # Protein
+    CHAIN3 = '{"model": 7, "chain": "A", "residues": 134}'  # Protein
+    CHAIN4 = '{"model": 0, "chain": "A", "residues": 114}'
+    CHAIN5 = '{"model": 0, "chain": "B", "residues": 191}'
     message = """*******************************************
 This test requires human intervention. By default is disabled
 so automatic checking do not fail but should be executed
@@ -179,16 +345,22 @@ You may enable the protocol but setting
     DISABLE_TEST = False
     
 HOW TO RUN THE TEST:
-1) when chimera opens select (in sequence window)
-structure -> modeller (homology)
-2) a new pop up windows appears called 'comparative model with modeller'
-3) choose as target = seq...mutated
-4) choose as template the only offered option 
+1) when chimerax opens select (in main menu)
+Tools -> Sequence -> Modeller Comparative
+2) a new pop up windows appears called 'Modeller Comparative'
+3) template(s) are the Sequence alignments
+4) choose as target(s) = seq...mutated
+In the particular case of test testImportChainFromStructureAndSequence4
+select as target sequences Q15116 and Q2LC89 for aligned_1.fasta and 
+aligned_2.fasta alignments, respectively.
 5) you will need a key for modeller website
 6) press OK
-7) In main window you will see (botton) "porcentage of progress" wait untill is 100%
-8) In command line type:  scipionwrite model #2.1 ,enter>
-9) close chimera 
+7) In main chimerax window you will see (botton) "porcentage of progress" wait untill is 100%
+8) In command line rename the #id of the model in you are interested, 
+for example from #3.1 to #4 type:
+rename #3.1 id #4, enter>
+9) In command line type:  scipionwrite #4 prefix mmodel_3.1_,enter>
+9) close chimerax 
 ************************************************"""
     DISABLE_TEST = True
 
@@ -202,7 +374,7 @@ structure -> modeller (homology)
 
         args = {'pdbFileToBeRefined': structure1_PDB,
                 'inputStructureChain': self.CHAIN1,
-                'inputSequence': sequence1
+                'inputSequence1': sequence1
                 }
         prot1 = self.newProtocol(ChimeraModelFromTemplate, **args)
         prot1.setObjLabel('1_structure chain seq,\n and seq from '
@@ -223,7 +395,7 @@ structure -> modeller (homology)
 
         args = {'pdbFileToBeRefined': structure2_PDB,
                 'inputStructureChain': self.CHAIN2,
-                'inputSequence': sequence2
+                'inputSequence1': sequence2
                 }
         prot2 = self.newProtocol(ChimeraModelFromTemplate, **args)
         prot2.setObjLabel('2_structure chain seq,\n and seq from '
@@ -243,7 +415,7 @@ structure -> modeller (homology)
 
         args = {'pdbFileToBeRefined': structure3_PDB,
                 'inputStructureChain': self.CHAIN3,
-                'inputSequence': sequence3
+                'inputSequence1': sequence3
                 }
         prot3 = self.newProtocol(ChimeraModelFromTemplate, **args)
         prot3.setObjLabel('3_structure chain seq,\n and seq from '
@@ -252,3 +424,59 @@ structure -> modeller (homology)
             print(self.message)
         else:
             self.launchProtocol(prot3)
+
+    def testImportChainFromStructureAndSequence4(self):
+        """
+        Import the aminoacid chains A and B from the structure 3bp5,
+        and two target sequences (Q15116 and Q12LC89)
+        """
+        structure4_PDB = self._importStructurePDBWoVol4()
+        sequence4 = self._importAminoacidSequence4()
+        sequence5 = self._importAminoacidSequence5()
+        sequence6 = self._importAminoacidSequence6()
+        sequence7 = self._importAminoacidSequence7()
+        sequence8 = self._importAminoacidSequence8()
+        sequence9 = self._importAminoacidSequence9()
+
+        args = {'pdbFileToBeRefined': structure4_PDB,
+                'inputStructureChain': self.CHAIN4,
+                'inputSequence1': sequence4,
+                'optionForAligning1': 1,
+                'inputSequencesToAlign1': [sequence5, sequence6],
+                'additionalTargetSequence': True,
+                'selectStructureChain': self.CHAIN5,
+                'inputSequence2': sequence7,
+                'optionForAligning2': 1,
+                'inputSequencesToAlign2': [sequence8, sequence9]
+                }
+        prot3 = self.newProtocol(ChimeraModelFromTemplate, **args)
+        prot3.setObjLabel('4_2 target sequences,\n '
+                          'fitting a complex\n'
+                          'additional seqs')
+        if self.DISABLE_TEST:
+            print(self.message)
+        else:
+            self.launchProtocol(prot3)
+
+        alignmentFile1 = prot3._getExtraPath("aligned_1.fasta")
+        alignmentFile2 = prot3._getExtraPath("aligned_2.fasta")
+
+        args = {'pdbFileToBeRefined': structure4_PDB,
+                'inputStructureChain': self.CHAIN4,
+                'inputSequence1': sequence4,
+                'optionForAligning1': 2,
+                'inputYourOwnSequenceAlignment1': alignmentFile1,
+                'additionalTargetSequence': True,
+                'selectStructureChain': self.CHAIN5,
+                'inputSequence2': sequence7,
+                'optionForAligning2': 2,
+                'inputYourOwnSequenceAlignment2': alignmentFile2,
+                }
+        prot4 = self.newProtocol(ChimeraModelFromTemplate, **args)
+        prot4.setObjLabel('5_2 target sequences,\n '
+                          'fitting a complex\n'
+                          'alignment input')
+        if self.DISABLE_TEST:
+            print(self.message)
+        else:
+            self.launchProtocol(prot4)

@@ -17,6 +17,10 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
+
 # Arguments marked as "Required" below must be included for upload to PyPI.
 # Fields marked as "Optional" may be commented out.
 
@@ -42,7 +46,7 @@ setup(
         'Development Status :: 3 - Alpha',
         'Programming Language :: Python :: 3'
     ],
-    install_requires=['scipion-em'],  # Optional
+    install_requires=[requirements], # Optional
     entry_points={
             'pyworkflow.plugin': 'chimera = chimera'
         },

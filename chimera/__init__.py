@@ -27,10 +27,11 @@ import os
 
 import pwem
 import pyworkflow.utils as pwutils
+from scipion.install.funcs import VOID_TGZ
 
-from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_13_1
+from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_0
 
-__version__ = "3.0.1"
+__version__ = "3.0.2"
 _logo = "chimera_logo.png"
 _references = ['Pettersen2004']
 
@@ -38,17 +39,18 @@ _references = ['Pettersen2004']
 class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
-    _supportedVersions = V1_13_1
+    _supportedVersions = V1_0
 
     @classmethod
     def _defineVariables(cls):
-        cls._defineEmVar(CHIMERA_HOME, 'chimera-1.13.1')
+        cls._defineEmVar(CHIMERA_HOME, 'chimerax-1.0')
         cls._defineEmVar(CHIMERA_HEADLESS_HOME, 'chimera_headless')
 
     @classmethod
     def getEnviron(cls):
         environ = pwutils.Environ(os.environ)
         d = {}
+        # d['PATH'] = cls.getHome('bin')
         d['PATH'] = cls.getHome('bin')
         if "REMOTE_MESA_LIB" in os.environ:
             d["LD_LIBRARY_PATH"] = os.environ['REMOTE_MESA_LIB']
@@ -62,23 +64,37 @@ class Plugin(pwem.Plugin):
         pwutils.runJob(None, program, args, env=env, cwd=cwd)
 
     @classmethod
-    def getProgram(cls, progName="chimera"):
+    def getProgram(cls, progName="ChimeraX"):
         """ Return the program binary that will be used. """
         cmd = cls.getHome('bin', progName)
         return str(cmd)
 
     @classmethod
     def isVersionActive(cls):
-        return cls.getActiveVersion().startswith(V1_13_1)
+        return cls.getActiveVersion().startswith(V1_0)
 
     @classmethod
     def defineBinaries(cls, env):
 
-        SW_CH = env.getEmFolder()
-        chimera_1_13_1_command = [('./scipion_installer',
-                            '%s/chimera-1.13.1/bin/chimera' % SW_CH)]
 
-        env.addPackage('chimera', version='1.13.1',
-                       tar='chimera-1.13.1-linux_x86_64.tgz',
-                       commands=chimera_1_13_1_command,
-                       default=True)
+        getChimeraScript = os.path.join(os.path.dirname(__file__),
+                                        "getchimera.py")
+        chimera_cmds = [("cd .. && python " + getChimeraScript, "../ChimeraX-1.0.tar.gz"),
+                        ("cd .. && tar -xf ChimeraX-1.0.tar.gz", "bin/ChimeraX")
+                        ]
+        env.addPackage('chimerax', version='1.0',
+                       tar=VOID_TGZ,
+                       default=True,
+                       commands=chimera_cmds
+                       )
+
+
+        pathToPlugin = os.path.join(os.path.dirname(__file__),
+                                        "Bundles", "scipion")
+        pathToBinary = cls.getProgram()
+        installPluginsCommand = [("%s --nogui --exit " \
+                                "--cmd 'devel install %s'" % (pathToBinary, pathToPlugin), [])]
+        env.addPackage('scipionchimera', version='1.0',
+                       tar=VOID_TGZ,
+                       default=True,
+                       commands=installPluginsCommand)
