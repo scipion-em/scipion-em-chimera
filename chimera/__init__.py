@@ -27,7 +27,6 @@ import os
 
 import pwem
 import pyworkflow.utils as pwutils
-from scipion.install.funcs import VOID_TGZ
 
 from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_0
 
@@ -75,6 +74,7 @@ class Plugin(pwem.Plugin):
 
     @classmethod
     def defineBinaries(cls, env):
+        from scipion.install.funcs import VOID_TGZ  # Local import to avoid having scipion-app installed when building the package.
 
 
         getChimeraScript = os.path.join(os.path.dirname(__file__),
