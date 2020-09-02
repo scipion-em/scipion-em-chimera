@@ -163,7 +163,7 @@ class TestChimeraContact(TestImportData):
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 380)
+        self.assertEqual(int(row[0]), 752)
 
     def testContactsSymC2_b(self):
         # import PDB; unit cell of hemoglobin macromolecule with HEM groups as

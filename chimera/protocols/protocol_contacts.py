@@ -356,7 +356,11 @@ class ChimeraProtContacts(EMProtocol):
                 # outFile = self._getExtraPath("{}.over".format(outFileBase))
                 outFiles.append(outFile)
                 f.write(
-                    """run(session,'echo {}')\nrun(session, 'contacts  #1{}  intersubmodel true  intramol False restrict any saveFile {} overlapCutoff {} hbondAllowance {} namingStyle simple')\n""".format(
+                    "run(session,'echo {}')\nrun(session, 'contacts  #1{} "
+                    "intersubmodel true "
+                    "intramol False "
+                    "restrict cross "
+                    "saveFile {} overlapCutoff {} hbondAllowance {} namingStyle simple')\n".format(
                         chains, chains, outFile, self.cutoff, self.allowance))
                 protId = v
                 # chains = "/{}".format(k)
@@ -369,7 +373,11 @@ class ChimeraProtContacts(EMProtocol):
         outFiles.append(outFile)
 
         f.write(
-            """run(session,'echo {}')\nrun(session, 'contacts  #1{}  intersubmodel true  intramol False restrict any savefile {} overlap {} hbond {} namingStyle simple')\n""".format(
+            "run(session,'echo {}')\nrun(session, 'contacts  #1{} "
+            "intersubmodel true "
+            "intramol False "
+            "restrict cross "
+            "savefile {} overlap {} hbond {} namingStyle simple')\n".format(
                 chains, chains, outFile, self.cutoff, self.allowance))
         # f.write("run('save %s')\n" % os.path.abspath(self._getExtraPath(sessionFile)))
 
@@ -414,12 +422,21 @@ class ChimeraProtContacts(EMProtocol):
             AND ca.atomId_1  = cb.atomId_2
             AND cb.atomId_1  = ca.atomId_2
             AND ca.modelId_2   > cb.modelId_2
-        
+     
+        EXCEPT
+            
+        SELECT ca.*
+        FROM {} ca
+        WHERE ca.modelId_1   = ca.modelId_2   
+          AND (ca.modelId_1 NOT LIKE '#1.1'  AND 
+               ca.modelId_1 NOT LIKE '#1')
+
         """
         # # Remove duplicate contacts
         # that is, given chains A,B
         # we have contact A.a-B.b and B.b-A.a
         c.execute(self.commandDropView.format(viewName="view_ND_1"))
+        # TODO: remove second contacts
         c.execute(commandEliminateDuplicates.format("view_ND_1",
                                                     "contacts",
                                                     "contacts"))
@@ -427,7 +444,9 @@ class ChimeraProtContacts(EMProtocol):
         # remove duplicate contacts due to symmetry
         # h1-h1p, h1-h2p
         c.execute(self.commandDropView.format(viewName="view_ND_2"))
-        c.execute(commandEliminateDuplicates2.format("view_ND_2", "view_ND_1", "view_ND_1", "view_ND_1"))
+        c.execute(commandEliminateDuplicates2.format("view_ND_2", "view_ND_1",
+                                                     "view_ND_1", "view_ND_1",
+                                                     "view_ND_1"))
 
     def _validate(self):
         errors = []
