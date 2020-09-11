@@ -96,7 +96,7 @@ class TestChimeraSubtractMap(TestImportData):
         extraCommands += "move -52.50,-52.50,-51.88 model #3 " \
                          "coord #2\n"
         extraCommands += "fitmap #3 in #2\n"
-        extraCommands += "scipionwrite #3 #2 " \
+        extraCommands += "scipionwrite #3 " \
                          "prefix DONOTSAVESESSION_\n"
         extraCommands += "exit\n"
 
@@ -196,7 +196,7 @@ class TestChimeraSubtractMap(TestImportData):
         extraCommands += "move -52.50,-52.50,-51.88 model #3 " \
                          "coord #2\n"
         extraCommands += "fitmap #3 in #2\n"
-        extraCommands += "scipionwrite #3 #2 " \
+        extraCommands += "scipionwrite #3 " \
                          "prefix DONOTSAVESESSION_\n"
         extraCommands += "exit\n"
 
@@ -240,9 +240,8 @@ class TestChimeraSubtractMap(TestImportData):
                 'radius': 1
                 }
         protChimera2 = self.newProtocol(ChimeraSubtractionMaps, **args)
-        # protChimera2.setObjLabel('chimera subtract\n chainA-sym-derived map\n '
-        #                           'removed residues\nzone')
-        protChimera2.setObjLabel('chimera subtract')
+        protChimera2.setObjLabel('chimera subtract\n chainA-sym-derived map\n '
+                                  'removed residues\nzone')
         self.launchProtocol(protChimera2)
         try:
             result = eval("protChimera2.chain_A_Atom_struct__4_%06d_cif.getFileName()"
@@ -425,7 +424,6 @@ class TestChimeraSubtractMap(TestImportData):
                 }
         protChimera5 = self.newProtocol(ChimeraSubtractionMaps, **args)
         protChimera5.setObjLabel('chimera subtract\n chainA-derived map\n')
-        protChimera5.setObjLabel('chimera subtract')
         self.launchProtocol(protChimera5)
         try:
             result = eval("protChimera5.chain_A_Atom_struct__4_%06d_cif.getFileName()"
@@ -525,7 +523,7 @@ class TestChimeraSubtractMap(TestImportData):
         extraCommands += "move -52.50,-52.50,-51.88 model #3 " \
                          "coord #2\n"
         extraCommands += "fitmap #3 in #2\n"
-        extraCommands += "scipionwrite #3 #2 " \
+        extraCommands += "scipionwrite #3 " \
                          "prefix DONOTSAVESESSION_\n"
         extraCommands += "exit\n"
 
@@ -655,7 +653,7 @@ class TestChimeraSubtractMap(TestImportData):
         extraCommands += "move -52.50,-52.50,-51.88 model #3 " \
                          "coord #2\n"
         extraCommands += "fitmap #3 in #2\n"
-        extraCommands += "scipionwrite #3 #2 " \
+        extraCommands += "scipionwrite #3 " \
                          "prefix DONOTSAVESESSION_\n"
         extraCommands += "exit\n"
 
@@ -678,16 +676,14 @@ class TestChimeraSubtractMap(TestImportData):
         self.assertTrue(os.path.exists(result))
 
         # TODO: These steps of protChimera2 can not be performed in protChimera1 because
-        # when the map is saved keep an inappropriate origin
+
+        # second way of obtaining the starting atom structure (it generates an appropriate
+        # cif by applying symmetry)
         extraCommands = ""
-        extraCommands += "split #2\n"
-        # extraCommands += "combine #1.1\n"
-        extraCommands += "scipionwrite #2.1  #1 " \
-                         "prefix DONOTSAVESESSION_A_\n"
-        #extraCommands += "combine #1.1#1.2\n"
-        extraCommands += "close #2.3\n"
-        extraCommands += "close #2.4\n"
-        extraCommands += "scipionwrite #2 #1 " \
+        extraCommands += "sel #2/A,B\n"
+        extraCommands += "save /tmp/chainA_B.cif format mmcif models #2 relModel #1 selectedOnly true\n"
+        extraCommands += "open /tmp/chainA_B.cif\n"
+        extraCommands += "scipionwrite #3 " \
                          "prefix DONOTSAVESESSION_A_B_\n"
         extraCommands += "exit\n"
 
@@ -699,20 +695,11 @@ class TestChimeraSubtractMap(TestImportData):
                 }
         protChimera2 = self.newProtocol(ChimeraProtOperate,
                                         **args)
-        protChimera2.setObjLabel('chimera operate\n pdb\n save '
-                                 'chain A and A_B')
+        protChimera2.setObjLabel('chimera operate\n pdb\n save chain A_B')
         self.launchProtocol(protChimera2)
         try:
             result = eval(
-                "protChimera2.DONOTSAVESESSION_A_Atom_struct__2_%06d.getFileName()"
-                 % protChimera2.getObjId())
-        except:
-            self.assertTrue(False,  "There was a problem with the alignment")
-
-        self.assertTrue(os.path.exists(result))
-        try:
-            result = eval(
-                "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__2_%06d.getFileName()"
+                "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d.getFileName()"
                  % protChimera2.getObjId())
         except:
             self.assertTrue(False,  "There was a problem with the alignment")
@@ -723,7 +710,7 @@ class TestChimeraSubtractMap(TestImportData):
         extraCommands = "run(session, 'select all')\n"
         extraCommands += "run(session, 'exit')\n"
         result = eval(
-            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__2_%06d"
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
             % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
@@ -790,7 +777,7 @@ class TestChimeraSubtractMap(TestImportData):
         extraCommands = "run(session, 'select all')\n"
         extraCommands += "run(session, 'exit')\n"
         result = eval(
-            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__2_%06d"
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
             % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
@@ -866,7 +853,7 @@ class TestChimeraSubtractMap(TestImportData):
         extraCommands = "run(session, 'select all')\n"
         extraCommands += "run(session, 'exit')\n"
         result = eval(
-            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__2_%06d"
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
             % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
@@ -942,7 +929,7 @@ class TestChimeraSubtractMap(TestImportData):
         extraCommands = "run(session, 'select all')\n"
         extraCommands += "run(session, 'exit')\n"
         result = eval(
-            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__2_%06d"
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
             % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
@@ -1018,7 +1005,7 @@ class TestChimeraSubtractMap(TestImportData):
         extraCommands = "run(session, 'select all')\n"
         extraCommands += "run(session, 'exit')\n"
         result = eval(
-            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__2_%06d"
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
             % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
@@ -1095,7 +1082,7 @@ class TestChimeraSubtractMap(TestImportData):
         extraCommands = "run(session, 'select all')\n"
         extraCommands += "run(session, 'exit')\n"
         result = eval(
-            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__2_%06d"
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
             % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
@@ -1173,7 +1160,7 @@ class TestChimeraSubtractMap(TestImportData):
         extraCommands = "run(session, 'select all')\n"
         extraCommands += "run(session, 'exit')\n"
         result = eval(
-            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__2_%06d"
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
             % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,

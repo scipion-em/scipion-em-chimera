@@ -75,101 +75,6 @@ class ChimeraSubtractionMaps(EMProtocol):
     PROTOCOL_OPTIONS = ['Subtraction', 'Mask']
     MAP_OPTIONS = ['3D map', 'atomic structure']
     CHIMERA_FILTERS = ['Gaussian', 'Fourier Transform']
-
-    subtractionString = """
-# from VolumeStatistics import mean_sd_rms
-# from chimera import openModels
-# from chimera import replyobj
-
-# from VolumeData import Array_Grid_Data
-# from VolumeViewer.volume import volume_from_grid_data
-import numpy
-from numpy import greater_equal, multiply, dot as inner_product
-from numpy import array, ravel
-# get volume from model id
-def subtraction(minuendId, subtrahendId, outModelId=-1, subtractOrMask=0):
-    ''' subtract or mask two volumes after adjust their respective ranges.
-    
-        The mask part is close to the chimera command
-        vop zone invert. 
-        If subtractOrMask=0 the program function uses vop subtract (chimera) 
-        Else:
-        1) A mask is computed using the volume with modelid=subtrahendId 
-           and the countour level value.
-        2) All voxels in minuendId are set to 0 for those
-           voxels inside the mask.
-        3) Result is shown in chimera
-        4) Volumes are assume to have the same sampling rate and dimensions
-        Usage Example:
-        from chimera import runCommand
-        runCommand('open /home/roberto/Downloads/Vols/emd_21375_crop_ref.mrc')
-        runCommand('open /home/roberto/Downloads/Vols/i2pc_Level0_226_crop_ref.mrc')
-        subtraction(0, 1, outModelId=6, subtractOrMask=0)
-        
-        Note this function is milar to chimera's vop zone invert
-        but can be used not only with PDBs but with 3D maps as subtrahend
-    '''
-    if subtractOrMask==0:
-        command = "vop subtract #%d #%d modelId #%d minRms true onGrid #%d" % (minuendId, subtrahendId, outModelId, minuendId)
-        run(session,command)
-        return
-    
-    # get models from Ids
-    minuendModel = openModels.list(id=minuendId)[0]  #submodel if needed
-    subtrahendModel = openModels.list(id=subtrahendId)[0]  #submodel if needed
-    
-    # Get contour level from model
-    contourLevel = subtrahendModel.surface_levels[0]
-        
-    # get  matrix with voxel values
-    minuendMatrix = minuendModel.full_matrix()
-    subtrahendMatrix = subtrahendModel.full_matrix()
-    
-    # check if sampling and size is the same
-    compatible1 = abs (minuendModel.data.step[0] - minuendModel.data.step[0]) < 0.01
-    s1 = minuendMatrix.shape
-    s2 = subtrahendMatrix.shape
-    compatible2 = (s1[0]==s2[0]) & (s1[1]==s2[1]) & (s1[1]==s2[1])
-
-    if not (compatible1 & compatible2):
-        replyobj.status("Both volumes have incompatible size or sampling, using vop subtract")
-        command = "vop subtract #%d #%d modelId #%d minRms true onGrid #%d" % (minuendId, subtrahendId, outModelId, minuendId)
-        run(session, command)
-        return
-
-    # test data, comment next two lines to operate
-    # with chimera volumes
-    # minuendMatrix = array([[1., 2., 3.], [4., 5., 6.]])
-    # subtrahendMatrix = minuendMatrix * 2 +1
-    # contourLevel=6
-    
-    
-    # create mask
-    # keep only values above threshold contourLevel
-    mask = subtrahendMatrix > contourLevel  # matrix with true and false
-                                            # values less than counter
-                                            # are set to true
-    # set values to half the contourLevel                                           
-    minuendMatrix[mask] = 0.
-    
-    #innerProduct = inner_product(shifted_matrix_subtrahend[mask],    shifted_matrix_minuend[mask])
-    #normalization =inner_product(shifted_matrix_subtrahend[mask], shifted_matrix_subtrahend[mask])
-    #if normalization == 0:
-    #   f = 1
-    #else:
-    #   f = innerProduct/normalization
-    #new_matrix_subtrahend =  minuendMatrix - (shifted_matrix_subtrahend * f + minuendMean )
-    # attach matrix to grid
-    
-    g0 = Array_Grid_Data(minuendMatrix, minuendModel.data.origin, 
-                         minuendModel.data.step, minuendModel.data.cell_angles)
-    # create new volume
-    if outModelId == -1:
-        differenceVolume = volume_from_grid_data(g0)
-    else:
-        differenceVolume = volume_from_grid_data(g0, model_id=outModelId)
-"""
-
     # --------------------------- DEFINE param functions --------------------
     def _defineParams(self, form, doHelp=False):
 
@@ -644,24 +549,26 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, subtractOrMask=0):
                 f.write("run(session,'scipionwrite #%d prefix molmap_  ')\n" % modelMapS)
 
         # Generation of the differential map
-        f.write(self.subtractionString)
-
         if self.selectAreaMap == True:
-            f.write("subtraction(%d, %d, outModelId=%d, subtractOrMask=%d)\n" %
-                    (modelIdZone, modelMapS, modelMapDiff, self.subtractOrMask.get())
-                    )
+            modelId = modelIdZone
         else:
-            f.write("subtraction(%d, %d, outModelId=%d, subtractOrMask=%r)\n" %
-                    (modelMapM, modelMapS, modelMapDiff, self.subtractOrMask.get())
-                    )
+            modelId = modelMapM
+        if self.subtractOrMask == 0:
+            f.write("run(session, 'volume subtract #%d #%d modelId #%d "
+                    "minRms true onGrid #%d')\n" %
+                    (modelId, modelMapS, modelMapDiff, modelId))
+        else:
+            f.write("run(session, 'volume mask #%d surfaces #%d invertMask "
+                    "true modelId #%d')\n" %
+                    (modelId, modelMapS, modelMapDiff))
         f.write("run(session,'scipionwrite #%d prefix difference_')\n" % modelMapDiff)
 
         # Generation of the filtered map
         if self.filterToApplyToDiffMap.get() == 0:
-            f.write("run(session,'vop gaussian #%d sd %0.3f modelId %#d')\n"
+            f.write("run(session,'volume gaussian #%d sd %0.3f modelId %#d')\n"
                     % (modelMapDiff, self.widthFilter.get(), modelMapDiffFil))
         else:
-            f.write("run(session,'vop laplacian #%d')\n" % modelMapDiff)
+            f.write("run(session,'volume laplacian #%d')\n" % modelMapDiff)
 
         f.write("run(session,'scipionwrite #%d prefix filtered_')\n" % modelMapDiffFil)
         if self.inputPdbFiles is not None:  # Other atomic models different
@@ -678,7 +585,8 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, subtractOrMask=0):
             args = " --nogui --script " + \
                    os.path.abspath(self._getTmpPath(chimeraScriptFileName))
         else:
-            args = " --script " + self._getTmpPath(chimeraScriptFileName)
+            args = " --script " + \
+                   os.path.abspath(self._getTmpPath(chimeraScriptFileName))
         f.close()
 
         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
@@ -688,11 +596,6 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, subtractOrMask=0):
         Chimera.runProgram(Plugin.getProgram(), args, cwd=cwd)
 
     def createOutput(self):
-        # cHB = ChimeraProtBase()
-        # directory = self._getExtraPath()
-        # cHB.createOutput(directory)
-        """ Register outputs.
-        """
         # Check vol and pdb files
         directory = self._getExtraPath()
         for filename in sorted(os.listdir(directory)):
@@ -731,26 +634,7 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, subtractOrMask=0):
             config.write(configfile)
 
     def symMethod(self, f, modelId, sym, order=None, range=None):
-        # if sym == "Cn" and order != 1:
-        #     f.write("run(session,'sym #%d C%d copies t range %d')\n"
-        #             % (modelId, order, range))
-        # elif sym == "Dn" and order != 1:
-        #     f.write("run(session,'sym #%d d%d copies t range %d')\n"
-        #             % (modelId, order, range))
-        # elif sym == "T222" or sym == "TZ3":
-        #     f.write("run(session,'sym #%d t,%s copies t range %d')\n"
-        #             % (modelId, sym[1:], range))
-        # elif sym == "O":
-        #     f.write("run(session,'sym #%d O copies t range %d')\n"
-        #             % modelId, range)
-        # elif sym == "I222" or sym == "I222r" or sym == "In25" or \
-        #         sym == "In25r" or sym == "I2n3" or sym == "I2n3r" or \
-        #         sym == "I2n5" or sym == "I2n5r":
-        #     f.write("run(session,'sym #%d i,%s copies t range %d')\n"
-        #             % (modelId, sym[1:], range))
         if sym == "Cn" and order != 1:
-            print("sym: ", sym)
-            print("order: ", order)
             f.write("run(session,'sym #%d C%d copies t')\n"
                     % (modelId, order))
         elif sym == "Dn" and order != 1:
