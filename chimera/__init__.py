@@ -28,9 +28,9 @@ import os
 import pwem
 import pyworkflow.utils as pwutils
 
-from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_0
+from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_0, V1_1
 
-__version__ = "3.0.2"
+__version__ = "3.0.3"
 _logo = "chimera_logo.png"
 _references = ['Pettersen2004']
 
@@ -38,11 +38,11 @@ _references = ['Pettersen2004']
 class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
-    _supportedVersions = V1_0
+    _supportedVersions = [V1_0, V1_1]
 
     @classmethod
     def _defineVariables(cls):
-        cls._defineEmVar(CHIMERA_HOME, 'chimerax-1.0')
+        cls._defineEmVar(CHIMERA_HOME, 'chimerax-1.1')
         cls._defineEmVar(CHIMERA_HEADLESS_HOME, 'chimera_headless')
 
     @classmethod
@@ -79,10 +79,10 @@ class Plugin(pwem.Plugin):
 
         getChimeraScript = os.path.join(os.path.dirname(__file__),
                                         "getchimera.py")
-        chimera_cmds = [("cd .. && python " + getChimeraScript, "../ChimeraX-1.0.tar.gz"),
-                        ("cd .. && tar -xf ChimeraX-1.0.tar.gz", "bin/ChimeraX")
+        chimera_cmds = [("cd .. && python " + getChimeraScript, "../ChimeraX-1.1.tar.gz"),
+                        ("cd .. && tar -xf ChimeraX-1.1.tar.gz", "bin/ChimeraX")
                         ]
-        env.addPackage('chimerax', version='1.0',
+        env.addPackage('chimerax', version='1.1',
                        tar=VOID_TGZ,
                        default=True,
                        commands=chimera_cmds
