@@ -375,7 +375,7 @@ class ChimeraProtBase(EMProtocol):
         return methodsMsgs
 
     def _citations(self):
-        return ['Pettersen2004']
+        return ['Goddard2018']
 
     def is_tool(self, name):
         """Check whether `name` is on PATH."""

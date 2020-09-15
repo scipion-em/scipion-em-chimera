@@ -32,7 +32,7 @@ from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_0
 
 __version__ = "3.0.2"
 _logo = "chimera_logo.png"
-_references = ['Pettersen2004']
+_references = ['Goddard2018']
 
 
 class Plugin(pwem.Plugin):

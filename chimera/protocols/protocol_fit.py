@@ -36,7 +36,7 @@ class ChimeraProtRigidFit(ChimeraProtBase):
         pdb to scipion. Default values are model=#0,
         refmodel =#1 and saverefmodel 0 (false).
         model refers to the pdb file. refmodel to a 3Dmap"""
-    _label = 'chimera rigid fit'
+    _label = 'chimerax rigid fit'
 
     def _defineParams(self, form):
         super(ChimeraProtRigidFit, self)._defineParams(form)

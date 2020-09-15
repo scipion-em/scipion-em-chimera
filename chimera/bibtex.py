@@ -25,16 +25,14 @@
 # *
 # **************************************************************************
 """
-@article{Pettersen2004,
-   Author="Pettersen, E. F.  and Goddard, T. D.  and Huang, C. C.  and Couch, G. S.  and Greenblatt, D. M.  and Meng, E. C.  and Ferrin, T. E. ",
-   Title="{{U}{C}{S}{F} {C}himera--a visualization system for exploratory research and analysis}",
-   Journal="J Comput Chem",
-   Year="2004",
-   Volume="25",
-   Number="13",
-   Pages="1605--1612",
-   Month="Oct",
-   doi="http://doi.org/10.1002/jcc.20084",
-   url = "http://onlinelibrary.wiley.com/doi/abs/10.1002/jcc.20084"
+@Article{Goddard2018,
+   Author="Goddard, T. D.  and Huang, C. C.  and Meng, E. C.  and Pettersen, E. F.  and Couch, G. S.  and Morris, J. H.  and Ferrin, T. E. ",
+   Title="{{U}{C}{S}{F} {C}himera{X}: {M}eeting modern challenges in visualization and analysis}",
+   Journal="Protein Sci.",
+   Year="2018",
+   Volume="27",
+   Number="1",
+   Pages="14--25",
+   Month="01"
 }
 """
