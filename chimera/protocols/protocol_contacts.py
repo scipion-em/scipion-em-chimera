@@ -334,6 +334,12 @@ class ChimeraProtContacts(EMProtocol):
     def getTableName(self):
         return "contacts"
 
+    def getView2Name(self):
+        return "view_ND_2"
+
+    def getView1Name(self):
+        return "view_ND_1"
+
     def getChimeraScriptFileName1(self):
         return os.path.abspath(self._getTmpPath("chimera1.cxc"))
 
@@ -355,13 +361,12 @@ class ChimeraProtContacts(EMProtocol):
                 outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
                 # outFile = self._getExtraPath("{}.over".format(outFileBase))
                 outFiles.append(outFile)
-                f.write(
-                    "run(session,'echo {}')\nrun(session, 'contacts  #1{} "
-                    "intersubmodel true "
-                    "intramol False "
-                    "restrict cross "
-                    "saveFile {} overlapCutoff {} hbondAllowance {} namingStyle simple')\n".format(
-                        chains, chains, outFile, self.cutoff, self.allowance))
+                f.write("run(session,'echo {}')\nrun(session, 'contacts  #1{} "
+                         "intersubmodel true "
+                         "intramol False "
+                         "restrict any "
+                         "saveFile {} overlapCutoff {} hbondAllowance {} namingStyle simple')\n".
+                         format(chains, chains, outFile, self.cutoff, self.allowance))
                 protId = v
                 # chains = "/{}".format(k)
                 chains = "{}".format(k)
@@ -376,7 +381,7 @@ class ChimeraProtContacts(EMProtocol):
             "run(session,'echo {}')\nrun(session, 'contacts  #1{} "
             "intersubmodel true "
             "intramol False "
-            "restrict cross "
+            "restrict any "
             "savefile {} overlap {} hbond {} namingStyle simple')\n".format(
                 chains, chains, outFile, self.cutoff, self.allowance))
         # f.write("run('save %s')\n" % os.path.abspath(self._getExtraPath(sessionFile)))
@@ -408,36 +413,53 @@ class ChimeraProtContacts(EMProtocol):
         SELECT *
         FROM {}
 
-        EXCEPT
+        EXCEPT -- Each bound appears two times, delete one of them
 
         SELECT ca.*
         FROM {} ca, {} cb
         WHERE
                 ca.protId_1    = cb.protId_2
             AND cb.protId_1    = ca.protId_2
-            AND ca.chainId_1   = cb.chainId_2
             AND cb.chainId_1   = ca.chainId_2
             AND ca.aaNumber_1  = cb.aaNumber_2
             AND cb.aaNumber_1  = ca.aaNumber_2
             AND ca.atomId_1  = cb.atomId_2
             AND cb.atomId_1  = ca.atomId_2
             AND ca.modelId_2   > cb.modelId_2
-     
-        EXCEPT
-            
+        
+        EXCEPT -- Interprotein bounds in the same model are not allowed
+
         SELECT ca.*
         FROM {} ca
-        WHERE ca.modelId_1   = ca.modelId_2   
-          AND (ca.modelId_1 NOT LIKE '#1.1'  AND 
-               ca.modelId_1 NOT LIKE '#1')
-
+        WHERE  ca.modelId_1 = ca.modelId_2 
+           AND ca.protId_1 = ca.protId_2 
+     
         """
+        if self.SYMMETRY:
+            sqlCommand = """
+            SELECT count(*) FROM {} ca
+            WHERE ca.modelId_1 = '#1.1'
+            """.format(self.getTableName())
+            c.execute(sqlCommand)
+            row = c.fetchone()
+            if int(row[0]) == 0:
+                self.SYMMETRY = False
+            else:
+                commandEliminateDuplicates2 +="""
+                EXCEPT -- One of the atoms must belong to the input unit cell
+            
+                SELECT ca.*
+                FROM {} ca
+                WHERE ca.modelId_1 != '#1.1'  AND 
+                      ca.modelId_2 != '#1.1'
+        """.format(self.getView1Name())
         # # Remove duplicate contacts
         # that is, given chains A,B
         # we have contact A.a-B.b and B.b-A.a
         c.execute(self.commandDropView.format(viewName="view_ND_1"))
         # TODO: remove second contacts
         c.execute(commandEliminateDuplicates.format("view_ND_1",
+                                                    "contacts",
                                                     "contacts",
                                                     "contacts"))
 

@@ -88,11 +88,22 @@ class TestChimeraContact(TestImportData):
         self.launchProtocol(protContacts)
 
         c, conn = protContacts.prepareDataBase(drop=False)
-        tableName = protContacts.getTableName()
+        tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 736)
+        self.assertEqual(int(row[0]), 368)
+        # # atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2
+        # 50  # 1 HEM_A       A002   #1 chainA      A
+        # 57  # 1 HEM_B       B002   #1 chainB      B
+        # 50  # 1 HEM_C       C002   #1 chainC      C
+        # 58  # 1 HEM_D       D002   #1 chainD      D
+        # 46  # 1 chainA      A     #1 chainB      B
+        # 6  # 1 chainA      A     #1 chainC      C
+        # 26  # 1 chainA      A     #1 chainD      D
+        # 25  # 1 chainB      B     #1 chainC      C
+        # 3  # 1 chainB      B     #1 chainD      D
+        # 47  # 1 chainC      C     #1 chainD      D
 
     def testContactsAsymetryC2_b(self):
         # import PDB; whole hemoglobin macromolecule with HEM groups as
@@ -112,11 +123,23 @@ class TestChimeraContact(TestImportData):
         self.launchProtocol(protContacts)
 
         c, conn = protContacts.prepareDataBase(drop=False)
-        tableName = protContacts.getTableName()
+        tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 736)
+        self.assertEqual(int(row[0]), 368)
+
+        # # atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2
+        # 50  # 1 HEM_A       A002   #1 chainA      A
+        # 57  # 1 HEM_B       B002   #1 chainB      B
+        # 50  # 1 HEM_C       C002   #1 chainC      C
+        # 58  # 1 HEM_D       D002   #1 chainD      D
+        # 46  # 1 chainA      A     #1 chainB      B
+        # 6  # 1 chainA      A     #1 chainC      C
+        # 26  # 1 chainA      A     #1 chainD      D
+        # 25  # 1 chainB      B     #1 chainC      C
+        # 3  # 1 chainB      B     #1 chainD      D
+        # 47  # 1 chainC      C     #1 chainD      D
 
     def testContactsAsymetryC2_c(self):
         # import PDB; whole hemoglobin macromolecule with HEM groups as
@@ -159,11 +182,19 @@ class TestChimeraContact(TestImportData):
         self.launchProtocol(protContacts)
 
         c, conn = protContacts.prepareDataBase(drop=False)
-        tableName = protContacts.getTableName()
+        tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 752)
+        self.assertEqual(int(row[0]), 227)
+
+        # # atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2
+        # 50  # 1.1 HEM_A       A002 #1.1 chainA      A
+        # 57  # 1.1 HEM_B       B002 #1.1 chainB      B
+        # 46  # 1.1 chainA      A   #1.1 chainB      B
+        # 6  # 1.1 chainA      A   #1.2 chainA      A
+        # 33  # 1.1 chainA      A   #1.2 chainB      B
+        # 2  # 1.1 chainB      B   #1.2 chainB      B
 
     def testContactsSymC2_b(self):
         # import PDB; unit cell of hemoglobin macromolecule with HEM groups as
@@ -182,11 +213,18 @@ class TestChimeraContact(TestImportData):
         self.launchProtocol(protContacts)
 
         c, conn = protContacts.prepareDataBase(drop=False)
-        tableName = protContacts.getTableName()
+        tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 636)
+        self.assertEqual(int(row[0]), 159)
+        # # atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2
+        # 48  # 1 chainA      A     #1 chainB      B
+        # 6  # 1 chainA      A     #1 chainC      C
+        # 26  # 1 chainA      A     #1 chainD      D
+        # 25  # 1 chainB      B     #1 chainC      C
+        # 3  # 1 chainB      B     #1 chainD      D
+        # 51  # 1 chainC      C     #1 chainD      D
 
     def testContactsAsymetryD4(self):
         # import PDB; whole molecule of thermosome from T. acidophilum (1a6d)
@@ -204,11 +242,20 @@ class TestChimeraContact(TestImportData):
         self.launchProtocol(protContacts)
 
         c, conn = protContacts.prepareDataBase(drop=False)
-        tableName = protContacts.getTableName()
+        tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 816)
+        self.assertEqual(int(row[0]), 408)
+        # # atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2
+        # 56  # 1 down        F     #1 up          D
+        # 56  # 1 down        G     #1 up          C
+        # 56  # 1 down        H     #1 up          A
+        # 56  # 1 down        I     #1 up          E
+        # 46  # 1 down        M     #1 up          L
+        # 46  # 1 down        N     #1 up          K
+        # 46  # 1 down        O     #1 up          J
+        # 46  # 1 down        P     #1 up          B
 
     def testContactsAsymetryD4_b(self):
         # import PDB; whole molecule of thermosome from T. acidophilum (1a6d)
@@ -228,11 +275,20 @@ class TestChimeraContact(TestImportData):
         self.launchProtocol(protContacts)
 
         c, conn = protContacts.prepareDataBase(drop=False)
-        tableName = protContacts.getTableName()
+        tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 816)
+        self.assertEqual(int(row[0]), 408)
+        # # atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2
+        # 56  # 1 down        F     #1 up          D
+        # 56  # 1 down        G     #1 up          C
+        # 56  # 1 down        H     #1 up          A
+        # 56  # 1 down        I     #1 up          E
+        # 46  # 1 down        M     #1 up          L
+        # 46  # 1 down        N     #1 up          K
+        # 46  # 1 down        O     #1 up          J
+        # 46  # 1 down        P     #1 up          B
 
     def testContactsAsymetryD4_c(self):
         # import PDB; whole molecule of thermosome from T. acidophilum (1a6d)
@@ -275,11 +331,18 @@ class TestChimeraContact(TestImportData):
         self.launchProtocol(protContacts)
 
         c, conn = protContacts.prepareDataBase(drop=False)
-        tableName = protContacts.getTableName()
+        tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 1302)
+        self.assertEqual(int(row[0]), 656)
+        # # atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2
+        # 256  # 1.1 chainA      A   #1.1 chainB      B
+        # 1  # 1.1 chainA      A   #1.2 chainA      A
+        # 341  # 1.1 chainA      A   #1.2 chainB      B
+        # 56  # 1.1 chainA      A   #1.4 chainA      A
+        # 2  # 1.1 chainB      B   #1.2 chainB      B
+        # 46  # 1.2 chainB      B   #1.4 chainB      B
 
     def testContactsAsymetryO(self):
         # import PDB; whole macromolecule of the cubic core of the pyruvate dehydrogenase
@@ -302,11 +365,16 @@ class TestChimeraContact(TestImportData):
         self.launchProtocol(protContacts)
 
         c, conn = protContacts.prepareDataBase(drop=False)
-        tableName = protContacts.getTableName()
+        tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 480)
+        self.assertEqual(int(row[0]), 240)
+        # # atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2
+        # 60  # 1 down        C     #1 up          U
+        # 60  # 1 down        I     #1 up          Q
+        # 60  # 1 down        S     #1 up          A
+        # 60  # 1 down        W     #1 up          K
 
     def testContactsSymO(self):
         # import PDB; unit cell of the cubic core of the pyruvate dehydrogenase
@@ -324,11 +392,15 @@ class TestChimeraContact(TestImportData):
         self.launchProtocol(protContacts)
 
         c, conn = protContacts.prepareDataBase(drop=False)
-        tableName = protContacts.getTableName()
+        tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 548)
+        self.assertEqual(int(row[0]), 274)
+        # # atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2
+        # 133  # 1.1 chainA      A   #1.1 chainA      A
+        # 274  # 1.1 chainA      A   #1.2 chainA      A
+        # 272  # 1.2 chainA      A   #1.3 chainA      A
 
     def testContactsAsymetryT(self):
         # import PDB; tetrahedral oligomeric complex of GyrA N-terminal fragment
@@ -348,11 +420,30 @@ class TestChimeraContact(TestImportData):
         self.launchProtocol(protContacts)
 
         c, conn = protContacts.prepareDataBase(drop=False)
-        tableName = protContacts.getTableName()
+        tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 7282)
+        self.assertEqual(int(row[0]), 3641)
+        # # atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2
+        # 186  # 1 chainA      A     #1 chainB      B
+        # 210  # 1 chainA      A     #1 chainJ      J
+        # 211  # 1 chainA      A     #1 chainL      L
+        # 211  # 1 chainB      B     #1 chainI      I
+        # 210  # 1 chainB      B     #1 chainK      K
+        # 210  # 1 chainC      C     #1 chainF      F
+        # 211  # 1 chainC      C     #1 chainH      H
+        # 186  # 1 chainC      C     #1 chainI      I
+        # 210  # 1 chainD      D     #1 chainE      E
+        # 210  # 1 chainD      D     #1 chainG      G
+        # 186  # 1 chainD      D     #1 chainJ      J
+        # 186  # 1 chainE      E     #1 chainF      F
+        # 211  # 1 chainE      E     #1 chainG      G
+        # 210  # 1 chainF      F     #1 chainH      H
+        # 186  # 1 chainG      G     #1 chainK      K
+        # 186  # 1 chainH      H     #1 chainL      L
+        # 211  # 1 chainI      I     #1 chainK      K
+        # 210  # 1 chainJ      J     #1 chainL      L
 
     def testContactsSymT(self):
         # import PDB; unit cell of the tetrahedral aminopeptidase from P. horikoshii)
@@ -369,11 +460,16 @@ class TestChimeraContact(TestImportData):
         self.launchProtocol(protContacts)
 
         c, conn = protContacts.prepareDataBase(drop=False)
-        tableName = protContacts.getTableName()
+        tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertEqual(int(row[0]), 523)
+        self.assertEqual(int(row[0]), 389)
+        # # atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2
+        # 1116  # 1.1 chainA      A   #1.1 chainA      A
+        # 256  # 1.1 chainA      A   #1.2 chainA      A
+        # 133  # 1.1 chainA      A   #1.3 chainA      A
+        # 133  # 1.3 chainA      A   #1.4 chainA      A
 
     def testContactsSymI222(self):
         """
@@ -404,12 +500,111 @@ class TestChimeraContact(TestImportData):
         protContacts.setObjLabel('6b1t\nicosahedral virus\nsym I222\ncontacts ')
         self.launchProtocol(protContacts)
         c, conn = protContacts.prepareDataBase(drop=False)
-        tableName = protContacts.getTableName()
+        tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
+        print("sqlCommand: ", sqlCommand)
         c.execute(sqlCommand)
         row = c.fetchone()
         # self.assertEqual(int(row[0]), 488698)
-        self.assertEqual(int(row[0]), 363096)
+        self.assertEqual(int(row[0]), 19947)
+
+        # atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2
+        # 54  # 1.1 h1          A   #1.1 h2          E
+        # 8  # 1.1 h1          A   #1.1 h4          K
+        # 2  # 1.1 h1          A   #1.1 iiia        N
+        # 132  # 1.1 h1          A   #1.1 vi          Y
+        # 32  # 1.1 h1          A   #1.1 viiiO       O
+        # 4  # 1.1 h1          B   #1.1 iiia        N
+        # 76  # 1.1 h1          B   #1.1 p           M
+        # 1  # 1.1 h1          B   #1.1 vi          Y
+        # 57  # 1.1 h1          B   #1.2 h1          B
+        # 714  # 1.1 h1          B   #1.2 iiia        N
+        # 4848  # 1.1 h1          B   #1.2 p           M
+        # 83  # 1.1 h1          C   #1.1 h2          E
+        # 100  # 1.1 h1          C   #1.1 h4          K
+        # 10  # 1.1 h1          C   #1.1 iiia        N
+        # 9  # 1.1 h1          C   #1.1 p           M
+        # 90  # 1.1 h1          C   #1.1 vi          Y
+        # 67  # 1.1 h1          C   #1.1 viiiO       O
+        # 11  # 1.1 h1          C   #1.2 h1          C
+        # 999  # 1.1 h1          C   #1.2 iiia        N
+        # 1702  # 1.1 h1          C   #1.2 p           M
+        # 8  # 1.1 h2          D   #1.1 h3          G
+        # 87  # 1.1 h2          D   #1.1 ix          R
+        # 3  # 1.1 h2          D   #1.1 vi          U
+        # 114  # 1.1 h2          D   #1.1 vi          V
+        # 60  # 1.1 h2          D   #1.1 vii         W
+        # 27  # 1.1 h2          D   #1.1 viiiP       P
+        # 31  # 1.1 h2          D   #1.1 x           X
+        # 2  # 1.1 h2          E   #1.1 h4          J
+        # 20  # 1.1 h2          E   #1.1 h4          K
+        # 25  # 1.1 h2          E   #1.1 ix          Q
+        # 13  # 1.1 h2          E   #1.1 ix          R
+        # 13  # 1.1 h2          E   #1.1 ixb         T
+        # 104  # 1.1 h2          E   #1.1 vi          U
+        # 1  # 1.1 h2          E   #1.1 vi          V
+        # 35  # 1.1 h2          E   #1.1 vii         W
+        # 17  # 1.1 h2          E   #1.1 x           X
+        # 90  # 1.1 h2          F   #1.1 h3          G
+        # 33  # 1.1 h2          F   #1.1 h4          J
+        # 19  # 1.1 h2          F   #1.1 h4          K
+        # 34  # 1.1 h2          F   #1.1 ix          Q
+        # 8  # 1.1 h2          F   #1.1 ixb         T
+        # 104  # 1.1 h2          F   #1.1 vi          U
+        # 107  # 1.1 h2          F   #1.1 vi          V
+        # 70  # 1.1 h2          F   #1.1 viiiP       P
+        # 51  # 1.1 h2          F   #1.1 x           X
+        # 22  # 1.1 h3          G   #1.1 h4          J
+        # 3  # 1.1 h3          G   #1.1 h4          K
+        # 12  # 1.1 h3          G   #1.1 ix          Q
+        # 2  # 1.1 h3          G   #1.1 ixb         T
+        # 173  # 1.1 h3          G   #1.1 viiiP       P
+        # 32  # 1.1 h3          H   #1.1 h4          J
+        # 1  # 1.1 h3          H   #1.1 ix          Q
+        # 127  # 1.1 h3          H   #1.1 ix          S
+        # 40  # 1.1 h3          H   #1.1 viiiP       P
+        # 81  # 1.1 h3          I   #1.1 ixb         T
+        # 58  # 1.1 h4          J   #1.1 ix          Q
+        # 8  # 1.1 h4          J   #1.1 ix          R
+        # 3  # 1.1 h4          J   #1.1 ix          S
+        # 133  # 1.1 h4          J   #1.1 viiiP       P
+        # 10  # 1.1 h4          K   #1.1 iiia        N
+        # 1  # 1.1 h4          K   #1.1 ix          S
+        # 6  # 1.1 h4          K   #1.1 ixb         T
+        # 162  # 1.1 h4          K   #1.1 viiiO       O
+        # 86  # 1.1 h4          K   #1.1 viiiP       P
+        # 32  # 1.1 h4          L   #1.1 iiia        N
+        # 87  # 1.1 h4          L   #1.1 ix          Q
+        # 36  # 1.1 h4          L   #1.1 viiiO       O
+        # 3  # 1.1 h4          L   #1.1 viiiP       P
+        # 60  # 1.1 iiia        N   #1.1 p           M
+        # 1  # 1.1 iiia        N   #1.1 vi          Y
+        # 84  # 1.1 iiia        N   #1.1 viiiO       O
+        # 1331  # 1.1 iiia        N   #1.2 h1          A
+        # 22  # 1.1 iiia        N   #1.2 h1          B
+        # 776  # 1.1 iiia        N   #1.2 h1          C
+        # 3900  # 1.1 iiia        N   #1.2 iiia        N
+        # 424  # 1.1 iiia        N   #1.2 vi          Y
+        # 886  # 1.1 iiia        N   #1.2 viiiO       O
+        # 62  # 1.1 ix          Q   #1.1 ixb         T
+        # 2  # 1.1 ix          R   #1.1 ixb         T
+        # 72  # 1.1 ix          S   #1.1 ixb         T
+        # 3  # 1.1 p           M   #1.2 h1          B
+        # 18  # 1.1 p           M   #1.2 h1          C
+        # 126  # 1.1 p           M   #1.2 iiia        N
+        # 32  # 1.1 p           M   #1.2 p           M
+        # 452  # 1.1 p           M   #1.2 viiiO       O
+        # 4  # 1.1 vi          U   #1.1 vii         W
+        # 13  # 1.1 vi          U   #1.1 x           X
+        # 60  # 1.1 vi          V   #1.1 x           X
+        # 9  # 1.1 vi          Y   #1.1 viiiO       O
+        # 98  # 1.1 vi          Y   #1.2 iiia        N
+        # 155  # 1.1 vi          Y   #1.2 p           M
+        # 23  # 1.1 vii         W   #1.1 x           X
+        # 29  # 1.1 viiiO       O   #1.2 h1          B
+        # 84  # 1.1 viiiO       O   #1.2 h1          C
+        # 28  # 1.1 viiiO       O   #1.2 p           M
+
 
     def testContactsSymI222_goodSym(self):
         """
@@ -440,8 +635,132 @@ class TestChimeraContact(TestImportData):
         protContacts.setObjLabel('6b1t\nicosahedral virus\nsym I2n3\ncontacts ')
         self.launchProtocol(protContacts)
         c, conn = protContacts.prepareDataBase(drop=False)
-        tableName = protContacts.getTableName()
+        tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
         c.execute(sqlCommand)
         row = c.fetchone()
-        self.assertAlmostEqual(int(row[0]), 13081, delta=80)
+        self.assertAlmostEqual(int(row[0]), 6968, delta=80)
+
+        # # atoms, model_1, prot_1, chain_1,  model_2, prot_2, chain_2
+        # 54  # 1.1 h1          A   #1.1 h2          E
+        # 8  # 1.1 h1          A   #1.1 h4          K
+        # 2  # 1.1 h1          A   #1.1 iiia        N
+        # 132  # 1.1 h1          A   #1.1 vi          Y
+        # 32  # 1.1 h1          A   #1.1 viiiO       O
+        # 4  # 1.1 h1          B   #1.1 iiia        N
+        # 76  # 1.1 h1          B   #1.1 p           M
+        # 1  # 1.1 h1          B   #1.1 vi          Y
+        # 3  # 1.1 h1          B   #1.4 h1          A
+        # 68  # 1.1 h1          B   #1.4 h1          B
+        # 1  # 1.1 h1          B   #1.4 p           M
+        # 83  # 1.1 h1          C   #1.1 h2          E
+        # 100  # 1.1 h1          C   #1.1 h4          K
+        # 10  # 1.1 h1          C   #1.1 iiia        N
+        # 9  # 1.1 h1          C   #1.1 p           M
+        # 90  # 1.1 h1          C   #1.1 vi          Y
+        # 67  # 1.1 h1          C   #1.1 viiiO       O
+        # 41  # 1.1 h1          C   #1.4 h1          A
+        # 33  # 1.1 h1          C   #1.4 h1          B
+        # 8  # 1.1 h2          D   #1.1 h3          G
+        # 87  # 1.1 h2          D   #1.1 ix          R
+        # 3  # 1.1 h2          D   #1.1 vi          U
+        # 114  # 1.1 h2          D   #1.1 vi          V
+        # 60  # 1.1 h2          D   #1.1 vii         W
+        # 27  # 1.1 h2          D   #1.1 viiiP       P
+        # 31  # 1.1 h2          D   #1.1 x           X
+        # 6  # 1.1 h2          D   #1.2 h2          D
+        # 20  # 1.1 h2          D   #1.2 h2          F
+        # 77  # 1.1 h2          D   #1.2 h3          G
+        # 83  # 1.1 h2          D   #1.2 h3          I
+        # 191  # 1.1 h2          D   #1.2 ixb         T
+        # 2  # 1.1 h2          E   #1.1 h4          J
+        # 20  # 1.1 h2          E   #1.1 h4          K
+        # 25  # 1.1 h2          E   #1.1 ix          Q
+        # 13  # 1.1 h2          E   #1.1 ix          R
+        # 13  # 1.1 h2          E   #1.1 ixb         T
+        # 104  # 1.1 h2          E   #1.1 vi          U
+        # 1  # 1.1 h2          E   #1.1 vi          V
+        # 35  # 1.1 h2          E   #1.1 vii         W
+        # 17  # 1.1 h2          E   #1.1 x           X
+        # 90  # 1.1 h2          F   #1.1 h3          G
+        # 33  # 1.1 h2          F   #1.1 h4          J
+        # 19  # 1.1 h2          F   #1.1 h4          K
+        # 34  # 1.1 h2          F   #1.1 ix          Q
+        # 8  # 1.1 h2          F   #1.1 ixb         T
+        # 104  # 1.1 h2          F   #1.1 vi          U
+        # 107  # 1.1 h2          F   #1.1 vi          V
+        # 70  # 1.1 h2          F   #1.1 viiiP       P
+        # 51  # 1.1 h2          F   #1.1 x           X
+        # 20  # 1.1 h2          F   #1.2 h2          D
+        # 9  # 1.1 h2          F   #1.2 h2          F
+        # 22  # 1.1 h3          G   #1.1 h4          J
+        # 3  # 1.1 h3          G   #1.1 h4          K
+        # 12  # 1.1 h3          G   #1.1 ix          Q
+        # 2  # 1.1 h3          G   #1.1 ixb         T
+        # 173  # 1.1 h3          G   #1.1 viiiP       P
+        # 32  # 1.1 h3          H   #1.1 h4          J
+        # 1  # 1.1 h3          H   #1.1 ix          Q
+        # 127  # 1.1 h3          H   #1.1 ix          S
+        # 40  # 1.1 h3          H   #1.1 viiiP       P
+        # 100  # 1.1 h3          H   #1.3 h3          H
+        # 90  # 1.1 h3          H   #1.3 h3          I
+        # 2  # 1.1 h3          H   #1.3 ix          S
+        # 81  # 1.1 h3          I   #1.1 ixb         T
+        # 5  # 1.1 h3          I   #1.2 ix          R
+        # 58  # 1.1 h4          J   #1.1 ix          Q
+        # 8  # 1.1 h4          J   #1.1 ix          R
+        # 3  # 1.1 h4          J   #1.1 ix          S
+        # 133  # 1.1 h4          J   #1.1 viiiP       P
+        # 89  # 1.1 h4          J   #1.3 h3          I
+        # 10  # 1.1 h4          K   #1.1 iiia        N
+        # 1  # 1.1 h4          K   #1.1 ix          S
+        # 6  # 1.1 h4          K   #1.1 ixb         T
+        # 162  # 1.1 h4          K   #1.1 viiiO       O
+        # 86  # 1.1 h4          K   #1.1 viiiP       P
+        # 35  # 1.1 h4          K   #1.4 h1          A
+        # 8  # 1.1 h4          K   #1.4 h1          B
+        # 32  # 1.1 h4          L   #1.1 iiia        N
+        # 87  # 1.1 h4          L   #1.1 ix          Q
+        # 36  # 1.1 h4          L   #1.1 viiiO       O
+        # 3  # 1.1 h4          L   #1.1 viiiP       P
+        # 116  # 1.1 h4          L   #1.3 h3          I
+        # 2  # 1.1 h4          L   #1.3 ixb         T
+        # 54  # 1.1 h4          L   #1.4 h1          A
+        # 88  # 1.1 h4          L   #1.4 h2          D
+        # 92  # 1.1 h4          L   #1.4 h2          E
+        # 183  # 1.1 h4          L   #1.4 ix          R
+        # 60  # 1.1 iiia        N   #1.1 p           M
+        # 1  # 1.1 iiia        N   #1.1 vi          Y
+        # 84  # 1.1 iiia        N   #1.1 viiiO       O
+        # 86  # 1.1 iiia        N   #1.4 h1          B
+        # 96  # 1.1 iiia        N   #1.4 h1          C
+        # 98  # 1.1 iiia        N   #1.4 iiia        N
+        # 6  # 1.1 iiia        N   #1.4 p           M
+        # 17  # 1.1 iiia        N   #1.4 vi          Y
+        # 62  # 1.1 ix          Q   #1.1 ixb         T
+        # 204  # 1.1 ix          Q   #1.3 h3          I
+        # 44  # 1.1 ix          Q   #1.3 ixb         T
+        # 4  # 1.1 ix          Q   #1.4 h2          D
+        # 39  # 1.1 ix          Q   #1.4 ix          R
+        # 2  # 1.1 ix          R   #1.1 ixb         T
+        # 45  # 1.1 ix          R   #1.2 ixb         T
+        # 72  # 1.1 ix          S   #1.1 ixb         T
+        # 104  # 1.1 ix          S   #1.3 h3          H
+        # 4  # 1.1 ix          S   #1.3 h3          I
+        # 57  # 1.1 ix          S   #1.3 ix          S
+        # 13  # 1.1 p           M   #1.4 h1          B
+        # 12  # 1.1 p           M   #1.4 h1          C
+        # 20  # 1.1 p           M   #1.4 iiia        N
+        # 539  # 1.1 p           M   #1.4 p           M
+        # 4  # 1.1 vi          U   #1.1 vii         W
+        # 13  # 1.1 vi          U   #1.1 x           X
+        # 60  # 1.1 vi          V   #1.1 x           X
+        # 9  # 1.1 vi          Y   #1.1 viiiO       O
+        # 23  # 1.1 vii         W   #1.1 x           X
+        # 156  # 1.1 viiiO       O   #1.4 h1          A
+        # 115  # 1.1 viiiO       O   #1.4 h1          B
+        # 1  # 1.1 viiiO       O   #1.4 h1          C
+        # 116  # 1.1 viiiO       O   #1.4 h2          E
+        # 8  # 1.1 viiiO       O   #1.4 h2          F
+        # 16  # 1.1 viiiP       P   #1.3 h3          G
+        # 99  # 1.1 viiiP       P   #1.3 h3          I
