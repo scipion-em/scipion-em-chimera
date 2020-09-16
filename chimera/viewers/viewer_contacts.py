@@ -26,7 +26,7 @@ class ChimeraProtContactsViewer(ProtocolViewer):
         form.addSection(label="Display Results")
         group = form.addGroup('3D Visualization')
         group.addParam('displayModel', LabelParam,
-                       label="View models in Chimera",
+                       label="View models in ChimeraX",
                        help="Display of input atomic structure and its respective"
                             " symmetrized models.")
         group = form.addGroup('Interacting chains')
