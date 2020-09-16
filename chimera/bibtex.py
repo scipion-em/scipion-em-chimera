@@ -33,6 +33,8 @@
    Volume="27",
    Number="1",
    Pages="14--25",
-   Month="01"
+   Month="01",
+   doi = "https://doi.org/10.1002/pro.3235",
+   url = "https://onlinelibrary.wiley.com/doi/full/10.1002/pro.3235"
 }
 """
