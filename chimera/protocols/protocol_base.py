@@ -59,6 +59,9 @@ import configparser
 class ChimeraProtBase(EMProtocol):
     """Base class  for chimera protocol"""
     _version = VERSION_3_0
+    @classmethod
+    def getClassPackageName(cls):
+        return "chimerax"
 
     # --------------------------- DEFINE param functions --------------------
     def _defineParams(self, form, doHelp=True):

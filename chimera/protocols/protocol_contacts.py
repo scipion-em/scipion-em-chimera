@@ -51,10 +51,14 @@ from pyworkflow.utils import red
 class ChimeraProtContacts(EMProtocol):
     """Identifies interatomic clashes and contacts based on van der Waals radii
     """
-    _label = 'chimerax contacts'
+    _label = 'contacts'
     _program = ""
     commandDropView = """DROP view IF EXISTS {viewName}"""
     TetrahedralOrientation = ['222', 'z3']
+
+    @classmethod
+    def getClassPackageName(cls):
+        return "chimerax"
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)

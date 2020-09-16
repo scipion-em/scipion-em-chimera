@@ -55,7 +55,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         to transfer the selected
         pdb to scipion. Default value is model=#0,
         model refers to the pdb file."""
-    _label = 'chimerax model from template'
+    _label = 'model from template'
     _program = ""
     _version = VERSION_1_2
 

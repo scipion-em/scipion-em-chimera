@@ -67,9 +67,13 @@ class ChimeraSubtractionMaps(EMProtocol):
         from command line in order to transfer the generated maps and models to scipion.
         In addition to maps and models that the protocol saves by default,
         the user can generate and save some others"""
-    _label = 'chimerax map subtraction'
+    _label = 'map subtraction'
     _program = ""
     _version = VERSION_3_0
+
+    @classmethod
+    def getClassPackageName(cls):
+        return "chimerax"
 
     PROTOCOL_OPTIONS = ['Subtraction', 'Mask']
     MAP_OPTIONS = ['3D map', 'atomic structure']

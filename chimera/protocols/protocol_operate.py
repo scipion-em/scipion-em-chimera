@@ -36,4 +36,4 @@ class ChimeraProtOperate(ChimeraProtBase):
         pdb to scipion. Default values are model=#0,
         refmodel =#1 and saverefmodel 0 (false).
         model refers to the pdb file. refmodel to a 3Dmap"""
-    _label = 'chimerax operate'
+    _label = 'operate'
