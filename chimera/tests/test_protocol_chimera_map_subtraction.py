@@ -30,6 +30,7 @@ from ..protocols import ChimeraSubtractionMaps
 from pwem.protocols.protocol_import import (ProtImportPdb,
                                             ProtImportVolumes)
 from ..constants import CHIMERA_CYCLIC
+import re
 # from pwem import Domain
 
 
@@ -92,12 +93,12 @@ class TestChimeraSubtractMap(TestImportData):
 
         # create auxiliary CMD file for chimera operate (model fitting)
         extraCommands = ""
-        extraCommands += "runCommand('move -52.50,-52.50,-51.88 model #2 " \
-                         "coord #1')\n"
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "move -52.50,-52.50,-51.88 model #3 " \
+                         "coord #2\n"
+        extraCommands += "fitmap #3 in #2\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
 
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
@@ -108,50 +109,75 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera1.setObjLabel('chimera operate\n volume and pdb\n save '
                                  'fitted model')
         self.launchProtocol(protChimera1)
-        self.assertIsNotNone(
-            protChimera1.DONOTSAVESESSION_Atom_struct__2.getFileName(),
-                             "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera1.DONOTSAVESESSION_Atom_struct__2.getFileName()))
+        # Dynamically defined name of the variable because it does depend on
+        # the protocol ID
+        try:
+            result = eval("protChimera1.DONOTSAVESESSION_Atom_struct__3_%06d.getFileName()"
+                          % protChimera1.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
 
         # TODO: These steps of protChimera2 can not be performed in protChimera1 because
         # when the map is saved keep an inappropriate origin
         extraCommands = ""
-        extraCommands += "runCommand('molmap #1 2.1 gridSpacing 1.05 modelId 2')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
+        # extraCommands += "molmap #2 2.1 gridSpacing 1.05 modelId 3\n"
+        extraCommands += "molmap #2 2.1 gridSpacing 1.05 replace false\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
+        result = eval("protChimera1.DONOTSAVESESSION_Atom_struct__3_%06d"
+                      % protChimera1.getObjId())
         args = {'extraCommands': extraCommands,
-                'pdbFileToBeRefined': protChimera1.DONOTSAVESESSION_Atom_struct__2
+                'pdbFileToBeRefined': result,
                 }
         protChimera2 = self.newProtocol(ChimeraProtOperate,
                                         **args)
         protChimera2.setObjLabel('chimera operate\n pdb\n save '
                                  'model-derived map')
         self.launchProtocol(protChimera2)
-        self.assertIsNotNone(
-            protChimera2.DONOTSAVESESSION_Map__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera2.DONOTSAVESESSION_Map__2.getFileName()))
+        try:
+            result = eval("protChimera2.DONOTSAVESESSION_Map__3_%06d.getFileName()"
+                          % protChimera2.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
 
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera map subtraction
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval("protChimera2.DONOTSAVESESSION_Map__3_%06d"
+                      % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'mapOrModel': 0,
-                'inputVolume2': protChimera2.DONOTSAVESESSION_Map__2,
+                'inputVolume2': result,
                 }
         protChimera3 = self.newProtocol(ChimeraSubtractionMaps, **args)
         protChimera3.setObjLabel('chimera subtract\n map -\n'
                                  'model-derived map\n')
         self.launchProtocol(protChimera3)
-        self.assertIsNotNone(
-            protChimera3.difference_Map__3.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera3.filtered_Map__4.getFileName()))
+
+        # Dynamically defined name of the variable because it does depend on
+        # the protocol ID
+        try:
+            result = eval("protChimera3.difference_Map__8_%06d.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+
+        try:
+            result = eval("protChimera3.filtered_Map__9_%06d.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
     def testChimeraSubtract2(self):
         """ This test checks the subtraction in Chimera of a
@@ -167,12 +193,12 @@ class TestChimeraSubtractMap(TestImportData):
 
         # create auxiliary CMD file for chimera operate (model fitting)
         extraCommands = ""
-        extraCommands += "runCommand('move -52.50,-52.50,-51.88 model #2 " \
-                         "coord #1')\n"
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "move -52.50,-52.50,-51.88 model #3 " \
+                         "coord #2\n"
+        extraCommands += "fitmap #3 in #2\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
 
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
@@ -183,19 +209,24 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera1.setObjLabel('chimera operate\n volume and pdb\n save '
                                  'fitted model')
         self.launchProtocol(protChimera1)
-        self.assertIsNotNone(
-            protChimera1.DONOTSAVESESSION_Atom_struct__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera1.DONOTSAVESESSION_Atom_struct__2.getFileName()))
+        try:
+            result = eval("protChimera1.DONOTSAVESESSION_Atom_struct__3_%06d.getFileName()"
+                 % protChimera1.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera map subtraction
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval("protChimera1.DONOTSAVESESSION_Atom_struct__3_%06d"
+                      % protChimera1.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'mapOrModel': 1,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera1.DONOTSAVESESSION_Atom_struct__2,
+                'pdbFileToBeRefined': result,
                 'selectChain': True,
                 'selectStructureChain': self.chainID,
                 'removeResidues': True,
@@ -212,25 +243,52 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera2.setObjLabel('chimera subtract\n chainA-sym-derived map\n '
                                   'removed residues\nzone')
         self.launchProtocol(protChimera2)
-        self.assertIsNotNone(
-            protChimera2.chain_A_Atom_struct__3.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera2.zone_Map__6.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera2.molmap_chainA_Map__7.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera2.difference_Map__8.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera2.filtered_Map__9.getFileName()))
+        try:
+            result = eval("protChimera2.chain_A_Atom_struct__4_%06d_cif.getFileName()"
+                 % protChimera2.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera2.zone_Map__6_%06d.getFileName()"
+                 % protChimera2.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera2.molmap_chainA_Map__7_%06d.getFileName()"
+                 % protChimera2.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera2.difference_Map__8_%06d.getFileName()"
+                 % protChimera2.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera2.filtered_Map__9_%06d.getFileName()"
+                 % protChimera2.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera map subtraction
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval("protChimera1.DONOTSAVESESSION_Atom_struct__3_%06d"
+                      % protChimera1.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'mapOrModel': 1,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera1.DONOTSAVESESSION_Atom_struct__2,
+                'pdbFileToBeRefined': result,
                 'selectChain': True,
                 'selectStructureChain': self.chainID,
                 'removeResidues': True,
@@ -239,32 +297,59 @@ class TestChimeraSubtractMap(TestImportData):
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2,
-                'rangeDist': 100,
+                'rangeDist': 100
                 }
         protChimera3 = self.newProtocol(ChimeraSubtractionMaps, **args)
         protChimera3.setObjLabel('chimera subtract\n chainA-sym-derived map\n '
                                  'removed residues\nno zone')
         self.launchProtocol(protChimera3)
-        self.assertIsNotNone(
-            protChimera3.chain_A_Atom_struct__3.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera3.sym_Atom_struct__5.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera3.molmap_chainA_Map__6.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera3.difference_Map__7.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera3.filtered_Map__8.getFileName()))
+        try:
+            result = eval("protChimera3.chain_A_Atom_struct__4_%06d_cif.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
 
+        self.assertTrue(os.path.exists(result))
+
+        try:
+            result = eval("protChimera3.sym_Atom_struct__5_%06d_cif.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera3.molmap_chainA_Map__7_%06d.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera3.difference_Map__8_%06d.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera3.filtered_Map__9_%06d.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera map subtraction
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval("protChimera1.DONOTSAVESESSION_Atom_struct__3_%06d"
+                      % protChimera1.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'mapOrModel': 1,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera1.DONOTSAVESESSION_Atom_struct__2,
+                'pdbFileToBeRefined': result,
                 'selectChain': True,
                 'selectStructureChain': self.chainID,
                 'applySymmetry': True,
@@ -277,28 +362,61 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera4 = self.newProtocol(ChimeraSubtractionMaps, **args)
         protChimera4.setObjLabel('chimera subtract\n chainA-sym-derived map\n')
         self.launchProtocol(protChimera4)
-        self.assertIsNotNone(
-            protChimera4.chain_A_Atom_struct__3.getFileName(),
-            "There was a problem with the alignment")
-        self.assertIsNotNone(
-            protChimera4.sym_Atom_struct__5.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera4.zone_Map__6.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera4.molmap_chainA_Map__7.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera4.difference_Map__8.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera4.filtered_Map__9.getFileName()))
+        try:
+            result = eval("protChimera4.chain_A_Atom_struct__4_%06d_cif.getFileName()"
+                 % protChimera4.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+
+        try:
+            result = eval("protChimera4.sym_Atom_struct__5_%06d_cif.getFileName()"
+                 % protChimera4.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+
+        try:
+            result = eval("protChimera4.zone_Map__6_%06d.getFileName()"
+                 % protChimera4.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera4.molmap_chainA_Map__7_%06d.getFileName()"
+                 % protChimera4.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera4.difference_Map__8_%06d.getFileName()"
+                 % protChimera4.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera4.filtered_Map__9_%06d.getFileName()"
+                 % protChimera4.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera map subtraction
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval("protChimera1.DONOTSAVESESSION_Atom_struct__3_%06d"
+                      % protChimera1.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'mapOrModel': 1,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera1.DONOTSAVESESSION_Atom_struct__2,
+                'pdbFileToBeRefined': result,
                 'selectChain': True,
                 'selectStructureChain': self.chainID,
                 'selectAreaMap': True,
@@ -307,40 +425,86 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera5 = self.newProtocol(ChimeraSubtractionMaps, **args)
         protChimera5.setObjLabel('chimera subtract\n chainA-derived map\n')
         self.launchProtocol(protChimera5)
-        self.assertIsNotNone(
-            protChimera5.chain_A_Atom_struct__3.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera5.zone_Map__4.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera5.molmap_chainA_Map__5.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera5.difference_Map__6.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera5.filtered_Map__7.getFileName()))
+        try:
+            result = eval("protChimera5.chain_A_Atom_struct__4_%06d_cif.getFileName()"
+                 % protChimera5.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera5.zone_Map__6_%06d.getFileName()"
+                 % protChimera5.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera5.molmap_chainA_Map__7_%06d.getFileName()"
+                 % protChimera5.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera5.difference_Map__8_%06d.getFileName()"
+                 % protChimera5.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera5.filtered_Map__9_%06d.getFileName()"
+                 % protChimera5.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera map subtraction
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval("protChimera1.DONOTSAVESESSION_Atom_struct__3_%06d"
+                      % protChimera1.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'mapOrModel': 1,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera1.DONOTSAVESESSION_Atom_struct__2,
+                'pdbFileToBeRefined': result,
                 'selectChain': True,
                 'selectStructureChain': self.chainID,
                 }
         protChimera6 = self.newProtocol(ChimeraSubtractionMaps, **args)
         protChimera6.setObjLabel('chimera subtract\n chainA-derived map\nno zone')
         self.launchProtocol(protChimera6)
-        self.assertIsNotNone(
-            protChimera6.chain_A_Atom_struct__3.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera6.molmap_chainA_Map__4.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera6.difference_Map__5.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera6.filtered_Map__6.getFileName()))
+        try:
+            result = eval("protChimera6.chain_A_Atom_struct__4_%06d_cif.getFileName()"
+                 % protChimera6.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera6.molmap_chainA_Map__7_%06d.getFileName()"
+                 % protChimera6.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera6.difference_Map__8_%06d.getFileName()"
+                 % protChimera6.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera6.filtered_Map__9_%06d.getFileName()"
+                 % protChimera6.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
     def testChimeraSubtract3(self):
         """ This test checks the subtraction in Chimera of a
@@ -356,12 +520,12 @@ class TestChimeraSubtractMap(TestImportData):
 
         # create auxiliary CMD file for chimera operate (model fitting)
         extraCommands = ""
-        extraCommands += "runCommand('move -52.50,-52.50,-51.88 model #2 " \
-                         "coord #1')\n"
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "move -52.50,-52.50,-51.88 model #3 " \
+                         "coord #2\n"
+        extraCommands += "fitmap #3 in #2\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
 
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
@@ -372,19 +536,24 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera1.setObjLabel('chimera operate\n volume and pdb\n save '
                                  'fitted model')
         self.launchProtocol(protChimera1)
-        self.assertIsNotNone(
-            protChimera1.DONOTSAVESESSION_Atom_struct__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera1.DONOTSAVESESSION_Atom_struct__2.getFileName()))
+        try:
+            result = eval("protChimera1.DONOTSAVESESSION_Atom_struct__3_%06d.getFileName()"
+                 % protChimera1.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera map subtraction
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval("protChimera1.DONOTSAVESESSION_Atom_struct__3_%06d"
+                      % protChimera1.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'mapOrModel': 1,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera1.DONOTSAVESESSION_Atom_struct__2,
+                'pdbFileToBeRefined': result,
                 'removeResidues': True,
                 'inputStructureChain': self.chainID,
                 'firstResidueToRemove': self.FirstResidue,
@@ -394,37 +563,78 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera2.setObjLabel('chimera subtract\n atomStruct-derived map\n '
                                   'removed residues\nno zone')
         self.launchProtocol(protChimera2)
-        self.assertIsNotNone(
-            protChimera2.mutated_Atom_struct__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera2.molmap_Map__3.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera2.difference_Map__4.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera2.filtered_Map__5.getFileName()))
+        try:
+            result = eval("protChimera2.mutated_Atom_struct__3_%06d_cif.getFileName()"
+                 % protChimera2.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera2.molmap_Map__7_%06d.getFileName()"
+                 % protChimera2.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera2.difference_Map__8_%06d.getFileName()"
+                 % protChimera2.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera2.filtered_Map__9_%06d.getFileName()"
+                 % protChimera2.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera map subtraction
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval("protChimera1.DONOTSAVESESSION_Atom_struct__3_%06d"
+                      % protChimera1.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'mapOrModel': 1,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera1.DONOTSAVESESSION_Atom_struct__2,
+                'pdbFileToBeRefined': result,
                 }
         protChimera3 = self.newProtocol(ChimeraSubtractionMaps, **args)
         protChimera3.setObjLabel('chimera subtract\n atomStruct-derived map\n '
                                  'no zone')
         self.launchProtocol(protChimera3)
-        self.assertIsNotNone(
-            protChimera3.Atom_struct__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera3.molmap_Map__3.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera3.difference_Map__4.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera3.filtered_Map__5.getFileName()))
+        try:
+            result = eval("protChimera3.Atom_struct__3_%06d_cif.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera3.molmap_Map__7_%06d.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera3.difference_Map__8_%06d.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval("protChimera3.filtered_Map__9_%06d.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
     def testChimeraSubtract4(self):
         """ This test checks the subtraction in Chimera of a
@@ -440,12 +650,12 @@ class TestChimeraSubtractMap(TestImportData):
 
         # create auxiliary CMD file for chimera operate (model fitting)
         extraCommands = ""
-        extraCommands += "runCommand('move -52.50,-52.50,-51.88 model #2 " \
-                         "coord #1')\n"
-        extraCommands += "runCommand('fitmap #2 #1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #1 " \
-                         "prefix DONOTSAVESESSION_')\n"
-        extraCommands += "runCommand('stop')\n"
+        extraCommands += "move -52.50,-52.50,-51.88 model #3 " \
+                         "coord #2\n"
+        extraCommands += "fitmap #3 in #2\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_\n"
+        extraCommands += "exit\n"
 
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
@@ -456,43 +666,57 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera1.setObjLabel('chimera operate\n volume and pdb\n save '
                                  'fitted model')
         self.launchProtocol(protChimera1)
-        self.assertIsNotNone(
-            protChimera1.DONOTSAVESESSION_Atom_struct__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera1.DONOTSAVESESSION_Atom_struct__2.getFileName()))
+        try:
+            result = eval(
+                "protChimera1.DONOTSAVESESSION_Atom_struct__3_%06d.getFileName()"
+                 % protChimera1.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # TODO: These steps of protChimera2 can not be performed in protChimera1 because
-        # when the map is saved keep an inappropriate origin
+
+        # second way of obtaining the starting atom structure (it generates an appropriate
+        # cif by applying symmetry)
         extraCommands = ""
-        extraCommands += "runCommand('split #1')\n"
-        extraCommands += "runCommand('combine #1.1')\n"
-        extraCommands += "runCommand('scipionwrite model #2 refmodel #0 " \
-                         "prefix DONOTSAVESESSION_A_')\n"
-        extraCommands += "runCommand('combine #1.1#1.2')\n"
-        extraCommands += "runCommand('scipionwrite model #3 refmodel #0 " \
-                         "prefix DONOTSAVESESSION_A_B_')\n"
+        extraCommands += "sel #2/A,B\n"
+        extraCommands += "save /tmp/chainA_B.cif format mmcif models #2 relModel #1 selectedOnly true\n"
+        extraCommands += "open /tmp/chainA_B.cif\n"
+        extraCommands += "scipionwrite #3 " \
+                         "prefix DONOTSAVESESSION_A_B_\n"
+        extraCommands += "exit\n"
+
+        result = eval(
+            "protChimera1.DONOTSAVESESSION_Atom_struct__3_%06d"
+            % protChimera1.getObjId())
         args = {'extraCommands': extraCommands,
-                'pdbFileToBeRefined': protChimera1.DONOTSAVESESSION_Atom_struct__2
+                'pdbFileToBeRefined': result
                 }
         protChimera2 = self.newProtocol(ChimeraProtOperate,
                                         **args)
-        protChimera2.setObjLabel('chimera operate\n pdb\n save '
-                                 'chain A and A_B')
+        protChimera2.setObjLabel('chimera operate\n pdb\n save chain A_B')
         self.launchProtocol(protChimera2)
-        self.assertIsNotNone(
-            protChimera2.DONOTSAVESESSION_A_Atom_struct__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3.getFileName()))
+        try:
+            result = eval(
+                "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d.getFileName()"
+                 % protChimera2.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera map subtraction
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval(
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
+            % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'mapOrModel': 1,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3,
+                'pdbFileToBeRefined': result,
                 # 'selectChain': True,
                 # 'selectStructureChain': self.chainID,
                 # 'removeResidues': True,
@@ -508,25 +732,58 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera3 = self.newProtocol(ChimeraSubtractionMaps, **args)
         protChimera3.setObjLabel('chimera subtract\n chainAB-sym-derived map\n')
         self.launchProtocol(protChimera3)
-        self.assertIsNotNone(
-            protChimera3.Atom_struct__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera3.sym_Atom_struct__4.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera3.molmap_Map__5.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera3.difference_Map__6.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera3.filtered_Map__7.getFileName()))
+        try:
+            result = eval(
+                "protChimera3.Atom_struct__3_%06d_cif.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera3.sym_Atom_struct__5_%06d_cif.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera3.molmap_Map__7_%06d.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera3.difference_Map__8_%06d.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera3.filtered_Map__9_%06d.getFileName()"
+                 % protChimera3.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera map subtraction
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval(
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
+            % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'mapOrModel': 1,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera2.DONOTSAVESESSION_A_Atom_struct__2,
+                'pdbFileToBeRefined': result,
                 # 'selectChain': True,
                 # 'selectStructureChain': self.chainID,
                 # 'removeResidues': True,
@@ -543,27 +800,66 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera4.setObjLabel('chimera subtract\n chainA-sym-derived map\n'
                                  'zone')
         self.launchProtocol(protChimera4)
-        self.assertIsNotNone(
-            protChimera4.Atom_struct__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera4.sym_Atom_struct__4.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera4.zone_Map__5.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera4.molmap_Map__6.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera4.difference_Map__7.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera4.filtered_Map__8.getFileName()))
+        try:
+            result = eval(
+                "protChimera4.Atom_struct__3_%06d_cif.getFileName()"
+                 % protChimera4.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera4.sym_Atom_struct__5_%06d_cif.getFileName()"
+                 % protChimera4.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera4.zone_Map__6_%06d.getFileName()"
+                 % protChimera4.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera4.molmap_Map__7_%06d.getFileName()"
+                 % protChimera4.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera4.difference_Map__8_%06d.getFileName()"
+                 % protChimera4.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera4.filtered_Map__9_%06d.getFileName()"
+                 % protChimera4.getObjId())
+        except:
+            self.assertTrue(False,  "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera map subtraction
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval(
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
+            % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'mapOrModel': 1,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera2.DONOTSAVESESSION_A_Atom_struct__2,
+                'pdbFileToBeRefined': result,
                 # 'selectChain': True,
                 # 'selectStructureChain': self.chainID,
                 'removeResidues': True,
@@ -580,27 +876,66 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera5.setObjLabel('chimera subtract\n chainA-sym-derived map\n'
                                  'remove residues\nzone')
         self.launchProtocol(protChimera5)
-        self.assertIsNotNone(
-            protChimera5.Atom_struct__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera5.sym_Atom_struct__4.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera5.zone_Map__5.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera5.molmap_Map__6.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera5.difference_Map__7.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera5.filtered_Map__8.getFileName()))
+        try:
+            result = eval(
+                "protChimera5.Atom_struct__3_%06d_cif.getFileName()"
+                % protChimera5.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera5.sym_Atom_struct__5_%06d_cif.getFileName()"
+                % protChimera5.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera5.zone_Map__6_%06d.getFileName()"
+                % protChimera5.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera5.molmap_Map__7_%06d.getFileName()"
+                % protChimera5.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera5.difference_Map__8_%06d.getFileName()"
+                % protChimera5.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera5.filtered_Map__9_%06d.getFileName()"
+                % protChimera5.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera map subtraction
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval(
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
+            % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'mapOrModel': 1,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3,
+                'pdbFileToBeRefined': result,
                 # 'selectChain': True,
                 # 'selectStructureChain': self.chainID,
                 'removeResidues': True,
@@ -615,28 +950,69 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera6.setObjLabel('chimera subtract\n chainAB-sym-derived map\n'
                                  'remove residues\nno zone')
         self.launchProtocol(protChimera6)
-        self.assertIsNotNone(
-            protChimera6.Atom_struct__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera6.mutated_Atom_struct__2.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera6.sym_Atom_struct__4.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera6.molmap_Map__5.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera6.difference_Map__6.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera6.filtered_Map__7.getFileName()))
+        try:
+            result = eval(
+                "protChimera6.Atom_struct__3_%06d_cif.getFileName()"
+                % protChimera6.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera6.mutated_Atom_struct__3_%06d_cif.getFileName()"
+                % protChimera6.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+
+        try:
+            result = eval(
+                "protChimera6.sym_Atom_struct__5_%06d_cif.getFileName()"
+                % protChimera6.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+
+        try:
+            result = eval(
+                "protChimera6.molmap_Map__7_%06d.getFileName()"
+                % protChimera6.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera6.difference_Map__8_%06d.getFileName()"
+                % protChimera6.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera6.filtered_Map__9_%06d.getFileName()"
+                % protChimera6.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera map subtraction
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval(
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
+            % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'mapOrModel': 1,
                 'level': 0.217,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3,
+                'pdbFileToBeRefined': result,
                 # 'selectChain': True,
                 # 'selectStructureChain': self.chainID,
                 'removeResidues': True,
@@ -651,29 +1027,70 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera7.setObjLabel('chimera subtract\n chainAB-sym-derived map\n'
                                  'remove residues\nlevel selected\nno zone')
         self.launchProtocol(protChimera7)
-        self.assertIsNotNone(
-            protChimera7.Atom_struct__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera7.mutated_Atom_struct__2.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera7.sym_Atom_struct__4.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera7.molmap_Map__5.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera7.difference_Map__6.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera7.filtered_Map__7.getFileName()))
+        try:
+            result = eval(
+                "protChimera7.Atom_struct__3_%06d_cif.getFileName()"
+                % protChimera7.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera7.mutated_Atom_struct__3_%06d_cif.getFileName()"
+                % protChimera7.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+
+        try:
+            result = eval(
+                "protChimera7.sym_Atom_struct__5_%06d_cif.getFileName()"
+                % protChimera7.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+
+        try:
+            result = eval(
+                "protChimera7.molmap_Map__7_%06d.getFileName()"
+                % protChimera7.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera7.difference_Map__8_%06d.getFileName()"
+                % protChimera7.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera7.filtered_Map__9_%06d.getFileName()"
+                % protChimera7.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera mask
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval(
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
+            % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'subtractOrMask': 1,
                 'level': 0.217,
                 'mapOrModel': 1,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3,
+                'pdbFileToBeRefined': result,
                 # 'selectChain': True,
                 # 'selectStructureChain': self.chainID,
                 'removeResidues': True,
@@ -688,29 +1105,70 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera8.setObjLabel('chimera mask\n chainAB-sym-derived map\n'
                                  'remove residues\nlevel 0.217\nno zone')
         self.launchProtocol(protChimera8)
-        self.assertIsNotNone(
-            protChimera8.Atom_struct__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera8.mutated_Atom_struct__2.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera8.sym_Atom_struct__4.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera8.molmap_Map__5.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera8.difference_Map__6.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera8.filtered_Map__7.getFileName()))
+        try:
+            result = eval(
+                "protChimera8.Atom_struct__3_%06d_cif.getFileName()"
+                % protChimera8.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera8.mutated_Atom_struct__3_%06d_cif.getFileName()"
+                % protChimera8.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+
+        try:
+            result = eval(
+                "protChimera8.sym_Atom_struct__5_%06d_cif.getFileName()"
+                % protChimera8.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+
+        try:
+            result = eval(
+                "protChimera8.molmap_Map__7_%06d.getFileName()"
+                % protChimera8.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera8.difference_Map__8_%06d.getFileName()"
+                % protChimera8.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera8.filtered_Map__9_%06d.getFileName()"
+                % protChimera8.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
         # protocol chimera mask
-        extraCommands = "runCommand('select all')\n"
+        extraCommands = "run(session, 'select all')\n"
+        extraCommands += "run(session, 'exit')\n"
+        result = eval(
+            "protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3_%06d"
+            % protChimera2.getObjId())
         args = {'extraCommands': extraCommands,
                 'inputVolume': volume,
                 'subtractOrMask': 1,
                 'level': 2.0,
                 'mapOrModel': 1,
                 'resolution': 3.2,
-                'pdbFileToBeRefined': protChimera2.DONOTSAVESESSION_A_B_Atom_struct__3,
+                'pdbFileToBeRefined': result,
                 # 'selectChain': True,
                 # 'selectStructureChain': self.chainID,
                 'removeResidues': True,
@@ -725,17 +1183,54 @@ class TestChimeraSubtractMap(TestImportData):
         protChimera9.setObjLabel('chimera mask\n chainAB-sym-derived map\n'
                                  'remove residues\nlevel 2.0\nno zone')
         self.launchProtocol(protChimera9)
-        self.assertIsNotNone(
-            protChimera9.Atom_struct__2.getFileName(),
-            "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera9.mutated_Atom_struct__2.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera9.sym_Atom_struct__4.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera9.molmap_Map__5.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera9.difference_Map__6.getFileName()))
-        self.assertTrue(os.path.exists(
-            protChimera9.filtered_Map__7.getFileName()))
+        try:
+            result = eval(
+                "protChimera9.Atom_struct__3_%06d_cif.getFileName()"
+                % protChimera9.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera9.mutated_Atom_struct__3_%06d_cif.getFileName()"
+                % protChimera9.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+
+        try:
+            result = eval(
+                "protChimera9.sym_Atom_struct__5_%06d_cif.getFileName()"
+                % protChimera9.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+
+        try:
+            result = eval(
+                "protChimera9.molmap_Map__7_%06d.getFileName()"
+                % protChimera9.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera9.difference_Map__8_%06d.getFileName()"
+                % protChimera9.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
+        try:
+            result = eval(
+                "protChimera9.filtered_Map__9_%06d.getFileName()"
+                % protChimera9.getObjId())
+        except:
+            self.assertTrue(False, "There was a problem with the alignment")
+
+        self.assertTrue(os.path.exists(result))
 
