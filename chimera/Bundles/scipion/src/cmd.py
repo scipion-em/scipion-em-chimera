@@ -47,13 +47,14 @@ def scipionwrite(session, model, prefix=None):
         prefix = prefix.replace(".", "_dot_")
 
     # session.logger.info("modelID %s" % str(dir(model)))
-    if isinstance(model, AtomicStructure):
+    modelName = model._get_name()
+    if isinstance(model, AtomicStructure) or \
+        (not isinstance(model, Volume) and modelName.find('cif')!= -1):
         modelFileName = d['chimerapdbtemplatefilename'].replace("__","__%s_" % (model.id)[0] )
-    elif isinstance(model, Volume):
+    elif (isinstance(model, Volume) or modelName.find('mrc')!= -1):
         modelFileName = d['chimeramaptemplatefilename'].replace("__","__%s_" % (model.id)[0] )
     else:
-        session.logger.error("I do not know how to save model %s\n" %
-                             model._get_name())
+        session.logger.error("I do not know how to save model %s\n" % modelName)
         return
 
     if prefix is not None:
