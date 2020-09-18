@@ -25,7 +25,6 @@
 # **************************************************************************
 
 CHIMERA_HOME = 'CHIMERA_HOME'
-CHIMERA_HEADLESS_HOME = 'CHIMERA_HEADLESS_HOME'
 CLUSTALO = 'clustalo'
 MUSCLE = 'muscle'
 CHIMERAX=True
