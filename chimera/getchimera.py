@@ -6,12 +6,13 @@ from tk_html_widgets import HTMLLabel
 from urllib import request, parse
 import re
 
-TGZ = 'ChimeraX-1.0.tar.gz'
-FILE ='linux/' + TGZ
+TGZ = 'ChimeraX-1.1.tar.gz'
+FILE ='1.1/linux/' + TGZ
 DOMAIN = "https://www.cgl.ucsf.edu"
 LICENSE_URL = DOMAIN + "/chimerax/cgi-bin/secure/chimerax-get.py"
 LICENSE_URL_PLUS_FILE = LICENSE_URL + '?file=' + FILE
 
+#http://www.rbvi.ucsf.edu/chimerax/cgi-bin/secure/chimerax-get.py?file=1.1/linux/ChimeraX-1.1.tar.gz
 def getChimeraX():
 
     def licenceAccepted():
