@@ -104,17 +104,15 @@ class ChimeraViewerBase(Viewer):
         counter = 2
         if _inputVol is not None:
             # In case we have PDBs only, _inputVol is None:
-            inputVolFileName = ImageHandler.removeFileType(_inputVol.getFileName())
-            f.write("open %s\n" % inputVolFileName)
-            if _inputVol.hasOrigin():
-                x, y, z = _inputVol.getOrigin().getShifts()
-            else:
-                x, y, z = _inputVol.getOrigin(force=True).getShifts()
-            f.write("volume #%d style surface voxelSize %f\n"
-                    "volume #%d origin %0.2f,%0.2f,%0.2f\n"
-                    % (counter, _inputVol.getSamplingRate(), counter, x, y, z))
+            self.visInputVolume(f, _inputVol, counter)
         else:
             counter = 1
+
+        if (self.protocol.hasAttribute("inputVolume2") and\
+                self.protocol.inputVolume2.get() is not None):
+            counter += 1
+            _inputVol2 = self.protocol.inputVolume2.get()
+            self.visInputVolume(f, _inputVol2, counter)
 
         for filename in sorted(os.listdir(directory)):
             if filename.endswith(".mrc") and filename != inputVolFileName:
@@ -148,6 +146,16 @@ class ChimeraViewerBase(Viewer):
         Chimera.runProgram(Chimera.getProgram(), fnCmd + "&")
         return []
 
+    def visInputVolume(self, f, vol, counter):
+        inputVolFileName = ImageHandler.removeFileType(vol.getFileName())
+        f.write("open %s\n" % inputVolFileName)
+        if vol.hasOrigin():
+            x, y, z = vol.getOrigin().getShifts()
+        else:
+            x, y, z = vol.getOrigin(force=True).getShifts()
+        f.write("volume #%d style surface voxelSize %f\n"
+                "volume #%d origin %0.2f,%0.2f,%0.2f\n"
+                % (counter, vol.getSamplingRate(), counter, x, y, z))
 
 class ChimeraRestoreViewer(Viewer):
     """ Visualize the output of protocols protocol_fit and protocol_operate """

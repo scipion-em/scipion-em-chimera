@@ -46,7 +46,7 @@ class ChimeraProtRestore(ChimeraProtBase):
         pdb to scipion. Default values are model=#0,
         refmodel =#1 and saverefmodel 0 (false).
         model refers to the pdb file. refmodel to a 3Dmap"""
-    _label = 'chimera restore session'
+    _label = 'restore session'
 
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -89,28 +89,13 @@ class ChimeraProtRestore(ChimeraProtBase):
     def runChimeraStep(self):
         # create CMD file
         parentSessionFileName = self.parentProt._getExtraPath(sessionFile)
-        sessionFileName = self._getExtraPath(sessionFile)
-        # f = open(self._getTmpPath(chimeraScriptFileName), "w")
-        # create coherent header
-        # createScriptFile(1,  # model id pdb
-        #                  1,  # model id 3D map
-        #                  self._getExtraPath(chimeraPdbTemplateFileName),
-        #                  self._getExtraPath(chimeraMapTemplateFileName),
-        #                  f,
-        #                  sessionFileName
-        #                  )
-
-        # f.write("open %s\n" % os.path.abspath(parentSessionFileName))
 
         # if len(self.extraCommands.get()) > 2:
         #     f.write(self.extraCommands.get())
         #     args = " --nogui --cmd " + self._getTmpPath(
         #         chimeraScriptFileName)
-        # else:
-        #     args = " --cmd " + self._getTmpPath(chimeraScriptFileName)
-        # f.close()
+
         program = Chimera.getProgram()
-        # self._log.info('Launching: ' + program + ' ' + args)
 
         config = configparser.ConfigParser()
         _chimeraPdbTemplateFileName = \

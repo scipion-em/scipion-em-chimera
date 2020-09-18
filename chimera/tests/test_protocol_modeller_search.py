@@ -355,7 +355,8 @@ select as target sequences Q15116 and Q2LC89 for aligned_1.fasta and
 aligned_2.fasta alignments, respectively.
 5) you will need a key for modeller website
 6) press OK
-7) In main chimerax window you will see (botton) "porcentage of progress" wait untill is 100%
+7) In main chimerax window you will see (botton) the progression of the process,
+e.g. 1 of 5 models generated, 2 of 5 models generated, and so on
 8) In command line rename the #id of the model in you are interested, 
 for example from #3.1 to #4 type:
 rename #3.1 id #4, enter>

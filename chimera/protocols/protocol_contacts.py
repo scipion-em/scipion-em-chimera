@@ -1,3 +1,30 @@
+# **************************************************************************
+# *
+# * Authors:     Marta Martinez (mmmtnez@cnb.csic.es)
+# *              Roberto Marabini (roberto@cnb.csic.es)
+# *
+# * L'Institut de genetique et de biologie moleculaire et cellulaire (IGBMC)
+# *
+# * This program is free software; you can redistribute it and/or modify
+# * it under the terms of the GNU General Public License as published by
+# * the Free Software Foundation; either version 2 of the License, or
+# * (at your option) any later version.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# * GNU General Public License for more details.
+# *
+# * You should have received a copy of the GNU General Public License
+# * along with this program; if not, write to the Free Software
+# * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
+# * 02111-1307  USA
+# *
+# *  All comments concerning this program package may be sent to the
+# *  e-mail address 'scipion@cnb.csic.es'
+# *
+# **************************************************************************
+
 from pwem.protocols import EMProtocol
 from pyworkflow.object import Boolean
 from pwem.constants import (SYM_DIHEDRAL_X)
@@ -28,6 +55,10 @@ class ChimeraProtContacts(EMProtocol):
     _program = ""
     commandDropView = """DROP view IF EXISTS {viewName}"""
     TetrahedralOrientation = ['222', 'z3']
+
+    @classmethod
+    def getClassPackageName(cls):
+        return "chimerax"
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
@@ -126,32 +157,34 @@ class ChimeraProtContacts(EMProtocol):
                                   object_pairs_hook=collections.OrderedDict)
         labelDict = collections.OrderedDict(sorted(labelDictAux.items(), key=itemgetter(1)))
         # labelDict = collections.OrderedDict(sorted(list(labelDictAux.items()), key=itemgetter(1)))
-        pdbFileName = self.pdbFileToBeRefined.get().getFileName()
+        pdbFileName = os.path.abspath(self.pdbFileToBeRefined.get().getFileName())
         # first element of dictionary
         firstValue = labelDict[list(labelDict)[0]]
         outFiles = []
         f = open(self.getChimeraScriptFileName1(), "w")
-        f.write("from chimera import runCommand\n")
-        f.write("runCommand('open {}')\n".format(pdbFileName))
-
+        f.write("from chimerax.core.commands import run\n")
+        f.write("run(session, 'open {}')\n".format(pdbFileName))
         if self.sym == "Cn" and self.symOrder != 1:
-            f.write("runCommand('sym #0 group C%d contact 3')\n" % self.symOrder)
+            f.write("run(session,'sym #1 C%d copies t')\n" % self.symOrder)
         elif self.sym == "Dn" and self.symOrder != 1:
-            f.write("runCommand('sym #0 group d%d contact 3')\n" % self.symOrder)
+            f.write("run(session,'sym #1 d%d copies t')\n" % self.symOrder)
         elif self.sym == "T222" or self.sym == "TZ3":
-            f.write("runCommand('sym #0 group t,%s contact 3')\n" % self.sym[1:])
+            f.write("run(session,'sym #1 t,%s copies t')\n" % self.sym[1:])
         elif self.sym == "O":
-            f.write("runCommand('sym #0 group O contact 3')\n")
+            f.write("run(session,'sym #1 O copies t')\n")
         elif self.sym == "I222" or self.sym == "I222r" or self.sym == "In25" or \
                 self.sym == "In25r" or self.sym == "I2n3" or self.sym == "I2n3r" or \
                 self.sym == "I2n5" or self.sym == "I2n5r":
-            f.write("runCommand('sym #0 group i,%s contact 3')\n" % self.sym[1:])
+            f.write("run(session,'sym #1 i,%s copies t')\n" % self.sym[1:])
         self.SYMMETRY = self.SYMMETRY.get()
         if self.SYMMETRY:
-            f.write("runCommand('write #1 {symmetrizedModelName}')\n".format(
+            f.write("run(session,'delete #2 & #1 #>3')\n")
+            f.write("run(session,'save {symmetrizedModelName} #2')\n".format(
                 symmetrizedModelName=self.getSymmetrizedModelName()))
-
+            f.write("run(session, 'close #1')\n")
+            f.write("run(session, 'rename #2 id #1')\n")
         self.endChimeraScript(firstValue, labelDict, outFiles, f)
+        f.write("run(session, 'exit')\n")
         f.close()
         args = " --nogui --script " + self.getChimeraScriptFileName1()
         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
@@ -167,9 +200,10 @@ class ChimeraProtContacts(EMProtocol):
                       "coordinates?"))
             self.SYMMETRY = False
             f = open(self.getChimeraScriptFileName2(), "w")
-            f.write("from chimera import runCommand\n")
-            f.write("runCommand('open {}')\n".format(pdbFileName))
+            f.write("from chimerax.core.commands import run\n")
+            f.write("session, run('open {}')\n".format(pdbFileName))
             self.endChimeraScript(firstValue, labelDict, outFiles, f)
+            f.write("run(session, 'exit')\n")
             f.close()
             args = " --nogui --script " + self.getChimeraScriptFileName2()
             self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
@@ -210,46 +244,49 @@ class ChimeraProtContacts(EMProtocol):
                     # print ("skip line", line
                     counter += 1
                 else:
-                    if not self.SYMMETRY:
-                        info = line.split()  # ['HIS', '87.A', 'NE2', 'HEM', '1.A002', 'ND', '0.620', '2.660']
-                        d1['modelId'] = "'" + "#0" + "'"
-                        d1['aaName'] = "'" + info[0][0] + info[0][1:].lower() + "'"  # "'HIS'"
-                        info2 = info[1].split(".")  # ['87', 'A']
-                        d1['aaNumber'] = info2[0]  # 87
-                        d1['chainId'] = "'" + info2[1] + "'"  # A
-                        d1['atomId'] = "'" + info[2] + "'"  # NE2
-                        d1['protId'] = "'" + labelDict[info2[1]] + "'"
+                    # if not self.SYMMETRY:
+                    if not self.SYMMETRY or line.split()[0].startswith("/"):
+                        # Second option (line.split()[0].startswith("/") stands for
+                        # cases in which the result of applying symmetry is identical
+                        # to the starting structure (see test testContactsSymC2_b
+                        # where after deleting the #2 submodel far more than 3 A from
+                        # the input model, the resulting model is the same as the initial one.
+                        info = line.split()  # ['/A002', 'HEM', '1', 'ND', '/A', 'HIS', '87', 'NE2', '0.620', '2.660']
+                        d1['modelId'] = "'" + "#1" + "'"
+                        d1['aaName'] = "'" + info[1][0] + info[1][1:].lower() + "'"  # 'Hem'
+                        d1['aaNumber'] = info[2]  # '1'
+                        d1['chainId'] = "'" + info[0].split("/")[1] + "'"  # 'A002'
+                        d1['atomId'] = "'" + info[3] + "'"  # 'ND'
+                        d1['protId'] = "'" + labelDict[info[0].split("/")[1]] + "'"
 
-                        d2['modelId'] = "'" + "#0" + "'"
-                        d2['aaName'] = "'" + info[3][0] + info[3][1:].lower() + "'"  # HEM
-                        info2 = info[4].split(".")
-                        d2['aaNumber'] = info2[0]  # 1
-                        d2['chainId'] = "'" + info2[1] + "'"  # A002
-                        d2['protId'] = "'" + labelDict[info2[1]] + "'"
-                        d2['atomId'] = "'" + info[5] + "'"  # ND
-                        d['overlap'] = info[6]  # 0.620
-                        d['distance'] = info[7]  # 2.660
+                        d2['modelId'] = "'" + "#1" + "'"
+                        d2['aaName'] = "'" + info[5][0] + info[5][1:].lower() + "'"  # 'His'
+                        d2['aaNumber'] = info[6]  # '87'
+                        d2['chainId'] = "'" + info[4].split("/")[1] + "'"  # 'A'
+                        d2['protId'] = "'" + labelDict[info[4].split("/")[1]] + "'"
+                        d2['atomId'] = "'" + info[7] + "'"  # 'NE2'
+                        d['overlap'] = info[8]  # '0.620'
+                        d['distance'] = info[9]  # '2.660'
 
                     else:
-                        info = line.split()  # ['#2', 'TYR', '851.B', 'CE1', '#0.7', 'PRO', '78.N', 'CA', '3.059', '0.581']
-                        d1['modelId'] = "'" + info[0] + "'"  # '#2'
-                        d1['aaName'] = "'" + info[1][0] + info[1][1:].lower() + "'"  # "'TYR'"
-                        info2 = info[2].split(".")  # ['851', 'B']
-                        d1['aaNumber'] = info2[0]  # 851
-                        d1['chainId'] = "'" + info2[1] + "'"  # B
-                        d1['atomId'] = "'" + info[3] + "'"  # CE1
-                        d1['protId'] = "'" + labelDict[info2[1]] + "'"
+                        info = line.split()
+                        # 5ni1_unit_cell_HEM.cif #1.2/A002 HEM 1 ND   5ni1_unit_cell_HEM.cif #1.2/A HIS 87 NE2    0.620    2.660
+                        d1['modelId'] = "'" + info[1].split("/")[0] + "'"  # '#1.2'
+                        d1['aaName'] = "'" + info[2][0] + info[2][1:].lower() + "'"  # 'Hem'
+                        d1['aaNumber'] = info[3]  # '1'
+                        d1['chainId'] = "'" + info[1].split("/")[1] + "'"  # 'A002'
+                        d1['atomId'] = "'" + info[4] + "'"  # 'ND'
+                        d1['protId'] = "'" + labelDict[info[1].split("/")[1]] + "'" # 'HEM_A'
 
-                        d2['modelId'] = "'" + info[4] + "'"  # '#0.7'
-                        d2['aaName'] = "'" + info[5][0] + info[5][1:].lower() + "'"  # PRO
-                        info2 = info[6].split(".")
-                        d2['aaNumber'] = info2[0]  # 78
-                        d2['chainId'] = "'" + info2[1] + "'"  # N
-                        d2['protId'] = "'" + labelDict[info2[1]] + "'"
-                        d2['atomId'] = "'" + info[7] + "'"  # CA
+                        d2['modelId'] = "'" + info[6].split("/")[0] + "'"  # '#1.2'
+                        d2['aaName'] = "'" + info[7][0] + info[7][1:].lower() + "'"  # 'His'
+                        d2['aaNumber'] = info[8]  # '87'
+                        d2['chainId'] = "'" + info[6].split("/")[1] + "'"  # N
+                        d2['protId'] = "'" + labelDict[info[6].split("/")[1]] + "'" # 'chainA'
+                        d2['atomId'] = "'" + info[9] + "'"  # 'NE2'
 
-                        d['overlap'] = info[8]  # 3.059
-                        d['distance'] = info[9]  # 0.5
+                        d['overlap'] = info[10]  # '0.620'
+                        d['distance'] = info[11]  # '2.660'
 
                     if d1['modelId'] == d2['modelId']:
                         if d1['protId'] <= d2['protId']:
@@ -284,7 +321,7 @@ class ChimeraProtContacts(EMProtocol):
                     values = values[:-2] + ")"
 
                     command += keys + " VALUES " + values
-                    ##print command
+                    # print(command)
                     c.execute(command)
 
         return anyResult
@@ -295,17 +332,23 @@ class ChimeraProtContacts(EMProtocol):
         return self._getExtraPath("overlaps.sqlite")
 
     def getSymmetrizedModelName(self):
-        # return os.path.abspath(self._getExtraPath("symModel.pdb"))
-        return self._getExtraPath("symModel.pdb")
+        return os.path.abspath(self._getExtraPath("symModel.cif"))
+        # return self._getExtraPath("symModel.pdb")
 
     def getTableName(self):
         return "contacts"
 
+    def getView2Name(self):
+        return "view_ND_2"
+
+    def getView1Name(self):
+        return "view_ND_1"
+
     def getChimeraScriptFileName1(self):
-        return self._getTmpPath("chimera1.cxc")
+        return os.path.abspath(self._getTmpPath("chimera1.cxc"))
 
     def getChimeraScriptFileName2(self):
-        return self._getTmpPath("chimera2.cxc")
+        return os.path.abspath(self._getTmpPath("chimera2.cxc"))
 
     def endChimeraScript(self, firstValue, labelDict, outFiles, f):
         protId = firstValue
@@ -313,27 +356,39 @@ class ChimeraProtContacts(EMProtocol):
         comma = ''
         for k, v in labelDict.items():
             if protId == v:
-                chains += "{}.{}".format(comma, k)
+                # chains += "{}/{}".format(comma, k)
+                chains += "{}{}".format(comma, k)
                 comma = ','
                 outFileBase = v
+
             else:
-                # outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
-                outFile = self._getExtraPath("{}.over".format(outFileBase))
+                outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
+                # outFile = self._getExtraPath("{}.over".format(outFileBase))
                 outFiles.append(outFile)
-                f.write(
-                    """runCommand('echo {}')\nrunCommand('findclash  #0:{} test other savefile {} overlap {} hbond {} namingStyle simple')\n""".format(
-                        chains, chains, outFile, self.cutoff, self.allowance))
+                f.write("run(session,'echo {}')\nrun(session, 'contacts  #1{} "
+                         "intersubmodel true "
+                         "intramol False "
+                         "restrict any "
+                         "saveFile {} overlapCutoff {} hbondAllowance {} namingStyle simple')\n".
+                         format(chains, chains, outFile, self.cutoff, self.allowance))
                 protId = v
-                chains = ".{}".format(k)
+                # chains = "/{}".format(k)
+                chains = "{}".format(k)
                 outFileBase = v
-        # outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
-        outFile = self._getExtraPath("{}.over".format(outFileBase))
+
+            chains = "/" + chains.split("/")[-1]
+        outFile = os.path.abspath(self._getExtraPath("{}.over".format(outFileBase)))
+        # outFile = self._getExtraPath("{}.over".format(outFileBase))
         outFiles.append(outFile)
 
         f.write(
-            """runCommand('echo {}')\nrunCommand('findclash  #0:{} test other savefile {} overlap {} hbond {} namingStyle simple')\n""".format(
+            "run(session,'echo {}')\nrun(session, 'contacts  #1{} "
+            "intersubmodel true "
+            "intramol False "
+            "restrict any "
+            "savefile {} overlap {} hbond {} namingStyle simple')\n".format(
                 chains, chains, outFile, self.cutoff, self.allowance))
-        # f.write("runCommand('save %s')\n" % os.path.abspath(self._getExtraPath(sessionFile)))
+        # f.write("run('save %s')\n" % os.path.abspath(self._getExtraPath(sessionFile)))
 
     def removeDuplicates(self, c):
         # Remove duplicate contacts
@@ -362,34 +417,62 @@ class ChimeraProtContacts(EMProtocol):
         SELECT *
         FROM {}
 
-        EXCEPT
+        EXCEPT -- Each bound appears two times, delete one of them
 
         SELECT ca.*
         FROM {} ca, {} cb
         WHERE
-              ca.protId_1    = cb.protId_2
-          AND cb.protId_1    = ca.protId_2
-          AND ca.chainId_1   = cb.chainId_2
-          AND cb.chainId_1   = ca.chainId_2
-          AND ca.aaNumber_1  = cb.aaNumber_2
-          AND cb.aaNumber_1  = ca.aaNumber_2
-          AND ca.atomId_1  = cb.atomId_2
-          AND cb.atomId_1  = ca.atomId_2
-          AND ca.modelId_2   > cb.modelId_2
+                ca.protId_1    = cb.protId_2
+            AND cb.protId_1    = ca.protId_2
+            AND cb.chainId_1   = ca.chainId_2
+            AND ca.aaNumber_1  = cb.aaNumber_2
+            AND cb.aaNumber_1  = ca.aaNumber_2
+            AND ca.atomId_1  = cb.atomId_2
+            AND cb.atomId_1  = ca.atomId_2
+            AND ca.modelId_2   > cb.modelId_2
+        
+        EXCEPT -- Interprotein bounds in the same model are not allowed
 
+        SELECT ca.*
+        FROM {} ca
+        WHERE  ca.modelId_1 = ca.modelId_2 
+           AND ca.protId_1 = ca.protId_2 
+     
         """
+        if self.SYMMETRY:
+            sqlCommand = """
+            SELECT count(*) FROM {} ca
+            WHERE ca.modelId_1 = '#1.1'
+            """.format(self.getTableName())
+            c.execute(sqlCommand)
+            row = c.fetchone()
+            if int(row[0]) == 0:
+                self.SYMMETRY = False
+            else:
+                commandEliminateDuplicates2 +="""
+                EXCEPT -- One of the atoms must belong to the input unit cell
+            
+                SELECT ca.*
+                FROM {} ca
+                WHERE ca.modelId_1 != '#1.1'  AND 
+                      ca.modelId_2 != '#1.1'
+        """.format(self.getView1Name())
         # # Remove duplicate contacts
         # that is, given chains A,B
         # we have contact A.a-B.b and B.b-A.a
         c.execute(self.commandDropView.format(viewName="view_ND_1"))
+        # TODO: remove second contacts
         c.execute(commandEliminateDuplicates.format("view_ND_1",
+                                                    "contacts",
                                                     "contacts",
                                                     "contacts"))
 
         # remove duplicate contacts due to symmetry
         # h1-h1p, h1-h2p
         c.execute(self.commandDropView.format(viewName="view_ND_2"))
-        c.execute(commandEliminateDuplicates2.format("view_ND_2", "view_ND_1", "view_ND_1", "view_ND_1"))
+        c.execute(commandEliminateDuplicates2.format("view_ND_2", "view_ND_1",
+                                                     "view_ND_1", "view_ND_1",
+                                                     "view_ND_1"))
 
     def _validate(self):
         errors = []
