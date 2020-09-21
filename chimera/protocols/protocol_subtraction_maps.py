@@ -57,6 +57,8 @@ from pwem.viewers.viewer_chimera import (Chimera,
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from .. import Plugin
 from pyworkflow.utils.properties import Message
+from ..constants import CHIMERA_CONFIG_FILE
+import configparser
 
 class ChimeraSubtractionMaps(EMProtocol):
     """Protocol to subtract two volumes.
@@ -67,107 +69,15 @@ class ChimeraSubtractionMaps(EMProtocol):
         the user can generate and save some others"""
     _label = 'map subtraction'
     _program = ""
-    _program = ""
     _version = VERSION_3_0
+
+    @classmethod
+    def getClassPackageName(cls):
+        return "chimerax"
 
     PROTOCOL_OPTIONS = ['Subtraction', 'Mask']
     MAP_OPTIONS = ['3D map', 'atomic structure']
     CHIMERA_FILTERS = ['Gaussian', 'Fourier Transform']
-
-    subtractionString = """
-from VolumeStatistics import mean_sd_rms
-from chimera import openModels
-from chimera import replyobj
-
-from VolumeData import Array_Grid_Data
-from VolumeViewer.volume import volume_from_grid_data
-import numpy
-from numpy import greater_equal, multiply, dot as inner_product
-from numpy import array, ravel
-# get volume from model id
-def subtraction(minuendId, subtrahendId, outModelId=-1, subtractOrMask=0):
-    ''' subtract or mask two volumes after adjust their respective ranges.
-    
-        The mask part is close to the chimera command
-        vop zone invert. 
-        If subtractOrMask=1 the program function uses vop subtract (chimera) 
-        Else:
-        1) A mask is computed using the volume with modelid=subtrahendId 
-           and the countour level value.
-        2) All voxels in minuendId are set to 0 for those
-           voxels inside the mask.
-        3) Result is shown in chimera
-        4) Volumes are assume to have the same sampling rate and dimensions
-        Usage Example:
-        from chimera import runCommand
-        runCommand('open /home/roberto/Downloads/Vols/emd_21375_crop_ref.mrc')
-        runCommand('open /home/roberto/Downloads/Vols/i2pc_Level0_226_crop_ref.mrc')
-        subtraction(0, 1, outModelId=6, subtractOrMask=0)
-        
-        Note this function is milar to chimera's vop zone invert
-        but can be used not only with PDBs but with 3D maps as subtrahend
-    '''
-    if subtractOrMask==0:
-        command = "vop subtract #%d #%d modelId #%d minRMS true onGrid #%d" % (minuendId, subtrahendId, outModelId, minuendId)
-        runCommand(command)
-        return
-    
-    # get models from Ids
-    minuendModel = openModels.list(id=minuendId)[0]  #submodel if needed
-    subtrahendModel = openModels.list(id=subtrahendId)[0]  #submodel if needed
-    
-    # Get contour level from model
-    contourLevel = subtrahendModel.surface_levels[0]
-        
-    # get  matrix with voxel values
-    minuendMatrix = minuendModel.full_matrix()
-    subtrahendMatrix = subtrahendModel.full_matrix()
-    
-    # check if sampling and size is the same
-    compatible1 = abs (minuendModel.data.step[0] - minuendModel.data.step[0]) < 0.01
-    s1 = minuendMatrix.shape
-    s2 = subtrahendMatrix.shape
-    compatible2 = (s1[0]==s2[0]) & (s1[1]==s2[1]) & (s1[1]==s2[1])
-
-    if not (compatible1 & compatible2):
-        replyobj.status("Both volumes have incompatible size or sampling, using vop subtract")
-        command = "vop subtract #%d #%d modelId #%d minRMS true onGrid #%d" % (minuendId, subtrahendId, outModelId, minuendId)
-        runCommand(command)
-        return
-
-    # test data, comment next two lines to operate
-    # with chimera volumes
-    # minuendMatrix = array([[1., 2., 3.], [4., 5., 6.]])
-    # subtrahendMatrix = minuendMatrix * 2 +1
-    # contourLevel=6
-    
-    
-    # create mask
-    # keep only values above threshold contourLevel
-    mask = subtrahendMatrix > contourLevel  # matrix with true and false
-                                            # values less than counter
-                                            # are set to true
-    # set values to half the contourLevel                                           
-    minuendMatrix[mask] = 0.
-    
-    #innerProduct = inner_product(shifted_matrix_subtrahend[mask],    shifted_matrix_minuend[mask])
-    #normalization =inner_product(shifted_matrix_subtrahend[mask], shifted_matrix_subtrahend[mask])
-    #if normalization == 0:
-    #   f = 1
-    #else:
-    #   f = innerProduct/normalization
-    #new_matrix_subtrahend =  minuendMatrix - (shifted_matrix_subtrahend * f + minuendMean )
-    # attach matrix to grid
-    
-    g0 = Array_Grid_Data(minuendMatrix, minuendModel.data.origin, 
-                         minuendModel.data.step, minuendModel.data.cell_angles)
-    # create new volume
-    if outModelId == -1:
-        differenceVolume = volume_from_grid_data(g0)
-    else:
-        differenceVolume = volume_from_grid_data(g0, model_id=outModelId)
-"""
-
     # --------------------------- DEFINE param functions --------------------
     def _defineParams(self, form, doHelp=False):
 
@@ -346,10 +256,10 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, subtractOrMask=0):
                       help="Add extra commands in cmd file. Use for testing")
         form.addSection(label='Help')
         form.addLine(''' 
-                    vop subtract #%d #%d modelId #%d minRMS true onGrid #%d
+                    vop subtract #%d #%d modelId #%d minRms true onGrid #%d
                     (If you want to use another level the above
                      command recalculates the difference)
-                    scipionwrite model #n [refmodel #p] [prefix stringAddedToFilename]
+                    scipionwrite model #n [prefix stringAddedToFilename]
                     scipionss
                     scipionrs
                     Type 'help command' in chimera command line for details 
@@ -382,19 +292,32 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, subtractOrMask=0):
                   % self.atomStructName)
 
     def runChimeraStep(self):
+        config = configparser.ConfigParser()
+        _chimeraPdbTemplateFileName = \
+            os.path.abspath(self._getExtraPath(
+                chimeraPdbTemplateFileName))
+        _chimeraMapTemplateFileName = \
+            os.path.abspath(self._getExtraPath(
+                chimeraMapTemplateFileName))
+        _sessionFile = os.path.abspath(
+            self._getExtraPath(sessionFile))
+        protId = self.getObjId()
+        config['chimerax'] = {'chimerapdbtemplatefilename':
+                                  _chimeraPdbTemplateFileName % protId,
+                              'chimeramaptemplatefilename':
+                                  _chimeraMapTemplateFileName % protId,
+                              'sessionfile': _sessionFile,
+                              'enablebundle': True,
+                              'protid': self.getObjId()}
+        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
+                  'w') as configfile:
+            config.write(configfile)
+
         # building script file including the coordinate axes and the input
         # volume with samplingRate and Origin information
         f = open(self._getTmpPath(chimeraScriptFileName), "w")
-        f.write("from chimera import runCommand\n")
+        f.write("from chimerax.core.commands import run\n")
 
-        # create coherent header
-        createScriptFile(1,  # model id pdb
-                         1,  # model id 3D map
-                         self._getExtraPath(chimeraPdbTemplateFileName),
-                         self._getExtraPath(chimeraMapTemplateFileName),
-                         f,
-                         self._getExtraPath(sessionFile),
-                         )
         # building coordinate axes
         dim = self.vol.getDim()[0]
         sampling = self.vol.getSamplingRate()
@@ -402,91 +325,93 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, subtractOrMask=0):
         Chimera.createCoordinateAxisFile(dim, bildFileName=bildFileName,
                                          sampling=sampling)
         # origin coordinates
-        modelId = 0 # axis
-        f.write("runCommand('open %s')\n" % (bildFileName))
-        f.write("runCommand('cofr 0,0,0')\n")  # set center of coordinates
+        modelId = 1 # axis
+        f.write("run(session, 'open %s')\n" % (bildFileName))
+        f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
         # input volume
-        modelMapM = modelId + 1 # 1, Minuend, result = minuend − subtrahend
-        f.write("runCommand('open %s')\n" % self.fnVolName)
+        modelMapM = modelId + 1 # 2, Minuend, result = minuend − subtrahend
+        f.write("run(session,'open %s')\n" % self.fnVolName)
         # step = 1 -> no  binning
-        f.write("runCommand('volume #%d style surface voxelSize %f')\n"
+        f.write("run(session,'volume #%d style surface voxelSize %f')\n"
                 % (modelMapM, sampling))
         x, y, z = self.vol.getShiftsFromOrigin()
-        f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
+        f.write("run(session,'volume #%d origin %0.2f,%0.2f,%0.2f')\n"
                 % (modelMapM, x, y, z))
+        modelMapS =7
+        modelAtomStruct = 3
+        modelAtomStructChain = 4
+        modelAtomStructChainSym = 5
+        modelIdZone = 6
+        modelMapDiff = 8
+        modelMapDiffFil = 9
 
         if self.mapOrModel == 0:  # subtrahend is a 3D Map
             # input map
             # with its origin coordinates
-            modelMapS = modelMapM + 1  # 2 Subtrahend
-            f.write("runCommand('open %s')\n" %
+            # modelMapS = modelMapM + 1  # 3 Subtrahend
+            f.write("run(session,'open %s')\n" %
                     (self.subVolName))
-            f.write("runCommand('volume #%d style surface voxelSize %f step 1')\n"
+            f.write("run(session, 'rename #3 id #%d')\n" % modelMapS)
+            f.write("run(session,'volume #%d style surface voxelSize %f step 1')\n"
                     % (modelMapS, sampling))
             x, y, z = self.subVol.getShiftsFromOrigin()
-            f.write("runCommand('volume #%d origin %0.2f,%0.2f,%0.2f')\n"
+            f.write("run(session,'volume #%d origin %0.2f,%0.2f,%0.2f')\n"
                         % (modelMapS, x, y, z))
             if self.subtractOrMask == 1 and self.level.get() is not None:
-                f.write("runCommand('volume #%d level %f')\n" %
+                f.write("run(session,'volume #%d level %f')\n" %
                         (modelMapS, self.level))
         else:  # subtrahend is an atomic structure
-            f.write("runCommand('open %s')\n" % self.atomStructName)
+            f.write("run(session,'open %s')\n" % self.atomStructName)
             # input atomic structure
-            modelAtomStruct = modelMapM + 1
             if self.selectChain == True:
                 # model and chain selected
                 if self.selectStructureChain.get() is not None:
                     chain = self.selectStructureChain.get()
                     self.selectedModel = chain.split(',')[0].split(':')[1].strip()
-                    modelAtomStruct = int(modelAtomStruct +
-                                                 int(self.selectedModel))
+                    #TODO: Study problems with multimodels
+                    if int(self.selectedModel) != 0:
+                        modelId = int(modelAtomStruct +
+                                                     int(self.selectedModel))
+
+                        f.write("run(session, 'rename #%d id #%d')\n" %
+                                (modelId, modelAtomStruct))
                     self.selectedChain = \
                         chain.split(',')[1].split(':')[1].strip().split('"')[1]
                     print("Selected chain: %s from model: %s from structure: %s" \
                         % (self.selectedChain, self.selectedModel,
                             os.path.basename(self.atomStructName)))
-                    f.write("runCommand('sel #%d:.%s')\n"
+                    f.write("run(session,'sel #%d/%s')\n"
                             % (modelAtomStruct, self.selectedChain))
-                    tmpPath = self._getTmpPath('chain.pdb')
-                    f.write("runCommand('write format pdb selected relative %d #%d %s')\n"
-                            % (modelId, modelAtomStruct, tmpPath))
-                    f.write("runCommand('open %s')\n" % tmpPath)
-                    modelAtomStructChain = modelAtomStruct + 1
-                    f.write("runCommand('scipionwrite model #%d refmodel #%d "
-                            "prefix chain_%s_  savesession 0')\n"
-                            % (modelAtomStructChain, modelMapM,
-                               self.selectedChain))
+                    tmpPath = os.path.abspath(self._getTmpPath('chain.cif'))
+
+                    f.write("run(session,"
+                            "'save %s format mmcif models #%d relModel #%d selectedOnly true')\n"
+                            % (tmpPath, modelAtomStruct, modelId))
+                    f.write("run(session,'open %s')\n" % tmpPath)
+                    f.write("run(session,'scipionwrite #%d prefix chain_%s_ ')\n"
+                            % (modelAtomStructChain, self.selectedChain))
                     if self.selectAreaMap == True:  # mask the minuend using the atomic structure
                         if self.applySymmetry == True and self.symmetryGroup.get() is not None:
                             sym = CHIMERA_SYM_NAME[self.symmetryGroup.get()]
-                            modelId = modelAtomStructChain
-                            self.symMethod(f, modelId, sym, self.symmetryOrder, self.rangeDist)
+                            modelId = modelAtomStructChain #4
+                            self.symMethod(f, modelId, sym, self.symmetryOrder)
 
-                            modelAtomStructChainSym = modelAtomStructChain + 2
-                            # create a new model with the result of the symmetrization
-                            f.write("runCommand('combine #%d- modelId #%d')\n"
-                                    % (modelAtomStructChain, modelAtomStructChainSym))
-                            modelIdZone = modelAtomStructChainSym + 1
-                            f.write("runCommand('vop zone #%d #%d %d modelId #%d')\n"
+                            f.write("run(session,'volume zone #%d nearAtoms #%d "
+                                    "range %d newMap true modelId #%d')\n"
                                     % (modelMapM, modelAtomStructChainSym,
                                        self.radius, modelIdZone))
+                            if not self.removeResidues:
+                                f.write("run(session,'scipionwrite #%d prefix sym_  ')\n"
+                                        % modelAtomStructChainSym)
 
-                            f.write("runCommand('close #%d')\n" % (modelAtomStructChain + 1))
-                            f.write("runCommand('close #%d')\n" % (modelAtomStructChainSym))
+                            f.write("run(session,'close #%d')\n" % (modelAtomStructChainSym))
                         else:
-                            modelIdZone = modelAtomStructChain + 1
-                            f.write("runCommand('vop zone #%d #%d %d modelId #%d')\n"
+                            f.write("run(session,'volume zone #%d nearAtoms #%d "
+                                    "range %d newMap true modelId #%d')\n"
                                     % (modelMapM, modelAtomStructChain,
                                     self.radius, modelIdZone))
 
-                        f.write("runCommand('scipionwrite model #%d refmodel #%d " \
-                                "prefix zone_  savesession 0')\n" % (modelIdZone, modelMapM))
-                        modelMapS = modelIdZone + 1
-                    else:  # do not mask the minuend using the atomic structure
-                        if self.applySymmetry == True:
-                            modelMapS = modelAtomStructChain + 3
-                        else:
-                            modelMapS = modelAtomStructChain + 1
+                        f.write("run(session,'scipionwrite #%d prefix zone_  ')\n" % modelIdZone)
 
                     if self.removeResidues == True:
                         if (self.firstResidueToRemove.get() is not None and
@@ -495,88 +420,68 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, subtractOrMask=0):
                             split(":")[1].split(",")[0].strip()
                             self.lastResidue = self.lastResidueToRemove.get(). \
                                 split(":")[1].split(",")[0].strip()
-                            f.write("runCommand('select #%d:%d-%d.%s')\n"
-                                    % (modelAtomStructChain,
-                                       int(self.firstResidue), int(self.lastResidue),
-                                       self.selectedChain))
-                            f.write("runCommand('del sel')\n")
-                            f.write("runCommand('select #%d:%d-%d.%s')\n" %
-                                    (modelAtomStructChain, int(self.firstResidue) - 10,
-                                     int(self.lastResidue) + 10, self.selectedChain))
+                            f.write("run(session,'sel #%d/%s:%d-%d')\n"
+                                    % (modelAtomStructChain, self.selectedChain,
+                                       int(self.firstResidue), int(self.lastResidue)))
+                            f.write("run(session,'del sel')\n")
+                            f.write("run(session,'sel #%d/%s:%d-%d')\n" %
+                                    (modelAtomStructChain, self.selectedChain,
+                                     int(self.firstResidue) - 10,
+                                     int(self.lastResidue) + 10))
                     if self.applySymmetry == True:
                         if self.symmetryGroup.get() is not None:
                             sym = CHIMERA_SYM_NAME[self.symmetryGroup.get()]
                             modelId = modelAtomStructChain
                             self.symMethod(f, modelId, sym, self.symmetryOrder, self.rangeDist)
-                            modelAtomStructChainSym = modelAtomStructChain + 2
-                            f.write("runCommand('combine #%d- modelId #%d')\n"
-                                    % (modelAtomStructChain, modelAtomStructChainSym))
-                            f.write("runCommand('scipionwrite model #%d refmodel #%d "
-                                    "prefix sym_  savesession 0')\n"
-                                    % (modelAtomStructChainSym, modelMapM))
-                            f.write("runCommand("
-                                    "'molmap #%d %0.3f gridSpacing %f modelId #%d')\n"
-                                    % (modelAtomStructChainSym, self.resolution, sampling,
-                                       modelMapS))
+                            f.write("run(session,'scipionwrite #%d prefix sym_  ')\n"
+                                    % modelAtomStructChainSym)
+                            f.write("v=run(session,'molmap #%d %0.3f gridSpacing %f')\n"
+                                    % (modelAtomStructChainSym, self.resolution, sampling))
+                            f.write("run(session,'rename #%d id #7' % v.id[0])\n") ## #7 is modelMapS id
                             if self.subtractOrMask == 1 and self.level.get() is not None:
-                                f.write("runCommand('volume #%d level %f')\n" %
+                                f.write("run(session,'volume #%d level %f')\n" %
                                         (modelMapS, self.level))
                             if self.removeResidues == True:
                                 if (self.firstResidueToRemove.get() is not None and
                                         self.lastResidueToRemove.get() is not None):
-                                    f.write("runCommand('select #%d:%d-%d')\n" %
+                                    f.write("run(session,'sel #%d:%d-%d')\n" %
                                             (modelAtomStructChainSym,
                                              int(self.firstResidue) - 10,
                                              int(self.lastResidue) + 10))
 
                     else:
-                        f.write("runCommand("
-                                "'molmap #%d %0.3f gridSpacing %f modelId #%d')\n"
-                                % (modelAtomStructChain, self.resolution, sampling,
-                                   modelMapS))
+                        f.write("v=run(session,'molmap #%d %0.3f gridSpacing %f')\n"
+                                % (modelAtomStructChain, self.resolution, sampling))
+                        f.write("run(session,'rename #%d id #7' % v.id[0])\n") ## #7 is modelMapS id
                         if self.subtractOrMask == 1 and self.level.get() is not None:
-                            f.write("runCommand('volume #%d level %f')\n" %
+                            f.write("run(session,'volume #%d level %f')\n" %
                                     (modelMapS, self.level))
-                    f.write("runCommand('scipionwrite model #%d refmodel #%d "
-                            "prefix molmap_chain%s_  savesession 0')\n"
-                            % (modelMapS, modelMapM,
-                               self.selectedChain))
+
+                    f.write("run(session,'scipionwrite #%d prefix molmap_chain%s_')\n"
+                            % (modelMapS, self.selectedChain))
 
             else:  # use whole atomic model
-                f.write("runCommand('scipionwrite model #%d refmodel #%d  savesession 0')\n" \
-                        % (modelAtomStruct, modelMapM))
+                f.write("run(session,'scipionwrite #%d')\n" % modelAtomStruct)
                 if self.selectAreaMap == True:
                     if self.applySymmetry == True and self.symmetryGroup.get() is not None:
                         sym = CHIMERA_SYM_NAME[self.symmetryGroup.get()]
                         modelId = modelAtomStruct
                         self.symMethod(f, modelId, sym, self.symmetryOrder, self.rangeDist)
-                        modelAtomStructChainSym = modelAtomStruct + 2
-                        f.write("runCommand('combine #%d- modelId #%d')\n"
-                                % (modelAtomStruct, modelAtomStructChainSym))
-
-                        modelIdZone = modelAtomStructChainSym + 1
-                        f.write("runCommand('vop zone #%d #%d %d modelId #%d')\n"
+                        f.write("run(session, 'rename #4 id #%d')\n" % modelAtomStructChainSym)
+                        f.write("run(session,'volume zone #%d nearAtoms #%d "
+                                "range %d newMap true modelId #%d')\n"
                                 % (modelMapM, modelAtomStructChainSym,
                                    self.radius, modelIdZone))
 
-                        f.write("runCommand('close #%d')\n" % (modelAtomStructChainSym))
+                        f.write("run(session,'close #%d')\n" % (modelAtomStructChainSym))
 
                     else:
-                        modelIdZone = modelAtomStruct + 1
-                        f.write("runCommand('vop zone #%d #%d %d modelId #%d')\n"
+                        f.write("run(session,'volume zone #%d nearAtoms #%d "
+                                "range %d newMap true modelId #%d')\n"
                                 % (modelMapM, modelAtomStruct,
                                     self.radius, modelIdZone))
 
-                    f.write("runCommand('scipionwrite model #%d refmodel #%d " \
-                            "prefix zone_  savesession 0')\n" % (modelIdZone,
-                                                  modelMapM))
-                    modelMapS = modelIdZone + 1
-
-                else:
-                    if self.applySymmetry == True:
-                        modelMapS = modelAtomStruct + 3
-                    else:
-                        modelMapS = modelAtomStruct + 1
+                    f.write("run(session,'scipionwrite #%d prefix zone_  ')\n" % modelIdZone)
 
                 if self.removeResidues == True:
                     if (self.inputStructureChain.get() is not None and
@@ -584,135 +489,116 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, subtractOrMask=0):
                             self.lastResidueToRemove.get() is not None):
                         chain = self.inputStructureChain.get()
                         self.selectedModel = chain.split(',')[0].split(':')[1].strip()
-                        modelAtomStruct = int(modelAtomStruct +
-                                                     int(self.selectedModel))
+                        # TODO: Study problems with multimodels
+                        if int(self.selectedModel) != 0:
+                            modelId = int(modelAtomStruct +
+                                          int(self.selectedModel))
+
+                            f.write("run(session, 'rename #%d id #%d')\n" %
+                                    (modelId, modelAtomStruct))
                         self.selectedChain = \
                             chain.split(',')[1].split(':')[1].strip().split('"')[1]
-                        print("Selected chain: %s from model: %s from structure: %s" \
+                        print("Selected chain: %s from model: %s from structure: %s"\
                               % (self.selectedChain, self.selectedModel,
                                  os.path.basename(self.atomStructName)))
-                        f.write("runCommand('sel #%d:.%s')\n"
+                        f.write("run(session,'sel #%d/%s')\n"
                                 % (modelAtomStruct, self.selectedChain))
                         self.firstResidue = self.firstResidueToRemove.get(). \
                             split(":")[1].split(",")[0].strip()
                         self.lastResidue = self.lastResidueToRemove.get(). \
                             split(":")[1].split(",")[0].strip()
-                        f.write("runCommand('select #%d:%d-%d.%s')\n"
-                                % (modelAtomStruct,
-                                   int(self.firstResidue), int(self.lastResidue),
-                                   self.selectedChain))
-                        f.write("runCommand('del sel')\n")
-                        f.write("runCommand('scipionwrite model #%d refmodel #%d " \
-                                "prefix mutated_  savesession 0')\n"
-                                % (modelAtomStruct, modelMapM))
+                        f.write("run(session,'sel #%d/%s:%d-%d')\n"
+                                % (modelAtomStruct, self.selectedChain,
+                                   int(self.firstResidue), int(self.lastResidue)))
+                        f.write("run(session,'del sel')\n")
+                        f.write("run(session,'scipionwrite #%d prefix mutated_ ')\n"
+                                % modelAtomStruct)
 
-                        f.write("runCommand('select #%d:%d-%d.%s')\n" %
-                                (modelAtomStruct, int(self.firstResidue) - 10,
-                                 int(self.lastResidue) + 10, self.selectedChain))
+                        f.write("run(session,'sel #%d/%s:%d-%d')\n" %
+                                (modelAtomStruct, self.selectedChain,
+                                 int(self.firstResidue) - 10,
+                                 int(self.lastResidue) + 10))
 
                 if self.applySymmetry == True:
                     if self.symmetryGroup.get() is not None:
                         sym = CHIMERA_SYM_NAME[self.symmetryGroup.get()]
                         modelId = modelAtomStruct
                         self.symMethod(f, modelId, sym, self.symmetryOrder, self.rangeDist)
-                        modelAtomStructChainSym = modelAtomStruct + 2
-                        f.write("runCommand('combine #%d- modelId #%d')\n"
-                                % (modelAtomStruct, modelAtomStructChainSym))
-                        f.write("runCommand('scipionwrite model #%d refmodel #%d "
-                                "prefix sym_  savesession 0')\n"
-                                % (modelAtomStructChainSym, modelMapM))
+                        f.write("run(session, 'rename #4 id #%d')\n" % modelAtomStructChainSym)
+                        f.write("run(session,'scipionwrite #%d prefix sym_ ')\n"
+                                % modelAtomStructChainSym)
                         if (self.inputStructureChain.get() is not None and
                                 self.firstResidueToRemove.get() is not None and
                                 self.lastResidueToRemove.get() is not None):
-                            f.write("runCommand('select #%d:%d-%d.%s')\n" %
+                            f.write("run(session, 'sel #%d/%s:%d-%d')\n" %
                                     (modelAtomStructChainSym,
+                                     self.selectedChain,
                                      int(self.firstResidue) - 10,
-                                     int(self.lastResidue) + 10,
-                                     self.selectedChain))
-                        f.write("runCommand("
-                                "'molmap #%d %0.3f gridSpacing %f modelId #%d')\n"
-                                % (modelAtomStructChainSym, self.resolution, sampling,
-                                   modelMapS))
+                                     int(self.lastResidue) + 10))
+                        f.write("v=run(session,'molmap #%d %0.3f gridSpacing %f')\n"
+                                % (modelAtomStructChainSym, self.resolution, sampling))
+                        f.write("run(session,'rename #%d id #7' % v.id[0])\n") ## #7 is modelMapS id
+                        # modelMapS = modelAtomStructChainSym + 1
                         if self.subtractOrMask == 1 and self.level.get() is not None:
-                            f.write("runCommand('volume #%d level %f')\n" %
+                            f.write("run(session,'volume #%d level %f')\n" %
                                     (modelMapS, self.level))
                 else:  # no symmetry
-                    f.write("runCommand("
-                            "'molmap #%d %0.3f gridSpacing %f modelId #%d')\n"
-                            % (modelAtomStruct, self.resolution, sampling,
-                               modelMapS))
+                    f.write("v=run(session,'molmap #%d %0.3f gridSpacing %f')\n"
+                            % (modelAtomStruct, self.resolution, sampling))
+                    f.write("run(session,'rename #%d id #7' % v.id[0])\n") ## #7 is modelMapS id
                     if self.subtractOrMask == 1 and self.level.get() is not None:
-                        f.write("runCommand('volume #%d level %f')\n" %
+                        f.write("run(session,'volume #%d level %f')\n" %
                                 (modelMapS, self.level))
-                f.write("runCommand('scipionwrite model #%d refmodel #%d "
-                        "prefix molmap_  savesession 0')\n"
-                        % (modelMapS, modelMapM))
+                f.write("run(session,'scipionwrite #%d prefix molmap_  ')\n" % modelMapS)
 
         # Generation of the differential map
-        f.write(self.subtractionString)
-
-        modelMapDiff = modelMapS + 1
         if self.selectAreaMap == True:
-            f.write("subtraction(%d, %d, outModelId=%d, subtractOrMask=%d)\n" %
-                    (modelIdZone, modelMapS, modelMapDiff, self.subtractOrMask.get())
-                    )
-            #f.write("runCommand('vop subtract #%d #%d modelId #%d "
-            #        "minRMS true onGrid #%d')\n"
-            #        % (modelIdZone, modelMapS,
-            #           modelMapDiff, modelMapM))
+            modelId = modelIdZone
         else:
-            f.write("subtraction(%d, %d, outModelId=%d, subtractOrMask=%r)\n" %
-                    (modelMapM, modelMapS, modelMapDiff, self.subtractOrMask.get())
-                    )
-            #f.write("runCommand('vop subtract #%d #%d modelId #%d "
-            #        "minRMS true onGrid #%d')\n"
-            #        % (modelMapM, modelMapS,
-            #           modelMapDiff, modelMapM))
-
-
-        f.write("runCommand('scipionwrite model #%d refmodel #%d " \
-                "prefix difference_  savesession 0')\n"
-                % (modelMapDiff, modelMapM))
+            modelId = modelMapM
+        if self.subtractOrMask == 0:
+            f.write("run(session, 'volume subtract #%d #%d modelId #%d "
+                    "minRms true onGrid #%d')\n" %
+                    (modelId, modelMapS, modelMapDiff, modelId))
+        else:
+            f.write("run(session, 'volume mask #%d surfaces #%d invertMask "
+                    "true modelId #%d')\n" %
+                    (modelId, modelMapS, modelMapDiff))
+        f.write("run(session,'scipionwrite #%d prefix difference_')\n" % modelMapDiff)
 
         # Generation of the filtered map
-        modelMapDiffFil = modelMapDiff + 1
         if self.filterToApplyToDiffMap.get() == 0:
-            f.write("runCommand('vop gaussian #%d sd %0.3f')\n"
-                    % (modelMapDiff, self.widthFilter.get()))
+            f.write("run(session,'volume gaussian #%d sd %0.3f modelId %#d')\n"
+                    % (modelMapDiff, self.widthFilter.get(), modelMapDiffFil))
         else:
-            f.write("runCommand('vop laplacian #%d')\n"
-                    % (modelMapDiff))
-        f.write("runCommand('scipionwrite model #%d refmodel #%d " \
-                "prefix filtered_  savesession 0')\n"
-                % (modelMapDiffFil, modelMapM))
+            f.write("run(session,'volume laplacian #%d')\n" % modelMapDiff)
+
+        f.write("run(session,'scipionwrite #%d prefix filtered_')\n" % modelMapDiffFil)
         if self.inputPdbFiles is not None:  # Other atomic models different
                                             # from the subtrahend
             for atomStruct in self.inputPdbFiles:
-                f.write("runCommand('open %s')\n" %
+                f.write("run(session,'open %s')\n" %
                         os.path.abspath(atomStruct.get().getFileName()))
         # Finally save session
-        f.write("runCommand('scipionss')\n")
+        f.write("run(session,'scipionss')\n")
 
         # run the script:
         if len(self.extraCommands.get()) > 2:
             f.write(self.extraCommands.get())
-            args = " --nogui --script " + self._getTmpPath(
-                            chimeraScriptFileName)
+            args = " --nogui --script " + \
+                   os.path.abspath(self._getTmpPath(chimeraScriptFileName))
         else:
-            args = " --script " + self._getTmpPath(chimeraScriptFileName)
+            args = " --script " + \
+                   os.path.abspath(self._getTmpPath(chimeraScriptFileName))
         f.close()
 
         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
 
         # run in the background
-        Chimera.runProgram(Plugin.getProgram(), args)
+        cwd = os.path.abspath(self._getExtraPath())
+        Chimera.runProgram(Plugin.getProgram(), args, cwd=cwd)
 
     def createOutput(self):
-        # cHB = ChimeraProtBase()
-        # directory = self._getExtraPath()
-        # cHB.createOutput(directory)
-        """ Register outputs.
-        """
         # Check vol and pdb files
         directory = self._getExtraPath()
         for filename in sorted(os.listdir(directory)):
@@ -741,24 +627,36 @@ def subtraction(minuendId, subtrahendId, outModelId=-1, subtractOrMask=0):
                 kwargs = {keyword: pdb}
                 self._defineOutputs(**kwargs)
 
+        # upodate config file flag enablebundle
+        # so scipionwrite is disabled
+        config = configparser.ConfigParser()
+        config.read(self._getExtraPath(CHIMERA_CONFIG_FILE))
+        config.set('chimerax', 'enablebundle', 'False')
+        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
+                  'w') as configfile:
+            config.write(configfile)
+
     def symMethod(self, f, modelId, sym, order=None, range=None):
         if sym == "Cn" and order != 1:
-            f.write("runCommand('sym #%d group C%d range %d')\n"
-                    % (modelId, order, range))
+            f.write("run(session,'sym #%d C%d copies t')\n"
+                    % (modelId, order))
         elif sym == "Dn" and order != 1:
-            f.write("runCommand('sym #%d group d%d range %d')\n"
-                    % (modelId, order, range))
+            f.write("run(session,'sym #%d d%d copies t')\n"
+                    % (modelId, order))
         elif sym == "T222" or sym == "TZ3":
-            f.write("runCommand('sym #%d group t,%s range %d')\n"
-                    % (modelId, sym[1:], range))
+            f.write("v=run(session,'sym #%d t,%s copies t')\n"
+                    % (modelId, sym[1:]))
         elif sym == "O":
-            f.write("runCommand('sym #%d group O range %d')\n"
-                    % modelId, range)
+            f.write("run(session,'sym #%d O copies t')\n"
+                    % modelId)
         elif sym == "I222" or sym == "I222r" or sym == "In25" or \
                 sym == "In25r" or sym == "I2n3" or sym == "I2n3r" or \
                 sym == "I2n5" or sym == "I2n5r":
-            f.write("runCommand('sym #%d group i,%s range %d')\n"
-                    % (modelId, sym[1:], range))
+            f.write("run(session,'sym #%d i,%s copies t')\n"
+                    % (modelId, sym[1:]))
+
+        f.write("run(session,'delete #%d & #%d #>%d')\n"
+                    % (int(modelId) + 1, modelId, self.rangeDist))
 
     def _summary(self):
         summary = []

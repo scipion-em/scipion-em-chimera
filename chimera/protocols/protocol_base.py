@@ -59,6 +59,9 @@ import configparser
 class ChimeraProtBase(EMProtocol):
     """Base class  for chimera protocol"""
     _version = VERSION_3_0
+    @classmethod
+    def getClassPackageName(cls):
+        return "chimerax"
 
     # --------------------------- DEFINE param functions --------------------
     def _defineParams(self, form, doHelp=True):
@@ -375,7 +378,7 @@ class ChimeraProtBase(EMProtocol):
         return methodsMsgs
 
     def _citations(self):
-        return ['Pettersen2004']
+        return ['Goddard2018']
 
     def is_tool(self, name):
         """Check whether `name` is on PATH."""
