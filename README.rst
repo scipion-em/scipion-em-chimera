@@ -77,6 +77,12 @@ Examples
 
 See `Model Building Tutorial <https://github.com/I2PC/scipion/wiki/tutorials/tutorial_model_building_basic.pdf>`_
 
+===
+FAQ
+===
+
+ check the FAQ <https://github.com/scipion-em/scipion-em-chimera/blob/devel/FAQ.rst> for known problems
+
 
 ===============
 Buildbot status
