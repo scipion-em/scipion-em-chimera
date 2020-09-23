@@ -155,7 +155,7 @@ class ChimeraProtBase(EMProtocol):
         if self.inputVolumes is not None:
             for vol in self.inputVolumes:
                 pdbModelCounter += 1
-                f.write("open %s\n" % vol.get().getFileName())
+                f.write("open %s\n" % os.path.abspath(vol.get().getFileName()))
                 x, y, z = vol.get().getShiftsFromOrigin()
                 f.write("volume #%d style surface voxelSize %f\n"
                         % (pdbModelCounter, vol.get().getSamplingRate()))
