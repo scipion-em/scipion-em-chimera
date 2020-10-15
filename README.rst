@@ -1,6 +1,6 @@
-================================
+======================
 Chimera scipion plugin
-================================
+======================
 
 This plugin allows to use chimeraX commands within the Scipion framework.
 
@@ -23,9 +23,9 @@ OR
 
   - through the plugin manager GUI by launching Scipion and following **Configuration** >> **Plugins**
       
-- **Developer's version** 
+- **Developer's version**
 
-1. Download repository: 
+1. Download repository:
 
 .. code-block::
 
@@ -37,12 +37,12 @@ OR
 
             scipion3 installp -p path_to_scipion-em-chimera --devel
 
-- **Binary files** 
+- **Binary files**
 
 Chimera binaries could be installed automatically with the plugin after accepting ChimeraX licence terms,
 but you can also link an existing installation. Default installation path assumed is *software/em/chimerax-1.0,
 if you want to change it, set *CHIMERA_HOME* in *scipion.conf* file to the folder where ChimeraX is installed
-or link your chimerax folder to *software/em/chimerax-1.0.
+or link your chimerax folder to *software/em/chimerax-1.0*.
 
 - **Tests**
 
@@ -57,7 +57,7 @@ To check the installation, simply run the following Scipion tests:
 
 - **Supported versions of ChimeraX**
 
-1.0
+1.0, 1.1
 
 
 =========

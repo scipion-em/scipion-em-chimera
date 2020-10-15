@@ -28,7 +28,7 @@ import os
 import pwem
 import pyworkflow.utils as pwutils
 
-from .constants import CHIMERA_HOME, CHIMERA_HEADLESS_HOME, V1_0, V1_1
+from .constants import CHIMERA_HOME, V1_0, V1_1
 
 __version__ = "3.0.3"
 _logo = "chimerax_logo.png"
@@ -43,7 +43,6 @@ class Plugin(pwem.Plugin):
     @classmethod
     def _defineVariables(cls):
         cls._defineEmVar(CHIMERA_HOME, 'chimerax-1.1')
-        cls._defineEmVar(CHIMERA_HEADLESS_HOME, 'chimera_headless')
 
     @classmethod
     def getEnviron(cls):
