@@ -213,12 +213,12 @@ class TestImportData(TestImportBase):
                     ProtImportSequence.IMPORT_FROM_STRUCTURE,
                 'inputStructureSequence':
                     ProtImportSequence.IMPORT_STRUCTURE_FROM_ID,
-                'pdbId': '3RRQ',
+                'pdbId': '3rrq',
                 'inputStructureChain':
                     '{"model": 0, "chain": "A", "residues": 108}'
                 }
         protSequence = self.newProtocol(ProtImportSequence, **args)
-        protSequence.setObjLabel('import aminoacid seq,\n from 3RRQ\n'
+        protSequence.setObjLabel('import aminoacid seq,\n from 3rrq\n'
                            'atomic structure')
         self.launchProtocol(protSequence)
         sequence = protSequence.outputSequence
