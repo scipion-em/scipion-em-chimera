@@ -1,7 +1,7 @@
 # devel install /home/roberto/Software/Plugins3/scipion-em-chimera/chimera/Bundles/scipion
 import configparser
 from chimerax.core.commands import CmdDesc      # Command description
-from chimerax.core.commands import TopModelsArg
+from chimerax.core.commands import TopModelsArg, ModelsArg
 from chimerax.core.commands import StringArg
 from chimerax.core.commands import run # execute chimera cli command
 from chimerax.map.volume import Volume # model type 3D map
@@ -30,6 +30,17 @@ def readConfigFile(session, configFileName):
         d['protid'] = config.getint("chimerax", "protId")
     # session.logger.info("d=%s" % str(d))
     return d
+
+def scipioncombine(session, models):
+    # save both models (check first that there are no submodels)
+    for m in models:
+        session.logger.info("%s" % str(m.name))
+    # biopython
+    # session.logger.info(os.getenv('SCIPION_HOME'))
+    pass
+scipioncombine_desc = CmdDesc(
+    required = [('models', TopModelsArg)]
+)
 
 def scipionwrite(session, model, prefix=None):
     # models is a tuple with all selected models but we are only
