@@ -345,14 +345,24 @@ You may enable the protocol but setting
     DISABLE_TEST = False
     
 HOW TO RUN THE TEST:
+
+In the particular case of test testImportSequence5
+you should select a possible template for the target, 
+for example 5wt9, write in the line command "open 5wt9"  
+
 1) when chimerax opens select (in main menu)
 Tools -> Sequence -> Modeller Comparative
 2) a new pop up windows appears called 'Modeller Comparative'
 3) template(s) are the Sequence alignments
+   (in the case of test testImportSequence5, only the sequence alignment
+   aligned_1.fasta)
 4) choose as target(s) = seq...mutated
-In the particular case of test testImportChainFromStructureAndSequence4
+(In the particular case of test testImportChainFromStructureAndSequence4
 select as target sequences Q15116 and Q2LC89 for aligned_1.fasta and 
-aligned_2.fasta alignments, respectively.
+aligned_2.fasta alignments, respectively.)
+(in the case of test testImportSequence5, only the target sequence Q15116
+in the aligned_1.fasta)
+
 5) you will need a key for modeller website
 6) press OK
 7) In main chimerax window you will see (botton) the progression of the process,
@@ -481,3 +491,19 @@ rename #3.1 id #4, enter>
             print(self.message)
         else:
             self.launchProtocol(prot4)
+
+    def testImportSequence5(self):
+        """
+        Import a target sequence Q15116 and look for templates
+        """
+        sequence4 = self._importAminoacidSequence4()
+        args = {'addTemplate': False,
+                'inputSequence1': sequence4,
+                }
+        prot3 = self.newProtocol(ChimeraModelFromTemplate, **args)
+        prot3.setObjLabel('5 target sequence,\n '
+                          'no template\n')
+        if self.DISABLE_TEST:
+            print(self.message)
+        else:
+            self.launchProtocol(prot3)
