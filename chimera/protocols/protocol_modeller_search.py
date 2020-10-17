@@ -39,7 +39,9 @@ from pyworkflow.protocol.params import (PointerParam,
                                         MultiPointerParam,
                                         BooleanParam,
                                         EnumParam,
-                                        PathParam)
+                                        PathParam,
+                                        FloatParam,
+                                        IntParam)
 from pwem.convert.sequence import (SequenceHandler,
                                    saveFileSequencesToAlign,
                                    alignClustalSequences,
@@ -69,15 +71,16 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
     ProgramToAlign2 = ['Clustal Omega', 'MUSCLE']
     OptionForAligning = ['None', 'Additional sequences to align',
                           'Provide your own sequence alignment']
+    OptionForDataBase = ['PDB', 'NR']
+    OptionForMatrix = ['BLOSUM45', 'BLOSUM50', 'BLOSUM62', 'BLOSUM80', 'BLOSUM90',
+                       'PAM30', 'PAM70', 'PAM250', 'IDENTITY']
 
     # --------------------------- DEFINE param functions --------------------
     def _defineParams(self, form, doHelp=False):
         formBase = super(ChimeraModelFromTemplate, self)._defineParams(form,
                                                                        doHelp=True)
         param = form.getParam('pdbFileToBeRefined')
-        param.label.set('Atomic structure used as template')
-        param.help.set("PDBx/mmCIF file template used as basic atomic "
-                       "structure to model your specific sequence.")
+        param.condition.set('False')
         param = form.getParam('inputVolume')
         param.condition.set('False')
         param = form.getParam('inputVolumes')
@@ -87,8 +90,24 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         param.condition.set('False')
         param.allowsNull.set('True')
         section = formBase.getSection('Input')
+        section.addParam('addTemplate', BooleanParam,
+                         default=True, label='Do you already have a template?',
+                         help='"Yes": Option by default. Select this option in case '
+                              'you already have a template to model your target '
+                              'sequence.\n"No": Select this option if you want to '
+                              'search for a template with which model your target '
+                              'sequence. Generation of multimeric models is not '
+                              'allowed selecting this option.\n')
+        section.addParam('pdbTemplate', PointerParam,
+                         pointerClass="AtomStruct", allowsNull=True,
+                         important=True,
+                         condition='addTemplate == True',
+                         label='Atomic structure used as template',
+                         help="PDBx/mmCIF file template used as basic atomic "
+                              "structure to model your specific sequence.")
         section.addParam('inputStructureChain', StringParam,
                          label="Chain ", allowsNull=True, important=True,
+                         condition='addTemplate == True',
                          help="Select a particular chain of the atomic "
                               "structure.")
         section.addParam('inputSequence1', PointerParam, pointerClass="Sequence",
@@ -96,8 +115,36 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                          important=True,
                          help="Input the aminoacid sequence to align with the "
                               "structure template sequence.")
+        section.addParam('dataBase', EnumParam,
+                         choices=self.OptionForDataBase,
+                         condition='addTemplate == False',
+                         label="Protein sequence database:", default=0,
+                         help="Select a protein sequence database to search "
+                              "for templates:\nPDB: Experimentally determined structures "
+                              "in the "
+                              "Protein Data Bank.\nNR: NCBI 'non-redundant'database. "
+                              "It contains GenBank translation proteins, PDB sequences, "
+                              "SwissProt proteins + PIR + PRF. Since NR is much larger "
+                              "than PDB, it takes longer to search.\n")
+        section.addParam('similarityMatrix', EnumParam,
+                         choices=self.OptionForMatrix,
+                         condition='addTemplate == False',
+                         label="Similarity matrix:", default=2,
+                         help="Select a similarity matrix to use for alignment "
+                              "scoring.\n")
+        section.addParam('cutoffValue', FloatParam,
+                         condition='addTemplate == False',
+                         label="cutoff evalue:", default=1e-3,
+                         help="Least significant expectation value needed to "
+                              "qualify the retrieved element as a hit.\n")
+        section.addParam('maxSeqs', IntParam,
+                         condition='addTemplate == False',
+                         label="Maximum number of sequences:", default=100,
+                         help="Maximum number of sequences to retrieve "
+                              "from the database.\n")
         section.addParam('optionForAligning1', EnumParam,
                          choices=self.OptionForAligning,
+                         condition='addTemplate == True',
                          label="Options to improve the alignment:", default=0,
                          help="None: Option by default. Only the template and the "
                               "target sequences will be included in the alignment. "
@@ -112,21 +159,21 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                               "sequences.\n")
         section.addParam('inputYourOwnSequenceAlignment1', PathParam,
                          pointerClass="File", allowsNull=False,
-                         condition='optionForAligning1 == 2',
+                         condition='addTemplate == True and optionForAligning1 == 2',
                          label='Sequence alignment input',
                          help="Input your own sequence alignment.\n"
                               "ChimeraX allowed formats accessible here: "
                               "https://www.cgl.ucsf.edu/chimerax/docs/user/commands/open.html#sequence ")
         section.addParam('inputSequencesToAlign1', MultiPointerParam,
                          pointerClass="Sequence", allowsNull=True,
-                         condition='optionForAligning1 == 1',
+                         condition='addTemplate == True and optionForAligning1 == 1',
                          label='Other sequences to align',
                          help="In case you need to load more sequences to "
                               "align, you can load them here.")
         section.addParam('inputProgramToAlign1_1', EnumParam,
                          choices=self.ProgramToAlign1,
                          label="Alignment tool for two sequences:", default=0,
-                         condition='optionForAligning1 == 0',
+                         condition='addTemplate == True and optionForAligning1 == 0',
                          help="Select a program to accomplish the sequence"
                               "alignment:\n\nBiophyton module "
                               "Bio.pairwise2 ("
@@ -155,7 +202,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         section.addParam('inputProgramToAlign2_1', EnumParam,
                          choices=self.ProgramToAlign2,
                          label="Multiple alignment tool:", default=0,
-                         condition='optionForAligning1 == 1',
+                         condition='addTemplate == True and optionForAligning1 == 1',
                          help="Select a program to accomplish the sequence"
                               "alignment:\n\nClustal Omega "
                               "program (http://www.clustal.org/omega/, "
@@ -172,7 +219,9 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                               "for the first time by 'sudo apt install "
                               "muscle'.")
         section.addParam('additionalTargetSequence', BooleanParam,
-                         default=False, label='Additional target sequence to include?',
+                         default=False,
+                         condition='addTemplate == True',
+                         label='Additional target sequence to include?',
                          help='Select YES if you want to add an additional '
                               'target sequence to model according a different '
                               'chain of the structure template. This '
@@ -180,19 +229,22 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                               'the two interacting elements of a particular complex'
                               ' at the same time.')
         section.addParam('selectStructureChain', StringParam,
-                         condition='additionalTargetSequence == True',
+                         condition='addTemplate == True and '
+                                   'additionalTargetSequence == True',
                          label="Chain ", allowsNull=True, important=True,
                          help="Select a particular chain of the atomic "
                               "structure.")
         section.addParam('inputSequence2', PointerParam, pointerClass="Sequence",
-                         condition='additionalTargetSequence == True',
+                         condition='addTemplate == True and '
+                                   'additionalTargetSequence == True',
                          label='Target sequence', allowsNull=True,
                          important=True,
                          help="Input the aminoacid sequence to align with the "
                               "structure template sequence.")
         section.addParam('optionForAligning2', EnumParam,
                          choices=self.OptionForAligning,
-                         condition='additionalTargetSequence == True',
+                         condition='addTemplate == True and '
+                                   'additionalTargetSequence == True',
                          label="Options to improve the alignment:", default=0,
                          help="None: Option by default. Only the template and the "
                               "target sequences will be included in the alignment. "
@@ -207,7 +259,8 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                               "sequences.\n")
         section.addParam('inputYourOwnSequenceAlignment2', PathParam,
                          pointerClass="File", allowsNull=False,
-                         condition='optionForAligning2 == 2 and '
+                         condition='addTemplate == True and '
+                                   'optionForAligning2 == 2 and '
                                    'additionalTargetSequence == True',
                          label='Sequence alignment input',
                          help="Input your own sequence alignment.\n"
@@ -215,7 +268,8 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                               "https://www.cgl.ucsf.edu/chimerax/docs/user/commands/open.html#sequence ")
         section.addParam('inputSequencesToAlign2', MultiPointerParam,
                          pointerClass="Sequence", allowsNull=True,
-                         condition='optionForAligning2 == 1 and '
+                         condition='addTemplate == True and '
+                                   'optionForAligning2 == 1 and '
                                    'additionalTargetSequence == True',
                          label='Other sequences to align',
                          help="In case you need to load more sequences to "
@@ -223,7 +277,8 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         section.addParam('inputProgramToAlign1_2', EnumParam,
                          choices=self.ProgramToAlign1,
                          label="Alignment tool for two sequences:", default=0,
-                         condition='optionForAligning2 == 0 and '
+                         condition='addTemplate == True and '
+                                   'optionForAligning2 == 0 and '
                                    'additionalTargetSequence == True',
                          help="Select a program to accomplish the sequence"
                               "alignment:\n\nBiophyton module "
@@ -253,7 +308,8 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         section.addParam('inputProgramToAlign2_2', EnumParam,
                          choices=self.ProgramToAlign2,
                          label="Multiple alignment tool:", default=0,
-                         condition='optionForAligning2 == 1 and '
+                         condition='addTemplate == True and '
+                                   'optionForAligning2 == 1 and '
                                    'additionalTargetSequence == True',
                          help="Select a program to accomplish the sequence"
                               "alignment:\n\nClustal Omega "
@@ -274,27 +330,29 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                          "sequence (and other additional sequences that you "
                          "want to use in  the alignment) will appear aligned to "
                          "the template's sequence. Select in the sequence window "
-                         "menu:\nStructure -> Modeller (homology)...;\nA new  "
+                         "menu:\nTools -> Sequence -> Modeller Comparative;\nA new  "
                          "window for Comparative Modeling with Modeller will "
-                         "appear. Select your specific sequence as the sequence "
-                         "to be modeled (target), and the input atomic structure"
+                         "appear. Select your specific template(s) as the Sequence "
+                         "alignments and the target(s)sequence as the sequence "
+                         "to be modeled"
                          + '''
-        used as template for modeling. Select Run Modeller via web service 
-        and write the Modeller license key supplied (Academic user can 
+        . To run Modeller via web service 
+        write the Modeller license key supplied (Academic user can 
         register free of charge to receive a license key). Finally, press OK.
         \nWAITING TIME: (you may see the status of your job in chimera main 
         window, lower left corner.)\n\nStep 2:\nWhen the process finished, 
         5 models will 
         be automatically superimposed onto the template and model scores
-        will appear in Modeller Results window. In Chimera main menu -> 
-        Favorites -> Model panel will show you: #0 (coordinate axes); #1 (
-        template); #2.1 to 2.5 (models).Choose the one you like the best, 
-        for example model #2.1. To save it in Scipion, we need to change the 
+        will appear in Modeller Results window. In Chimera Model panel 
+        you will have: #1 (coordinate axes); #2 (
+        template); #3.1 to 3.5 (models).Choose the one you like the best, 
+        for example model #3.1. To save it in Scipion, we need to change the 
         model ID. In Chimera main menu: Favorites -> Command Line, write 
-        *combine #2.1 model #3 close t*. Then, you will see in Model panel 
-        that selected model #2.1 renamed to combination with ID #3. Save it 
+        *rename #3.1 id #4*. Then, you will see in Model panel 
+        that selected model #3.1 renamed to #3. Save it 
         as first guess in Scipion by executing the Chimera command 
-        *scipionwrite [model #n]*. In our example *scipionwrite model #3*.\n 
+        *scipionwrite [model] #n [prefix XX]*. In our example 
+        *scipionwrite #4 pefix model_3_1_*.\n 
         When you use the command line scipionwrite, the Chimera session will 
         be saved by default. Additionally, you can save the Chimera session 
         whenever you want by executing the command *scipionss*. You will be 
@@ -306,60 +364,68 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
     # --------------------------- INSERT steps functions --------------------
 
     def prerequisitesStep(self):
+        if self.addTemplate:
 
-        # read PDB
-        fileName = self._readPDB()
+            # read PDB
+            fileName = self._readPDB()
 
-        # get pdb sequence
-        import json
-        chainIdDict = json.loads(self.inputStructureChain.get())
+            # get pdb sequence
+            import json
+            chainIdDict = json.loads(self.inputStructureChain.get())
 
-        userSeq = self.inputSequence1.get()  # SEQ object from Scipion
+            userSeq = self.inputSequence1.get()  # SEQ object from Scipion
 
-        inFile = self.INFILE1
-        outFile = self.OUTFILE1
+            inFile = self.INFILE1
+            outFile = self.OUTFILE1
 
-        addSeq = self.optionForAligning1.get()
+            addSeq = self.optionForAligning1.get()
 
-        yourAlignment = self.inputYourOwnSequenceAlignment1.get()
+            yourAlignment = self.inputYourOwnSequenceAlignment1.get()
 
-        inputSeqAlign = self.inputSequencesToAlign1
+            inputSeqAlign = self.inputSequencesToAlign1
 
-        programToAlign1 = self.inputProgramToAlign1_1
+            programToAlign1 = self.inputProgramToAlign1_1
 
-        programToAlign2 = self.inputProgramToAlign2_1
-
-        self.prePreRequisites(fileName, chainIdDict, userSeq,
-                              inFile, outFile, addSeq, yourAlignment,
-                              inputSeqAlign, programToAlign1,
-                              programToAlign2)
-
-        self.selectedChain1 = self.selectedChain
-
-        if self.additionalTargetSequence.get() is True:
-            chainIdDict = json.loads(self.selectStructureChain.get())
-
-            userSeq = self.inputSequence2.get()  # SEQ object from Scipion
-
-            inFile = self.INFILE2
-            outFile = self.OUTFILE2
-
-            addSeq = self.optionForAligning2.get()
-
-            yourAlignment = self.inputYourOwnSequenceAlignment2.get()
-
-            inputSeqAlign = self.inputSequencesToAlign2
-
-            programToAlign1 = self.inputProgramToAlign1_2
-
-            programToAlign2 = self.inputProgramToAlign2_2
+            programToAlign2 = self.inputProgramToAlign2_1
 
             self.prePreRequisites(fileName, chainIdDict, userSeq,
                                   inFile, outFile, addSeq, yourAlignment,
                                   inputSeqAlign, programToAlign1,
                                   programToAlign2)
 
-        self.selectedChain2 = self.selectedChain
+            self.selectedChain1 = self.selectedChain
+
+            if self.additionalTargetSequence.get() is True:
+                chainIdDict = json.loads(self.selectStructureChain.get())
+
+                userSeq = self.inputSequence2.get()  # SEQ object from Scipion
+
+                inFile = self.INFILE2
+                outFile = self.OUTFILE2
+
+                addSeq = self.optionForAligning2.get()
+
+                yourAlignment = self.inputYourOwnSequenceAlignment2.get()
+
+                inputSeqAlign = self.inputSequencesToAlign2
+
+                programToAlign1 = self.inputProgramToAlign1_2
+
+                programToAlign2 = self.inputProgramToAlign2_2
+
+                self.prePreRequisites(fileName, chainIdDict, userSeq,
+                                      inFile, outFile, addSeq, yourAlignment,
+                                      inputSeqAlign, programToAlign1,
+                                      programToAlign2)
+
+            self.selectedChain2 = self.selectedChain
+
+        else:
+            userSeq = self.inputSequence1.get()  # SEQ object from Scipion
+            # get target sequence imported by the user
+
+            outFile = self.OUTFILE1
+            self.targetSeqID1 = self.preTemplate(userSeq, outFile)
 
     def prePreRequisites(self, fileName, chainIdDict, userSeq, inFile, \
                          outFile, addSeq, yourAlignment, inputSeqAlign, \
@@ -455,9 +521,24 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
             outFile = os.path.join(self._getExtraPath(), aligmentFile)
             copyFile(yourAlignment, outFile)
 
+    def preTemplate(self, userSeq, outFile):
+        userSequence = userSeq.getSequence()  # sequence associated to
+        # that SEQ object (str)
+        targetSeqID = userSeq.getId()  # ID associated to SEQ object (str)
+        # transformation of this sequence (str) in a Bio.Seq.Seq object:
+        seqHandler = SequenceHandler(userSequence,
+                                     isAminoacid=userSeq.getIsAminoacids())
+        targetSeq = seqHandler._sequence  # Bio.Seq.Seq object
+        # creation of Dic of IDs and sequences
+        SeqDic = OrderedDict()
+        SeqDic[targetSeqID] = targetSeq
+        outFile = self._getOutFastaSequencesFile(outFile)
+        saveFileSequencesToAlign(SeqDic, outFile)
+        return targetSeqID
+
     def _readPDB(self):
         self.structureHandler = AtomicStructHandler()
-        fileName = os.path.abspath(self.pdbFileToBeRefined.get(
+        fileName = os.path.abspath(self.pdbTemplate.get(
         ).getFileName())
         self.structureHandler.read(fileName)
         return fileName
