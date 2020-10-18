@@ -118,9 +118,10 @@ class ChimeraProtBase(EMProtocol):
         # building script file including the coordinate axes and the input
         # volume with samplingRate and Origin information
         f = open(self._getTmpPath(chimeraScriptFileName), "w")
-
+        _inputVol = None
         if self.inputVolume.get() is None:
-            _inputVol = self.pdbFileToBeRefined.get().getVolume()
+            if self.pdbFileToBeRefined.get() is not None:
+                _inputVol = self.pdbFileToBeRefined.get().getVolume()
         else:
             _inputVol = self.inputVolume.get()
 
@@ -162,6 +163,20 @@ class ChimeraProtBase(EMProtocol):
                         % (pdbModelCounter, vol.get().getSamplingRate()))
                 f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n"
                         % (pdbModelCounter, x, y, z))
+
+        if self.addTemplate:
+            self.pdbTemplate = self.pdbFileToBeRefined
+        else:
+            if (hasattr(self, 'inputSequence1') and
+                    self._getOutFastaSequencesFile is not None):
+                alignmentFile1 = self._getOutFastaSequencesFile(self.OUTFILE1)
+                f.write("open %s\n" % alignmentFile1)
+                f.write("blastprotein %s:%s database %s matrix %s "
+                        "cutoff %.3f maxSeqs %d log true\n" %
+                        (alignmentFile1.split("/")[-1], self.targetSeqID1,
+                         self.OptionForDataBase[int(self.dataBase)],
+                         self.OptionForMatrix[int(self.similarityMatrix)],
+                         self.cutoffValue, self.maxSeqs))
 
         if self.pdbFileToBeRefined.get() is not None:
             pdbModelCounter += 1
