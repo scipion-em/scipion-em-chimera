@@ -55,6 +55,7 @@ from pyworkflow.utils.properties import Message
 
 from .. import Plugin
 import configparser
+import shutil
 
 class ChimeraProtBase(EMProtocol):
     """Base class  for chimera protocol"""
@@ -266,8 +267,9 @@ class ChimeraProtBase(EMProtocol):
                                   _chimeraMapTemplateFileName % protId,
                               'sessionfile': _sessionFile,
                               'enablebundle': True,
-                              'protid': self.getObjId()}
-                              # set to True when
+                              'protid': self.getObjId(),
+                              'scipionpython': shutil.which('python')}
+                              # set enablebundle to True when
                               # protocol finished
                               # viewers will check this configuration file
         with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
