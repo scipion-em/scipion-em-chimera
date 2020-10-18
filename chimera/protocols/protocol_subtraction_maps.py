@@ -26,6 +26,8 @@
 # **************************************************************************
 
 import os
+import shutil
+
 from pwem import *
 from pwem.convert import Ccp4Header
 from pwem.objects import Volume
@@ -48,7 +50,7 @@ from pwem.constants import (SYM_DIHEDRAL_X)
 from ..constants import (CHIMERA_SYM_NAME, CHIMERA_I222r)
 from ..convert import CHIMERA_LIST
 from pwem.protocols import EMProtocol
-from .protocol_base import createScriptFile, ChimeraProtBase
+from .protocol_base import ChimeraProtBase
 from pwem.viewers.viewer_chimera import (Chimera,
                                          sessionFile,
                                          chimeraMapTemplateFileName,
@@ -308,7 +310,9 @@ class ChimeraSubtractionMaps(EMProtocol):
                                   _chimeraMapTemplateFileName % protId,
                               'sessionfile': _sessionFile,
                               'enablebundle': True,
-                              'protid': self.getObjId()}
+                              'protid': self.getObjId(),
+                              'scipionpython': shutil.which('python')}
+
         with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
                   'w') as configfile:
             config.write(configfile)

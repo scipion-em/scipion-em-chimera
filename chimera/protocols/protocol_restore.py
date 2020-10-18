@@ -35,6 +35,7 @@ from pwem.viewers.viewer_chimera import (Chimera,
                                          sessionFile)
 from .protocol_base import ChimeraProtBase
 from ..constants import CHIMERA_CONFIG_FILE
+import shutil
 
 
 class ChimeraProtRestore(ChimeraProtBase):
@@ -113,7 +114,8 @@ class ChimeraProtRestore(ChimeraProtBase):
                                   _chimeraMapTemplateFileName % protId,
                               'sessionfile': _sessionFile,
                               'enablebundle': True,
-                              'protid': self.getObjId()}
+                              'protid': self.getObjId(),
+                              'scipionpython': shutil.which('python') }
         with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
                   'w') as configfile:
             config.write(configfile)
