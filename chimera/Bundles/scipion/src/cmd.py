@@ -26,20 +26,75 @@ def readConfigFile(session, configFileName):
         d['enablebundle'] = config.getboolean("chimerax", "enablebundle")
         d['chimerapdbtemplatefilename'] = config.get("chimerax", "chimeraPdbTemplateFileName")
         d['chimeramaptemplatefilename'] = config.get("chimerax", "chimeraMapTemplateFileName")
-        d['sessionfile'] = config.get("chimerax", "sessionFile")
+        d['sessionfile'] = config.get("chimerax", "sessionfile")
         d['protid'] = config.getint("chimerax", "protId")
+        d['scipionpython'] = config.get("chimerax", "scipionpython")
     # session.logger.info("d=%s" % str(d))
     return d
 
-def scipioncombine(session, models):
-    # save both models (check first that there are no submodels)
-    for m in models:
-        session.logger.info("%s" % str(m.name))
-    # biopython
-    # session.logger.info(os.getenv('SCIPION_HOME'))
-    pass
+def scipioncombine(session, models=None, modelid=None):
+    """Emulate copy/combine chimera command. It will not handle
+    properly models with submodels but it is better than nothing.
+    scipioncombine #1,2 modelid 55
+    will combine model 1 and 2 and produce an output model with
+    id = 55
+    arg modelid is optional
+    """
+    d = readConfigFile(session, chimeraConfigFileName)
+    # I think there is no harm in allowing this
+    # command by default
+    # if not d['enablebundle']:
+    #    session.logger.error("scipionwrite cannot be called from Analyze or Viewers")
+    #    return
+
+    # list with all models
+    modelFileName = []
+
+    for model in models:
+        modelName = model._get_name()
+        if isinstance(model, AtomicStructure) or\
+            modelName[-4:] == '.cif' or\
+            modelName[-4:] == '.pdb':
+            modelFileName.append(d['chimerapdbtemplatefilename'].
+                                 replace("__","_in_%s_" % (model.id)[0]))
+        else:
+            session.logger.error("I do not know how to combine model %s\n" % modelName)
+            continue
+        # save each model to be combined
+        command = 'save %s #%s'%(modelFileName[-1],
+                                 str((model.id)[0]))
+        run(session, command)
+
+    # create add script for scipion atomatructurils
+    outFileName = d['chimerapdbtemplatefilename'].replace("__", "_out_%s_" % (model.id)[0])
+    scriptFileName = outFileName[:-4] + ".py"
+
+    f = open(scriptFileName, "w")
+    f.write("""from pwem.convert.atom_struct import AtomicStructHandler
+# recover list with all models to be combined    
+modelFileName = eval("%s")
+# read first model
+aStruct1 = AtomicStructHandler(modelFileName[0])
+# read rest of models but last one
+for fileName in modelFileName[1:-1]:
+    aStruct1.addStruct(fileName)
+# read last model and save the sum of all
+aStruct1.addStruct(modelFileName[-1], '%s')
+"""% (str(modelFileName), outFileName))
+    f.close()
+    cmd = d['scipionpython']
+    cmd += " %s" % scriptFileName
+    os.system(cmd)
+    newModel = run(session, "open %s" % outFileName )
+    modelID = str(newModel[0][0].id[0])
+    session.logger.info("model --> " + modelID)
+    run(session, "style #%s stick" % modelID )
+    if modelid is not None:
+        run(session, "rename  #%s id #%s" % (modelID, modelid))
+
 scipioncombine_desc = CmdDesc(
-    required = [('models', TopModelsArg)]
+    required = [('models', TopModelsArg)],
+    optional= [('modelid', StringArg)],
 )
 
 def scipionwrite(session, model, prefix=None):
@@ -53,7 +108,7 @@ def scipionwrite(session, model, prefix=None):
 
     model = model[0] # model is a tuple, let us get the major model id
 
-    # remoce "." from prefix string
+    # remove "." from prefix string
     if prefix is not None:
         prefix = prefix.replace(".", "_dot_")
 
