@@ -165,7 +165,7 @@ class ChimeraProtBase(EMProtocol):
 
         if hasattr(self, 'addTemplate') and \
                 self.addTemplate:
-            self.pdbTemplate = self.pdbFileToBeRefined
+            self.pdbFileToBeRefined = self.pdbTemplate
         else:
             if (hasattr(self, 'inputSequence1') and
                     self._getOutFastaSequencesFile is not None):
