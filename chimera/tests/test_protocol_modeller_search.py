@@ -462,7 +462,7 @@ rename #3.1 id #4, enter>
                 'inputSequencesToAlign2': [sequence8, sequence9]
                 }
         prot3 = self.newProtocol(ChimeraModelFromTemplate, **args)
-        prot3.setObjLabel('4_2 target sequences,\n '
+        prot3.setObjLabel('4_1 target sequences,\n '
                           'fitting a complex\n'
                           'additional seqs')
         if self.DISABLE_TEST:
@@ -485,7 +485,7 @@ rename #3.1 id #4, enter>
                 'inputYourOwnSequenceAlignment2': alignmentFile2,
                 }
         prot4 = self.newProtocol(ChimeraModelFromTemplate, **args)
-        prot4.setObjLabel('5_2 target sequences,\n '
+        prot4.setObjLabel('4_2 target sequences,\n '
                           'fitting a complex\n'
                           'alignment input')
         if self.DISABLE_TEST:
