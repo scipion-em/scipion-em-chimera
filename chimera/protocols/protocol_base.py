@@ -93,9 +93,11 @@ class ChimeraProtBase(EMProtocol):
                       help="Add extra commands in cmd file. Use for testing")
         if doHelp:
             form.addSection(label='Help')
-            form.addLine(''' scipionwrite model #n [refmodel #p] [prefix stringAddedToFilename]
+            # form.addLine(''' scipionwrite model #n [refmodel #p] [prefix stringAddedToFilename]
+            form.addLine(''' scipionwrite #n [prefix stringAddedToFilename]
             scipionss
             scipionrs
+            scipioncombine #n1,n2,n3... [modelid StringArg]
             Type 'help command' in chimera command line for details (command is the command name)''')
 
         return form  # DO NOT remove this return
