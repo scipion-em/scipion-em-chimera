@@ -53,7 +53,7 @@ from ..constants import CLUSTALO, MUSCLE
 
 class ChimeraModelFromTemplate(ChimeraProtBase):
     """Protocol to model three-dimensional structures of proteins using Modeller.
-        Execute command *scipionwrite [model #n]* from command line in order
+        Execute command *scipionwrite #n [prefix stringAddedToFilename] from command line in order
         to transfer the selected
         pdb to scipion. Default value is model=#0,
         model refers to the pdb file."""
