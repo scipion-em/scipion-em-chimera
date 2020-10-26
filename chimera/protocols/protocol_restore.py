@@ -42,11 +42,14 @@ class ChimeraProtRestore(ChimeraProtBase):
     """This protocol opens Chimera and restores a session
       that has been stored each time a 3Dmap or an atomic structure 
       by using `scipionwrite` or `scipionss` commad.
-        Execute command *scipionwrite [model #n] [refmodel #p]
-        [saverefmodel 0|1]* from command line in order to transfer fitted
-        pdb to scipion. Default values are model=#0,
-        refmodel =#1 and saverefmodel 0 (false).
-        model refers to the pdb file. refmodel to a 3Dmap"""
+      Execute command *scipionwrite #n [prefix stringAddedToFilename]
+      model refers to the pdb file"""
+        # Execute command *scipionwrite [model #n] [refmodel #p]
+        # [saverefmodel 0|1]* from command line in order to transfer fitted
+        # pdb to scipion. Default values are model=#0,
+        # refmodel =#1 and saverefmodel 0 (false).
+        # model refers to the pdb file. refmodel to a 3Dmap"""
+
     _label = 'restore session'
 
     def _defineParams(self, form):

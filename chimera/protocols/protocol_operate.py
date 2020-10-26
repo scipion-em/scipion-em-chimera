@@ -30,10 +30,13 @@ from .protocol_base import ChimeraProtBase
 
 
 class ChimeraProtOperate(ChimeraProtBase):
+    # """This protocol provides access to Chimera and allows to save the result in Scipion framework.
+    #     Execute command *scipionwrite [model #n] [refmodel #p]
+    #     [saverefmodel 0|1]* from command line in order to transferm fitted
+    #     pdb to scipion. Default values are model=#0,
+    #     refmodel =#1 and saverefmodel 0 (false).
+    #     model refers to the pdb file. refmodel to a 3Dmap"""
     """This protocol provides access to Chimera and allows to save the result in Scipion framework.
-        Execute command *scipionwrite [model #n] [refmodel #p]
-        [saverefmodel 0|1]* from command line in order to transferm fitted
-        pdb to scipion. Default values are model=#0,
-        refmodel =#1 and saverefmodel 0 (false).
-        model refers to the pdb file. refmodel to a 3Dmap"""
+            Execute command *scipionwrite #n [prefix stringAddedToFilename]
+            model refers to the pdb file"""
     _label = 'operate'
