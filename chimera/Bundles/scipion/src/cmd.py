@@ -65,7 +65,7 @@ def scipioncombine(session, models=None, modelid=None):
                                  str((model.id)[0]))
         run(session, command)
 
-    # create add script for scipion atomatructurils
+    # create add script for scipion atomstructutils
     outFileName = d['chimerapdbtemplatefilename'].replace("__", "_out_%s_" % (model.id)[0])
     scriptFileName = outFileName[:-4] + ".py"
 
@@ -85,12 +85,20 @@ aStruct1.addStruct(modelFileName[-1], '%s')
     cmd = d['scipionpython']
     cmd += " %s" % scriptFileName
     os.system(cmd)
-    newModel = run(session, "open %s" % outFileName )
-    modelID = str(newModel[0][0].id[0])
-    session.logger.info("model --> " + modelID)
-    run(session, "style #%s stick" % modelID )
+    run(session, "open %s" % outFileName)
+    # newModel = run(session, "open %s" % outFileName )
+    # modelID = str(newModel[0][0].id[0])
+    # session.logger.info("model --> " + modelID)
+    modelID = str(session.models.list()[-1].id[0])
     if modelid is not None:
         run(session, "rename  #%s id #%s" % (modelID, modelid))
+        session.logger.info("model --> " + modelid)
+    else:
+        session.logger.info("model --> " + modelID)
+    run(session, "style #%s stick" % modelID )
+    # if modelid is not None:
+    #     run(session, "rename  #%s id #%s" % (modelID, modelid))
+    run(session, "scipionss")
 
 scipioncombine_desc = CmdDesc(
     required = [('models', TopModelsArg)],
