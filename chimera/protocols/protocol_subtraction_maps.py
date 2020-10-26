@@ -65,7 +65,7 @@ import configparser
 class ChimeraSubtractionMaps(EMProtocol):
     """Protocol to subtract two volumes.
         One of these volumes can be derived from an atomic structure.
-        Execute command *scipionwrite model #n [refmodel #p] [prefix stringAddedToFilename]*
+        Execute command *scipionwrite #n [prefix stringAddedToFilename]*
         from command line in order to transfer the generated maps and models to scipion.
         In addition to maps and models that the protocol saves by default,
         the user can generate and save some others"""
