@@ -90,15 +90,17 @@ aStruct1.addStruct(modelFileName[-1], '%s')
     # modelID = str(newModel[0][0].id[0])
     # session.logger.info("model --> " + modelID)
     modelID = str(session.models.list()[-1].id[0])
+    run(session, "style #%s stick" % modelID)
     if modelid is not None:
         run(session, "rename  #%s id #%s" % (modelID, modelid))
         session.logger.info("model --> " + modelid)
+        run(session, "scipionwrite #%s" % modelid)
     else:
         session.logger.info("model --> " + modelID)
-    run(session, "style #%s stick" % modelID )
+        run(session, "scipionwrite #%s" % modelID)
+    # run(session, "style #%s stick" % modelID )
     # if modelid is not None:
     #     run(session, "rename  #%s id #%s" % (modelID, modelid))
-    run(session, "scipionss")
 
 scipioncombine_desc = CmdDesc(
     required = [('models', TopModelsArg)],
