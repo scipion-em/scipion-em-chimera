@@ -316,6 +316,9 @@ class ChimeraProtBase(EMProtocol):
         # Check vol and pdb files
         directory = self._getExtraPath()
         for filename in sorted(os.listdir(directory)):
+            if filename.startswith("tmp"):
+                # files starting with "tmp" will not be converted in scipion objects
+                continue
             if filename.endswith(".mrc"):
                 volFileName = os.path.join(directory, filename)
                 vol = Volume()
