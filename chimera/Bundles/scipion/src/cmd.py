@@ -56,8 +56,9 @@ def scipioncombine(session, models=None, modelid=None):
             modelName[-4:] == '.cif' or\
             modelName[-4:] == '.pdb':
             # files starting with "tmp" will not be converted in scipion objects
-            modelFileName.append("tmp_" + d['chimerapdbtemplatefilename'].
-                                 replace("__","_in_%s_" % (model.id)[0]))
+            modelFileName.append(d['chimerapdbtemplatefilename'].
+                                 replace("__","_in_%s_" % (model.id)[0]).
+                                 replace("Atom_struct_", "tmp_Atom_struct_"))
         else:
             session.logger.error("I do not know how to combine model %s\n" % modelName)
             continue
@@ -67,7 +68,8 @@ def scipioncombine(session, models=None, modelid=None):
         run(session, command)
 
     # create add script for scipion atomatructurils
-    outFileName = d['chimerapdbtemplatefilename'].replace("__", "_out_%s_" % (model.id)[0])
+    outFileName = d['chimerapdbtemplatefilename'].\
+        replace("__", "_out_%s_" % (model.id)[0])
     scriptFileName = outFileName[:-4] + ".py"
 
     f = open(scriptFileName, "w")
