@@ -120,9 +120,9 @@ class ChimeraProtBase(EMProtocol):
         # volume with samplingRate and Origin information
         f = open(self._getTmpPath(chimeraScriptFileName), "w")
         _inputVol = None
-        if self.inputVolume.get() is None:
-            if self.pdbFileToBeRefined.get() is not None:
-                _inputVol = self.pdbFileToBeRefined.get().getVolume()
+        if not hasattr(self, 'inputVolume') and \
+                self.pdbFileToBeRefined.get() is not None:
+            _inputVol = self.pdbFileToBeRefined.get().getVolume()
         else:
             _inputVol = self.inputVolume.get()
 
@@ -155,7 +155,8 @@ class ChimeraProtBase(EMProtocol):
             f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n"
                     % (pdbModelCounter, x_input, y_input, z_input))
 
-        if self.inputVolumes is not None:
+        if hasattr(self, 'inputVolumes') and \
+                self.inputVolumes is not None:
             for vol in self.inputVolumes:
                 pdbModelCounter += 1
                 f.write("open %s\n" % os.path.abspath(vol.get().getFileName()))
@@ -164,21 +165,6 @@ class ChimeraProtBase(EMProtocol):
                         % (pdbModelCounter, vol.get().getSamplingRate()))
                 f.write("volume #%d origin %0.2f,%0.2f,%0.2f\n"
                         % (pdbModelCounter, x, y, z))
-
-        if hasattr(self, 'addTemplate') and \
-                self.addTemplate:
-            self.pdbFileToBeRefined = self.pdbTemplate
-        else:
-            if (hasattr(self, 'inputSequence1') and
-                    self._getOutFastaSequencesFile is not None):
-                alignmentFile1 = self._getOutFastaSequencesFile(self.OUTFILE1)
-                f.write("open %s\n" % alignmentFile1)
-                f.write("blastprotein %s:%s database %s matrix %s "
-                        "cutoff %.3f maxSeqs %d log true\n" %
-                        (alignmentFile1.split("/")[-1], self.targetSeqID1,
-                         self.OptionForDataBase[int(self.dataBase)],
-                         self.OptionForMatrix[int(self.similarityMatrix)],
-                         self.cutoffValue, self.maxSeqs))
 
         if self.pdbFileToBeRefined.get() is not None:
             pdbModelCounter += 1
@@ -190,77 +176,17 @@ class ChimeraProtBase(EMProtocol):
                 f.write("move %0.2f,%0.2f,%0.2f model #%d "
                         "coord #0\n" % (x, y, z, pdbModelCounter))
 
-        # Alignment of sequence and structure
-        if (hasattr(self, 'inputSequence1') and
-                hasattr(self, 'inputStructureChain')):
-            if (self.inputSequence1.get() is not None and
-                self.inputStructureChain.get() is not None):
-                pdbModelCounter = 2
-                if str(self.selectedModel) != '0':
-                    f.write("select #%s.%s/%s\n"
-                            % (pdbModelCounter,
-                               str(self.selectedModel + 1),
-                               str(self.selectedChain1)))
-                else:
-                    f.write("select #%s/%s\n"
-                            % (pdbModelCounter,
-                               str(self.selectedChain1)))
-
-                if self._getOutFastaSequencesFile is not None:
-                    alignmentFile1 = self._getOutFastaSequencesFile(self.OUTFILE1)
-                    f.write("open %s\n" % alignmentFile1)
-                    f.write("sequence disassociate #%s %s\n" %
-                            (pdbModelCounter,
-                            alignmentFile1.split("/")[-1]))
-                    if str(self.selectedModel) != '0':
-                        f.write("sequence associate #%s.%s/%s %s:1\n" %
-                                (pdbModelCounter,
-                                 str(self.selectedModel + 1),
-                                 str(self.selectedChain1),
-                                 alignmentFile1.split("/")[-1]))
-                    else:
-                        f.write("sequence associate #%s/%s %s:1\n" %
-                                (pdbModelCounter,
-                                 str(self.selectedChain1),
-                                 alignmentFile1.split("/")[-1]))
-
-            if (self.additionalTargetSequence.get() is True and
-                self.inputSequence2.get() is not None and
-                self.inputStructureChain.get() is not None):
-                f.write("select clear\n")
-                f.write("select #%s/%s,%s\n"
-                        % (pdbModelCounter,
-                           str(self.selectedChain1),
-                           str(self.selectedChain2)))
-
-                if self._getOutFastaSequencesFile is not None:
-                    alignmentFile2 = self._getOutFastaSequencesFile(self.OUTFILE2)
-                    f.write("open %s\n" % alignmentFile2)
-                    f.write("sequence disassociate #%s %s\n" %
-                            (pdbModelCounter,
-                            alignmentFile2.split("/")[-1]))
-                    if str(self.selectedModel) != '0':
-                        f.write("sequence associate #%s.%s/%s %s:1\n" %
-                                (pdbModelCounter,
-                                 str(self.selectedModel + 1),
-                                 str(self.selectedChain2),
-                                 alignmentFile2.split("/")[-1]))
-                    else:
-                        f.write("sequence associate #%s/%s %s:1\n" %
-                                (pdbModelCounter,
-                                 str(self.selectedChain2),
-                                 alignmentFile2.split("/")[-1]))
-
         # other pdb files
-        for pdb in self.inputPdbFiles:
-            pdbModelCounter += 1
-            f.write("open %s\n" % os.path.abspath(pdb.get(
-            ).getFileName()))
-            if pdb.get().hasOrigin():
-                x, y, z = pdb.get().getOrigin().getShifts()
-                f.write("move %0.2f,%0.2f,%0.2f model #%d "
-                        "coord #0\n" % (x, y, z, pdbModelCounter))
-            # TODO: Check this this this this this this
+        if hasattr(self, 'inputPdbFiles'):
+            for pdb in self.inputPdbFiles:
+                pdbModelCounter += 1
+                f.write("open %s\n" % os.path.abspath(pdb.get(
+                ).getFileName()))
+                if pdb.get().hasOrigin():
+                    x, y, z = pdb.get().getOrigin().getShifts()
+                    f.write("move %0.2f,%0.2f,%0.2f model #%d "
+                            "coord #0\n" % (x, y, z, pdbModelCounter))
+                # TODO: Check this this this this this this
 
         # Go to extra dir and save there the output of
         # scipionwrite
