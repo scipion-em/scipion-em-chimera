@@ -27,6 +27,8 @@
 
 import os
 from pwem import *
+from pwem.viewers.viewer_chimera import chimeraScriptFileName, Chimera, chimeraPdbTemplateFileName, \
+    chimeraMapTemplateFileName, sessionFile
 from pyworkflow import VERSION_1_2
 from pyworkflow.utils import copyFile
 
@@ -48,7 +50,10 @@ from pwem.convert.sequence import (SequenceHandler,
                                    alignBioPairwise2Sequences,
                                    alignMuscleSequences)
 from collections import OrderedDict
-from ..constants import CLUSTALO, MUSCLE
+from ..constants import CLUSTALO, MUSCLE, CHIMERA_CONFIG_FILE
+import configparser
+import shutil
+from .. import Plugin
 
 
 class ChimeraModelFromTemplate(ChimeraProtBase):
@@ -77,19 +82,9 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
 
     # --------------------------- DEFINE param functions --------------------
     def _defineParams(self, form, doHelp=False):
-        formBase = super(ChimeraModelFromTemplate, self)._defineParams(form,
-                                                                       doHelp=True)
-        param = form.getParam('pdbFileToBeRefined')
-        param.condition.set('False')
-        param = form.getParam('inputVolume')
-        param.condition.set('False')
-        param = form.getParam('inputVolumes')
-        param.condition.set('False')
-        # hide inputPdbFiles
-        param = form.getParam('inputPdbFiles')
-        param.condition.set('False')
-        param.allowsNull.set('True')
-        section = formBase.getSection('Input')
+        form.addSection(label='Input')
+        section = form.getSection('Input')
+
         section.addParam('addTemplate', BooleanParam,
                          default=True, label='Do you already have a template?',
                          help='"Yes": Option by default. Select this option in case '
@@ -98,7 +93,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                               'search for a template with which model your target '
                               'sequence. Generation of multimeric models is not '
                               'allowed selecting this option.\n')
-        section.addParam('pdbTemplate', PointerParam,
+        section.addParam('pdbFileToBeRefined', PointerParam,
                          pointerClass="AtomStruct", allowsNull=True,
                          important=True,
                          condition='addTemplate == True',
@@ -326,7 +321,13 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                               "Install muscle if you choose this option "
                               "for the first time by 'sudo apt install "
                               "muscle'.")
-        formBase.addLine("Step 1:\nIn the sequence window your target "
+        section.addParam('extraCommands', StringParam,
+                          default = '',
+                          condition = 'False',
+                          label = 'Extra commands for chimera viewer',
+                          help = "Add extra commands in cmd file. Use for testing")
+        form.addSection(label='Help')
+        form.addLine("Step 1:\nIn the sequence window your target "
                          "sequence (and other additional sequences that you "
                          "want to use in  the alignment) will appear aligned to "
                          "the template's sequence. Select in the sequence window "
@@ -425,6 +426,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
             # get target sequence imported by the user
 
             outFile = self.OUTFILE1
+            print("self.preTemplate(userSeq, outFile): ", self.preTemplate(userSeq, outFile))
             self.targetSeqID1 = self.preTemplate(userSeq, outFile)
 
     def prePreRequisites(self, fileName, chainIdDict, userSeq, inFile, \
@@ -538,7 +540,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
 
     def _readPDB(self):
         self.structureHandler = AtomicStructHandler()
-        fileName = os.path.abspath(self.pdbTemplate.get(
+        fileName = os.path.abspath(self.pdbFileToBeRefined.get(
         ).getFileName())
         self.structureHandler.read(fileName)
         return fileName
@@ -551,10 +553,152 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         OUTFILENAME = self._getExtraPath(outFile)
         return os.path.abspath(OUTFILENAME)
 
-    # def validate(self):
-    #    super(ChimeraModelFromTemplate, self).validate()
-    #    # TODO check if clustal/muscle exists
-    #    #TODO; change help ro installation pages instead of apt-get
+    def runChimeraStep(self):
+        # building script file including the coordinate axes and the input
+        # volume with samplingRate and Origin information
+        f = open(self._getTmpPath(chimeraScriptFileName), "w")
+        # building coordinate axes
+
+        dim = 150  # eventually we will create a PDB library that
+        # computes PDB dim
+        sampling = 1.
+
+        tmpFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
+        Chimera.createCoordinateAxisFile(dim,
+                                         bildFileName=tmpFileName,
+                                         sampling=sampling)
+        f.write("open %s\n" % tmpFileName)
+        f.write("cofr 0,0,0\n")  # set center of coordinates
+
+        # input vol with its origin coordinates
+        pdbModelCounter = 1
+
+        if (not hasattr(self, 'addTemplate') and
+                hasattr(self, 'inputSequence1') and
+                self._getOutFastaSequencesFile is not None):
+            alignmentFile1 = self._getOutFastaSequencesFile(self.OUTFILE1)
+            print("alignmentFile1: ", alignmentFile1)
+            f.write("open %s\n" % alignmentFile1)
+            f.write("blastprotein %s:%s database %s matrix %s "
+                    "cutoff %.3f maxSeqs %d log true\n" %
+                    (alignmentFile1.split("/")[-1], self.targetSeqID1,
+                     self.OptionForDataBase[int(self.dataBase)],
+                     self.OptionForMatrix[int(self.similarityMatrix)],
+                     self.cutoffValue, self.maxSeqs))
+
+        if (hasattr(self, 'pdbFileToBeRefined') and
+                self.pdbFileToBeRefined.get() is not None):
+            pdbModelCounter += 1
+            pdbFileToBeRefined = self.pdbFileToBeRefined.get()
+            f.write("open %s\n" % os.path.abspath(
+                pdbFileToBeRefined.getFileName()))
+            if pdbFileToBeRefined.hasOrigin():
+                x, y, z = (pdbFileToBeRefined.getOrigin().getShifts())
+                f.write("move %0.2f,%0.2f,%0.2f model #%d "
+                        "coord #0\n" % (x, y, z, pdbModelCounter))
+
+        # Alignment of sequence and structure
+        if (hasattr(self, 'inputSequence1') and
+                hasattr(self, 'inputStructureChain')):
+            if (self.inputSequence1.get() is not None and
+                self.inputStructureChain.get() is not None):
+                pdbModelCounter = 2
+                if str(self.selectedModel) != '0':
+                    f.write("select #%s.%s/%s\n"
+                            % (pdbModelCounter,
+                               str(self.selectedModel + 1),
+                               str(self.selectedChain1)))
+                else:
+                    f.write("select #%s/%s\n"
+                            % (pdbModelCounter,
+                               str(self.selectedChain1)))
+
+                if self._getOutFastaSequencesFile is not None:
+                    alignmentFile1 = self._getOutFastaSequencesFile(self.OUTFILE1)
+                    f.write("open %s\n" % alignmentFile1)
+                    f.write("sequence disassociate #%s %s\n" %
+                            (pdbModelCounter,
+                            alignmentFile1.split("/")[-1]))
+                    if str(self.selectedModel) != '0':
+                        f.write("sequence associate #%s.%s/%s %s:1\n" %
+                                (pdbModelCounter,
+                                 str(self.selectedModel + 1),
+                                 str(self.selectedChain1),
+                                 alignmentFile1.split("/")[-1]))
+                    else:
+                        f.write("sequence associate #%s/%s %s:1\n" %
+                                (pdbModelCounter,
+                                 str(self.selectedChain1),
+                                 alignmentFile1.split("/")[-1]))
+
+            if (self.additionalTargetSequence.get() is True and
+                self.inputSequence2.get() is not None and
+                self.inputStructureChain.get() is not None):
+                f.write("select clear\n")
+                f.write("select #%s/%s,%s\n"
+                        % (pdbModelCounter,
+                           str(self.selectedChain1),
+                           str(self.selectedChain2)))
+
+                if self._getOutFastaSequencesFile is not None:
+                    alignmentFile2 = self._getOutFastaSequencesFile(self.OUTFILE2)
+                    f.write("open %s\n" % alignmentFile2)
+                    f.write("sequence disassociate #%s %s\n" %
+                            (pdbModelCounter,
+                            alignmentFile2.split("/")[-1]))
+                    if str(self.selectedModel) != '0':
+                        f.write("sequence associate #%s.%s/%s %s:1\n" %
+                                (pdbModelCounter,
+                                 str(self.selectedModel + 1),
+                                 str(self.selectedChain2),
+                                 alignmentFile2.split("/")[-1]))
+                    else:
+                        f.write("sequence associate #%s/%s %s:1\n" %
+                                (pdbModelCounter,
+                                 str(self.selectedChain2),
+                                 alignmentFile2.split("/")[-1]))
+
+        config = configparser.ConfigParser()
+        _chimeraPdbTemplateFileName = \
+            os.path.abspath(self._getExtraPath(
+                chimeraPdbTemplateFileName))
+        _chimeraMapTemplateFileName = \
+            os.path.abspath(self._getExtraPath(
+                chimeraMapTemplateFileName))
+        _sessionFile = os.path.abspath(
+            self._getExtraPath(sessionFile))
+        protId = self.getObjId()
+        config['chimerax'] = {'chimerapdbtemplatefilename':
+                                  _chimeraPdbTemplateFileName % protId,
+                              'chimeramaptemplatefilename':
+                                  _chimeraMapTemplateFileName % protId,
+                              'sessionfile': _sessionFile,
+                              'enablebundle': True,
+                              'protid': self.getObjId(),
+                              'scipionpython': shutil.which('python')}
+                              # set enablebundle to True when
+                              # protocol finished
+                              # viewers will check this configuration file
+        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
+                  'w') as configfile:
+            config.write(configfile)
+
+        # run the text:
+        _chimeraScriptFileName = os.path.abspath(
+            self._getTmpPath(chimeraScriptFileName))
+        if len(self.extraCommands.get()) > 2:
+            f.write(self.extraCommands.get())
+            args = " --nogui " + _chimeraScriptFileName
+        else:
+            args = " " + _chimeraScriptFileName
+
+        f.close()
+
+        self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
+
+        # run in the background
+        cwd = os.path.abspath(self._getExtraPath())
+        Chimera.runProgram(Plugin.getProgram(), args, cwd=cwd)
 
     def _validate(self):
         # Check that CLUSTALO or MUSCLE program exists
