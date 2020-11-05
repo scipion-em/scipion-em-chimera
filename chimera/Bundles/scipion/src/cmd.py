@@ -55,7 +55,8 @@ def scipioncombine(session, models=None, modelid=None):
         if isinstance(model, AtomicStructure) or\
             modelName[-4:] == '.cif' or\
             modelName[-4:] == '.pdb':
-            modelFileName.append(d['chimerapdbtemplatefilename'].
+            # files starting with "tmp" will not be converted in scipion objects
+            modelFileName.append("tmp_" + d['chimerapdbtemplatefilename'].
                                  replace("__","_in_%s_" % (model.id)[0]))
         else:
             session.logger.error("I do not know how to combine model %s\n" % modelName)
