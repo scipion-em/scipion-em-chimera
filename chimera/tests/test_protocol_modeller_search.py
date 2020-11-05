@@ -384,7 +384,7 @@ rename #3.1 id #4, enter>
         structure1_PDB = self._importStructurePDBWoVol1()
         sequence1 = self._importAminoacidSequence1()
 
-        args = {'pdbTemplate': structure1_PDB,
+        args = {'pdbFileToBeRefined': structure1_PDB,
                 'inputStructureChain': self.CHAIN1,
                 'inputSequence1': sequence1
                 }
@@ -405,7 +405,7 @@ rename #3.1 id #4, enter>
         structure2_PDB = self._importStructurePDBWoVol2()
         sequence2 = self._importAminoacidSequence2()
 
-        args = {'pdbTemplate': structure2_PDB,
+        args = {'pdbFileToBeRefined': structure2_PDB,
                 'inputStructureChain': self.CHAIN2,
                 'inputSequence1': sequence2
                 }
@@ -425,7 +425,7 @@ rename #3.1 id #4, enter>
         structure3_PDB = self._importStructurePDBWoVol3()
         sequence3 = self._importAminoacidSequence3()
 
-        args = {'pdbTemplate': structure3_PDB,
+        args = {'pdbFileToBeRefined': structure3_PDB,
                 'inputStructureChain': self.CHAIN3,
                 'inputSequence1': sequence3
                 }
@@ -450,7 +450,7 @@ rename #3.1 id #4, enter>
         sequence8 = self._importAminoacidSequence8()
         sequence9 = self._importAminoacidSequence9()
 
-        args = {'pdbTemplate': structure4_PDB,
+        args = {'pdbFileToBeRefined': structure4_PDB,
                 'inputStructureChain': self.CHAIN4,
                 'inputSequence1': sequence4,
                 'optionForAligning1': 1,
@@ -473,7 +473,7 @@ rename #3.1 id #4, enter>
         alignmentFile1 = prot3._getExtraPath("aligned_1.fasta")
         alignmentFile2 = prot3._getExtraPath("aligned_2.fasta")
 
-        args = {'pdbTemplate': structure4_PDB,
+        args = {'pdbFileToBeRefined': structure4_PDB,
                 'inputStructureChain': self.CHAIN4,
                 'inputSequence1': sequence4,
                 'optionForAligning1': 2,
