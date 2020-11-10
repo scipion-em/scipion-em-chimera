@@ -37,6 +37,9 @@ class _MyAPI(BundleAPI):
         elif ci.name == "scipionrs":
             func = cmd.scipionrs
             desc = cmd.scipionrs_desc
+        elif ci.name == "scipioncombine":
+            func = cmd.scipioncombine
+            desc = cmd.scipioncombine_desc
         else:
             raise ValueError("trying to register unknown command: %s" % ci.name)
         if desc.synopsis is None:

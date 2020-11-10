@@ -23,6 +23,7 @@ https://www.cgl.ucsf.edu/chimerax/docs/devel/tutorials/tutorial_hello.htm
   <Description>scipionwrite: saves model file
     scipionss: saves chimera session
     scipionrs: restores chimera sesion
+    scipioncombine: combines two models
   </Description>
 
   <!-- Categories is a list where this bundle should appear -->
@@ -55,6 +56,9 @@ https://www.cgl.ucsf.edu/chimerax/docs/devel/tutorials/tutorial_hello.htm
     </ChimeraXClassifier>
     <ChimeraXClassifier>ChimeraX :: Command :: scipionrs :: General ::
         Restore last chimera session saved with scipionss
+    </ChimeraXClassifier>
+     <ChimeraXClassifier>ChimeraX :: Command :: scipioncombine :: General ::
+        Combine two models
     </ChimeraXClassifier>
   </Classifiers>
 

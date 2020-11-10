@@ -26,6 +26,8 @@
 # **************************************************************************
 
 import os
+import shutil
+
 from pwem import *
 from pwem.convert import Ccp4Header
 from pwem.objects import Volume
@@ -48,7 +50,7 @@ from pwem.constants import (SYM_DIHEDRAL_X)
 from ..constants import (CHIMERA_SYM_NAME, CHIMERA_I222r)
 from ..convert import CHIMERA_LIST
 from pwem.protocols import EMProtocol
-from .protocol_base import createScriptFile, ChimeraProtBase
+from .protocol_base import ChimeraProtBase
 from pwem.viewers.viewer_chimera import (Chimera,
                                          sessionFile,
                                          chimeraMapTemplateFileName,
@@ -63,7 +65,7 @@ import configparser
 class ChimeraSubtractionMaps(EMProtocol):
     """Protocol to subtract two volumes.
         One of these volumes can be derived from an atomic structure.
-        Execute command *scipionwrite model #n [refmodel #p] [prefix stringAddedToFilename]*
+        Execute command *scipionwrite #n [prefix stringAddedToFilename]*
         from command line in order to transfer the generated maps and models to scipion.
         In addition to maps and models that the protocol saves by default,
         the user can generate and save some others"""
@@ -308,7 +310,9 @@ class ChimeraSubtractionMaps(EMProtocol):
                                   _chimeraMapTemplateFileName % protId,
                               'sessionfile': _sessionFile,
                               'enablebundle': True,
-                              'protid': self.getObjId()}
+                              'protid': self.getObjId(),
+                              'scipionpython': shutil.which('python')}
+
         with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
                   'w') as configfile:
             config.write(configfile)

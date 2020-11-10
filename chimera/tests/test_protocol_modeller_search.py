@@ -213,12 +213,12 @@ class TestImportData(TestImportBase):
                     ProtImportSequence.IMPORT_FROM_STRUCTURE,
                 'inputStructureSequence':
                     ProtImportSequence.IMPORT_STRUCTURE_FROM_ID,
-                'pdbId': '3RRQ',
+                'pdbId': '3rrq',
                 'inputStructureChain':
                     '{"model": 0, "chain": "A", "residues": 108}'
                 }
         protSequence = self.newProtocol(ProtImportSequence, **args)
-        protSequence.setObjLabel('import aminoacid seq,\n from 3RRQ\n'
+        protSequence.setObjLabel('import aminoacid seq,\n from 3rrq\n'
                            'atomic structure')
         self.launchProtocol(protSequence)
         sequence = protSequence.outputSequence
@@ -345,14 +345,25 @@ You may enable the protocol but setting
     DISABLE_TEST = False
     
 HOW TO RUN THE TEST:
+
+In the particular case of test testImportSequence5
+you should select a possible template for the target, 
+for example 5wt9, write in the line command "open 5wt9"  
+
 1) when chimerax opens select (in main menu)
 Tools -> Sequence -> Modeller Comparative
 2) a new pop up windows appears called 'Modeller Comparative'
 3) template(s) are the Sequence alignments
+   (in the case of test testImportSequence5, only the sequence alignment
+   aligned_1.fasta)
 4) choose as target(s) = seq...mutated
-In the particular case of test testImportChainFromStructureAndSequence4
+(In the particular case of test testImportChainFromStructureAndSequence4
 select as target sequences Q15116 and Q2LC89 for aligned_1.fasta and 
-aligned_2.fasta alignments, respectively.
+aligned_2.fasta alignments, respectively. Do not forget select the 
+basic option "Make multichain model from multichain template")
+(in the case of test testImportSequence5, only the target sequence Q15116
+in the aligned_1.fasta)
+
 5) you will need a key for modeller website
 6) press OK
 7) In main chimerax window you will see (botton) the progression of the process,
@@ -451,7 +462,7 @@ rename #3.1 id #4, enter>
                 'inputSequencesToAlign2': [sequence8, sequence9]
                 }
         prot3 = self.newProtocol(ChimeraModelFromTemplate, **args)
-        prot3.setObjLabel('4_2 target sequences,\n '
+        prot3.setObjLabel('4_1 target sequences,\n '
                           'fitting a complex\n'
                           'additional seqs')
         if self.DISABLE_TEST:
@@ -474,10 +485,26 @@ rename #3.1 id #4, enter>
                 'inputYourOwnSequenceAlignment2': alignmentFile2,
                 }
         prot4 = self.newProtocol(ChimeraModelFromTemplate, **args)
-        prot4.setObjLabel('5_2 target sequences,\n '
+        prot4.setObjLabel('4_2 target sequences,\n '
                           'fitting a complex\n'
                           'alignment input')
         if self.DISABLE_TEST:
             print(self.message)
         else:
             self.launchProtocol(prot4)
+
+    def testImportSequence5(self):
+        """
+        Import a target sequence Q15116 and look for templates
+        """
+        sequence4 = self._importAminoacidSequence4()
+        args = {'addTemplate': False,
+                'inputSequence1': sequence4,
+                }
+        prot3 = self.newProtocol(ChimeraModelFromTemplate, **args)
+        prot3.setObjLabel('5 target sequence,\n '
+                          'no template\n')
+        if self.DISABLE_TEST:
+            print(self.message)
+        else:
+            self.launchProtocol(prot3)
