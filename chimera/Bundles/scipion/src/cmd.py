@@ -55,7 +55,7 @@ def scipioncombine(session, models=None, modelid=None):
         if isinstance(model, AtomicStructure) or\
             modelName[-4:] == '.cif' or\
             modelName[-4:] == '.pdb':
-            # files starting with "tmp" will not be converted in scipion objects
+            # files starting with "tmp_" will not be converted in scipion objects
             modelFileName.append(d['chimerapdbtemplatefilename'].
                                  replace("__","_in_%s_" % (model.id)[0]).
                                  replace("Atom_struct_", "tmp_Atom_struct_"))
@@ -89,7 +89,10 @@ aStruct1.addStruct(modelFileName[-1], '%s')
     cmd += " %s" % scriptFileName
     os.system(cmd)
     newModel = run(session, "open %s" % outFileName )
-    modelID = str(newModel[0][0].id[0])
+    try:
+        modelID = str(newModel[0][0].id[0])
+    except:
+        modelID = str(session.models[-1].id[0])
     session.logger.info("model --> " + modelID)
     run(session, "style #%s stick" % modelID )
     if modelid is not None:
