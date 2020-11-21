@@ -120,8 +120,9 @@ class ChimeraProtBase(EMProtocol):
         # volume with samplingRate and Origin information
         f = open(self._getTmpPath(chimeraScriptFileName), "w")
         _inputVol = None
-        if not hasattr(self, 'inputVolume') and \
-                self.pdbFileToBeRefined.get() is not None:
+        if (hasattr(self, 'inputVolume') and
+                (self.inputVolume.get() is None) and
+                (self.pdbFileToBeRefined.get() is not None)):
             _inputVol = self.pdbFileToBeRefined.get().getVolume()
         else:
             _inputVol = self.inputVolume.get()
