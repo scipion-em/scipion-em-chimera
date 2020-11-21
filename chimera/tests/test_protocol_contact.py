@@ -502,7 +502,6 @@ class TestChimeraContact(TestImportData):
         c, conn = protContacts.prepareDataBase(drop=False)
         tableName = protContacts.getView2Name()
         sqlCommand = """SELECT count(*) FROM {tableName}""".format(tableName=tableName)
-        print("sqlCommand: ", sqlCommand)
         c.execute(sqlCommand)
         row = c.fetchone()
         # self.assertEqual(int(row[0]), 488698)
