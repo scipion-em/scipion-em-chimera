@@ -54,6 +54,7 @@ To check the installation, simply run the following Scipion tests:
 * scipion test chimera.tests.test_protocol_chimera_fit
 * scipion test chimera.tests.test_protocol_modeller_search
 * scipion test chimera.tests.test_protocol_contact
+* scipion test chimera.tests.test_protocol_chimera_map_subtraction
 
 - **Supported versions of ChimeraX**
 
@@ -69,6 +70,7 @@ Protocols
 * contacts: Identifies interatomic `clashes and contacts <https://www.cgl.ucsf.edu/chimera/docs/ContributedSoftware/findclash/findclash.html>`_ based on van der Waals radii. 
 * operate: Provides access to Chimera and allows to save the result in Scipion framework.
 * restore: This protocol opens Chimera and restores the session previously saved with commands *scipionwrite* or *scipionss*. 
+* map subtraction: Protocol to identify remnant densities in a density map by subtracting two maps or masking one of them.
 
 
 ========
