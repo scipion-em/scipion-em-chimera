@@ -30,7 +30,7 @@ import pyworkflow.utils as pwutils
 
 from .constants import CHIMERA_HOME, V1_0, V1_1
 
-__version__ = "3.0.3"
+__version__ = "3.0.4"
 _logo = "chimerax_logo.png"
 _references = ['Goddard2018']
 
