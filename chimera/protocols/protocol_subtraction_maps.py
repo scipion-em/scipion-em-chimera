@@ -266,7 +266,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                       help="Add extra commands in cmd file. Use for testing")
         form.addSection(label='Help')
         form.addLine(''' 
-                    # vop subtract #%d #%d modelId #%d minRms true onGrid #%d
+                    # vol subtract #%d #%d modelId #%d minRms true onGrid #%d
                     # (If you want to use another level the above
                     #  command recalculates the difference)
                     scipionwrite model #n [prefix stringAddedToFilename]
