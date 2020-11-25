@@ -36,6 +36,7 @@ https://www.cgl.ucsf.edu/chimerax/docs/devel/tutorials/tutorial_hello.htm
     <DataFile>docs/user/commands/scipionwrite.html</DataFile>
     <DataFile>docs/user/commands/scipionss.html</DataFile>
     <DataFile>docs/user/commands/scipionrs.html</DataFile>
+    <DataFile>docs/user/commands/scipioncombine.html</DataFile>
   </DataFiles>
 
   <!-- Dependencies on other ChimeraX/Python packages -->
