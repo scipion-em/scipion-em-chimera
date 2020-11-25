@@ -89,6 +89,10 @@ aStruct1.addStruct(modelFileName[-1], '%s')
     cmd += " %s" % scriptFileName
     os.system(cmd)
     newModel = run(session, "open %s" % outFileName )
+    # TODO: we do not fully understand how
+    # models work in chimerax. The follwong two
+    # way of getting modelID should be equivalent
+    # but sometimes one of them fail.
     try:
         modelID = str(newModel[0][0].id[0])
     except:
