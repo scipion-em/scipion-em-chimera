@@ -86,9 +86,15 @@ class ChimeraProtRestore(ChimeraProtBase):
         self.parentProt.setProject(self.getProject())  # I do not really
         # understand this line
 
-        self.inputVolume = self.parentProt.inputVolume
-        self.pdbFileToBeRefined = self.parentProt.pdbFileToBeRefined
-        self.inputPdbFiles = self.parentProt.inputPdbFiles
+        if hasattr(self, 'inputVolume') and \
+                self.inputVolume is not None:
+            self.inputVolume = self.parentProt.inputVolume
+        if hasattr(self, 'pdbFileToBeRefined') and \
+                self.pdbFileToBeRefined is not None:
+            self.pdbFileToBeRefined = self.parentProt.pdbFileToBeRefined
+        if hasattr(self, 'inputPdbFiles') and \
+                self.inputPdbFiles is not None:
+            self.inputPdbFiles = self.parentProt.inputPdbFiles
 
     def runChimeraStep(self):
         # create CMD file

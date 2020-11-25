@@ -136,7 +136,8 @@ class ChimeraViewerBase(Viewer):
 
         for filename in os.listdir(directory):
             if filename.endswith(".pdb") or filename.endswith(".cif"):
-                if not filename.startswith("Atom_struct_out_"):
+                if not (filename.startswith("Atom_struct_out_") or
+                        filename.startswith("tmp_")):
                     path = os.path.join(directory, filename)
                     # f.write("open %s\n" % os.path.abspath(path))
                     f.write("open %s\n" % path)
