@@ -72,7 +72,7 @@ class ChimeraProtContactsViewer(ProtocolViewer):
     def _displayModel(self, e=None):
         # bildFileName = os.path.abspath(self.protocol._getTmpPath(
         #    "axis_output.bild"))
-        bildFileName = self.protocol._getTmpPath("axis_output.bild")
+        bildFileName = self.protocol._getExtraPath("axis_output.bild")
 
         # Axis Dim
         dim = 150.
@@ -81,7 +81,7 @@ class ChimeraProtContactsViewer(ProtocolViewer):
                                          bildFileName=bildFileName,
                                          sampling=sampling)
 
-        fnCmd = self.protocol._getTmpPath("chimera_output.cxc")
+        fnCmd = self.protocol._getExtraPath("chimera_output.cxc")
         f = open(fnCmd, 'w')
         # change to workingDir
         # If we do not use cd and the project name has an space
@@ -296,7 +296,7 @@ ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
         return choices  # list with pairs of chains
 
     def getPairChainsFileName(self):
-        return self.protocol._getTmpPath('pairChainsFile.txt')
+        return self.protocol._getExtraPath('pairChainsFile.txt')
 
     def getInteractionFileName(self):
-        return self.protocol._getTmpPath('interactions.txt')
+        return self.protocol._getExtraPath('interactions.txt')
