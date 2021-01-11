@@ -88,11 +88,11 @@ class ChimeraViewerBase(Viewer):
             dim = _inputVol.getDim()[0]
             sampling = _inputVol.getSamplingRate()
 
-        bildFileName = self.protocol._getTmpPath("axis_output.bild")
+        bildFileName = self.protocol._getExtraPath("axis_output.bild")
         Chimera.createCoordinateAxisFile(dim,
                                          bildFileName=bildFileName,
                                          sampling=sampling)
-        fnCmd = self.protocol._getTmpPath("chimera_output.cxc")
+        fnCmd = self.protocol._getExtraPath("chimera_output.cxc")
         f = open(fnCmd, 'w')
         # change to workingDir
         # If we do not use cd and the project name has an space
@@ -165,7 +165,7 @@ class ChimeraRestoreViewer(Viewer):
     _targets = [ChimeraProtRestore]
 
     def _visualize(self, obj, **args):
-        fnCmd = self.protocol._getTmpPath("chimera_restore_session.cxc")
+        fnCmd = self.protocol._getExtraPath("chimera_restore_session.cxc")
         f = open(fnCmd, 'w')
         # change to workingDir
         # If we do not use cd and the project name has an space
