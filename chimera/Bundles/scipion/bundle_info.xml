@@ -9,7 +9,7 @@ https://www.cgl.ucsf.edu/chimerax/docs/devel/tutorials/tutorial_hello.htm
 -->
 
 <BundleInfo name="ChimeraX-ScipionExtensions"
-            version="1.2" package="chimerax.scipionExtensions"
+            version="1.3" package="chimerax.scipionExtensions"
             minSessionVersion="1" maxSessionVersion="10">
 
   <!-- Additional information about bundle source -->
