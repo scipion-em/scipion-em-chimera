@@ -30,7 +30,7 @@ import pyworkflow.utils as pwutils
 
 from .constants import CHIMERA_HOME, V1_0, V1_1
 
-__version__ = "3.0.4"
+__version__ = "3.0.5"
 _logo = "chimerax_logo.png"
 _references = ['Goddard2018']
 
@@ -56,9 +56,13 @@ class Plugin(pwem.Plugin):
         return environ
 
     @classmethod
-    def runChimeraProgram(cls, program, args="", cwd=None):
+    def runChimeraProgram(cls, program, args="", cwd=None, extraEnv=None):
         """ Internal shortcut function to launch chimera program. """
         env = cls.getEnviron()
+
+        if extraEnv:
+            env.update(extraEnv)
+
         pwutils.runJob(None, program, args, env=env, cwd=cwd)
 
     @classmethod
@@ -93,7 +97,7 @@ class Plugin(pwem.Plugin):
         pathToBinary = cls.getProgram()
         installPluginsCommand = [("%s --nogui --exit " \
                                 "--cmd 'devel install %s'" % (pathToBinary, pathToPlugin), [])]
-        env.addPackage('scipionchimera', version='1.0',
+        env.addPackage('scipionchimera', version='1.3',
                        tar=VOID_TGZ,
                        default=True,
                        commands=installPluginsCommand)

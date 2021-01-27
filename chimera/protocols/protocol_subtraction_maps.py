@@ -25,9 +25,6 @@
 # *
 # **************************************************************************
 
-import os
-import shutil
-
 from pwem import *
 from pwem.convert import Ccp4Header
 from pwem.objects import Volume
@@ -50,17 +47,13 @@ from pwem.constants import (SYM_DIHEDRAL_X)
 from ..constants import (CHIMERA_SYM_NAME, CHIMERA_I222r)
 from ..convert import CHIMERA_LIST
 from pwem.protocols import EMProtocol
-from .protocol_base import ChimeraProtBase
-from pwem.viewers.viewer_chimera import (Chimera,
-                                         sessionFile,
-                                         chimeraMapTemplateFileName,
-                                         chimeraScriptFileName,
-                                         chimeraPdbTemplateFileName)
+from pwem.viewers.viewer_chimera import Chimera, chimeraScriptFileName
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from .. import Plugin
+from chimera import Plugin
 from pyworkflow.utils.properties import Message
-from ..constants import CHIMERA_CONFIG_FILE
-import configparser
+
+from chimera.utils import getEnvDictionary
+
 
 class ChimeraSubtractionMaps(EMProtocol):
     """Protocol to subtract two volumes.
@@ -303,28 +296,6 @@ class ChimeraSubtractionMaps(EMProtocol):
                   % self.atomStructName)
 
     def runChimeraStep(self):
-        config = configparser.ConfigParser()
-        _chimeraPdbTemplateFileName = \
-            os.path.abspath(self._getExtraPath(
-                chimeraPdbTemplateFileName))
-        _chimeraMapTemplateFileName = \
-            os.path.abspath(self._getExtraPath(
-                chimeraMapTemplateFileName))
-        _sessionFile = os.path.abspath(
-            self._getExtraPath(sessionFile))
-        protId = self.getObjId()
-        config['chimerax'] = {'chimerapdbtemplatefilename':
-                                  _chimeraPdbTemplateFileName % protId,
-                              'chimeramaptemplatefilename':
-                                  _chimeraMapTemplateFileName % protId,
-                              'sessionfile': _sessionFile,
-                              'enablebundle': True,
-                              'protid': self.getObjId(),
-                              'scipionpython': shutil.which('python')}
-
-        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
-                  'w') as configfile:
-            config.write(configfile)
 
         # building script file including the coordinate axes and the input
         # volume with samplingRate and Origin information
@@ -609,7 +580,7 @@ class ChimeraSubtractionMaps(EMProtocol):
 
         # run in the background
         cwd = os.path.abspath(self._getExtraPath())
-        Chimera.runProgram(Plugin.getProgram(), args, cwd=cwd)
+        Plugin.runChimeraProgram(Plugin.getProgram(), args, cwd=cwd, extraEnv=getEnvDictionary(self))
 
     def createOutput(self):
         # Check vol and pdb files
@@ -639,15 +610,6 @@ class ChimeraSubtractionMaps(EMProtocol):
                 keyword = filename.split(".pdb")[0].replace(".","_")
                 kwargs = {keyword: pdb}
                 self._defineOutputs(**kwargs)
-
-        # upodate config file flag enablebundle
-        # so scipionwrite is disabled
-        config = configparser.ConfigParser()
-        config.read(self._getExtraPath(CHIMERA_CONFIG_FILE))
-        config.set('chimerax', 'enablebundle', 'False')
-        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
-                  'w') as configfile:
-            config.write(configfile)
 
     def symMethod(self, f, modelId, sym, order=None, range=None):
         if sym == "Cn" and order != 1:

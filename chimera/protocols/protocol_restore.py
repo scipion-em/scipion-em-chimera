@@ -24,18 +24,13 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-import configparser
-
 from pyworkflow.protocol.params import PointerParam, StringParam
 import os
-from pwem.viewers.viewer_chimera import (Chimera,
-                                         chimeraScriptFileName,
-                                         chimeraPdbTemplateFileName,
-                                         chimeraMapTemplateFileName,
-                                         sessionFile)
+from pwem.viewers.viewer_chimera import sessionFile
 from .protocol_base import ChimeraProtBase
-from ..constants import CHIMERA_CONFIG_FILE
-import shutil
+from chimera import Plugin
+
+from chimera.utils import getEnvDictionary
 
 
 class ChimeraProtRestore(ChimeraProtBase):
@@ -105,36 +100,9 @@ class ChimeraProtRestore(ChimeraProtBase):
         #     args = " --nogui --cmd " + self._getTmpPath(
         #         chimeraScriptFileName)
 
-        program = Chimera.getProgram()
-
-        config = configparser.ConfigParser()
-        _chimeraPdbTemplateFileName = \
-            os.path.abspath(self._getExtraPath(
-                chimeraPdbTemplateFileName))
-        _chimeraMapTemplateFileName = \
-            os.path.abspath(self._getExtraPath(
-                chimeraMapTemplateFileName))
-        _sessionFile = os.path.abspath(
-            self._getExtraPath(sessionFile))
-        protId = self.getObjId()
-        config['chimerax'] = {'chimerapdbtemplatefilename':
-                                  _chimeraPdbTemplateFileName % protId,
-                              'chimeramaptemplatefilename':
-                                  _chimeraMapTemplateFileName % protId,
-                              'sessionfile': _sessionFile,
-                              'enablebundle': True,
-                              'protid': self.getObjId(),
-                              'scipionpython': shutil.which('python') }
-        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
-                  'w') as configfile:
-            config.write(configfile)
-
         # run in the background
         cwd = os.path.abspath(self._getExtraPath())
-        Chimera.runProgram(program, os.path.abspath(parentSessionFileName), cwd=cwd)
-
-    def createOutput(self):
-        super(ChimeraProtRestore, self).createOutput()
+        Plugin.runChimeraProgram(Plugin.getProgram(), os.path.abspath(parentSessionFileName), cwd=cwd, extraEnv=getEnvDictionary(self))
 
     def _validate(self):
         errors = super(ChimeraProtRestore, self)._validate()

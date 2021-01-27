@@ -50,10 +50,10 @@ from pwem.convert.sequence import (SequenceHandler,
                                    alignBioPairwise2Sequences,
                                    alignMuscleSequences)
 from collections import OrderedDict
-from ..constants import CLUSTALO, MUSCLE, CHIMERA_CONFIG_FILE
-import configparser
-import shutil
-from .. import Plugin
+
+from ..constants import CLUSTALO, MUSCLE
+from chimera import Plugin
+from chimera.utils import getEnvDictionary
 
 
 class ChimeraModelFromTemplate(ChimeraProtBase):
@@ -658,31 +658,6 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                                  str(self.selectedChain2),
                                  alignmentFile2.split("/")[-1]))
 
-        config = configparser.ConfigParser()
-        _chimeraPdbTemplateFileName = \
-            os.path.abspath(self._getExtraPath(
-                chimeraPdbTemplateFileName))
-        _chimeraMapTemplateFileName = \
-            os.path.abspath(self._getExtraPath(
-                chimeraMapTemplateFileName))
-        _sessionFile = os.path.abspath(
-            self._getExtraPath(sessionFile))
-        protId = self.getObjId()
-        config['chimerax'] = {'chimerapdbtemplatefilename':
-                                  _chimeraPdbTemplateFileName % protId,
-                              'chimeramaptemplatefilename':
-                                  _chimeraMapTemplateFileName % protId,
-                              'sessionfile': _sessionFile,
-                              'enablebundle': True,
-                              'protid': self.getObjId(),
-                              'scipionpython': shutil.which('python')}
-                              # set enablebundle to True when
-                              # protocol finished
-                              # viewers will check this configuration file
-        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
-                  'w') as configfile:
-            config.write(configfile)
-
         # run the text:
         _chimeraScriptFileName = os.path.abspath(
             self._getTmpPath(chimeraScriptFileName))
@@ -698,7 +673,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
 
         # run in the background
         cwd = os.path.abspath(self._getExtraPath())
-        Chimera.runProgram(Plugin.getProgram(), args, cwd=cwd)
+        Plugin.runChimeraProgram(Plugin.getProgram(), args, cwd=cwd, extraEnv=getEnvDictionary(self))
 
     def _validate(self):
         # Check that CLUSTALO or MUSCLE program exists

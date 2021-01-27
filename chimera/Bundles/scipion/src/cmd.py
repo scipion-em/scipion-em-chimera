@@ -1,5 +1,8 @@
+# When a test is executed the default working directory is tmp even if extra has been
+# passed as ChimeraX argument. The following hack bypasses that problem.
+from .constants import *
+
 # devel install /home/roberto/Software/Plugins3/scipion-em-chimera/chimera/Bundles/scipion
-import configparser
 from chimerax.core.commands import CmdDesc      # Command description
 from chimerax.core.commands import TopModelsArg, ModelsArg
 from chimerax.core.commands import StringArg
@@ -9,28 +12,10 @@ from chimerax.atomic.structure import AtomicStructure # model type atomic struct
 
 import os
 import ntpath
-# When a test is executed the default working directory is tmp even if extra has been
-# passed as ChimeraX argument. The following hack bypasses that problem.
-chimeraConfigFileName = "../extra/chimera.ini"
 
-def readConfigFile(session, configFileName):
-    config = configparser.ConfigParser()
-    config.read(configFileName)
 
-    d = {}
-    if not config.has_section('chimerax'):
-        # session.logger.info("No section chimerax")
-        d['enablebundle'] = False
-    else:
-        # session.logger.info("Yes section chimera")
-        d['enablebundle'] = config.getboolean("chimerax", "enablebundle")
-        d['chimerapdbtemplatefilename'] = config.get("chimerax", "chimeraPdbTemplateFileName")
-        d['chimeramaptemplatefilename'] = config.get("chimerax", "chimeraMapTemplateFileName")
-        d['sessionfile'] = config.get("chimerax", "sessionfile")
-        d['protid'] = config.getint("chimerax", "protId")
-        d['scipionpython'] = config.get("chimerax", "scipionpython")
-    # session.logger.info("d=%s" % str(d))
-    return d
+def getConfig(session, key):
+        return os.environ.get(key, False)
 
 def scipioncombine(session, models=None, modelid=None):
     """Emulate copy/combine chimera command. It will not handle
@@ -40,12 +25,9 @@ def scipioncombine(session, models=None, modelid=None):
     id = 55
     arg modelid is optional
     """
-    d = readConfigFile(session, chimeraConfigFileName)
-    # I think there is no harm in allowing this
-    # command by default
-    # if not d['enablebundle']:
-    #    session.logger.error("scipionwrite cannot be called from Analyze or Viewers")
-    #    return
+
+    if not checkBundleEnabled(session, cmd="scipioncombine"):
+        return
 
     # list with all models
     modelFileName = []
@@ -56,7 +38,7 @@ def scipioncombine(session, models=None, modelid=None):
             modelName[-4:] == '.cif' or\
             modelName[-4:] == '.pdb':
             # files starting with "tmp_" will not be converted in scipion objects
-            modelFileName.append(d['chimerapdbtemplatefilename'].
+            modelFileName.append(getConfig(session, CHIMERA_PDB_TEMPLATE_FILE_NAME).
                                  replace("__","_in_%s_" % (model.id)[0]).
                                  replace("Atom_struct_", "tmp_Atom_struct_"))
         else:
@@ -68,7 +50,7 @@ def scipioncombine(session, models=None, modelid=None):
         run(session, command)
 
     # create add script for scipion atomatructurils
-    outFileName = d['chimerapdbtemplatefilename'].\
+    outFileName = getConfig(session, CHIMERA_PDB_TEMPLATE_FILE_NAME).\
         replace("__", "_out_%s_" % (model.id)[0])
     scriptFileName = outFileName[:-4] + ".py"
 
@@ -85,7 +67,7 @@ for fileName in modelFileName[1:-1]:
 aStruct1.addStruct(modelFileName[-1], '%s')
 """% (str(modelFileName), outFileName))
     f.close()
-    cmd = d['scipionpython']
+    cmd = getConfig(session, SCIPIONPYTHON)
     cmd += " %s" % scriptFileName
     os.system(cmd)
     newModel = run(session, "open %s" % outFileName )
@@ -107,13 +89,21 @@ scipioncombine_desc = CmdDesc(
     optional= [('modelid', StringArg)],
 )
 
+def checkBundleEnabled(session, cmd="scipion"):
+    """ Checks if bundle is enabled, this should happens under protocol execution process
+    and not during visualization"""
+    if not getConfig(session, PROTID):
+        session.logger.error("%s command can not be executed in this context" % cmd)
+        return False
+    else:
+        return True
+
+
 def scipionwrite(session, model, prefix=None):
     # models is a tuple with all selected models but we are only
     # process the first one
 
-    d = readConfigFile(session, chimeraConfigFileName)
-    if not d['enablebundle']:
-        session.logger.error("scipionwrite cannot be called from Analyze or Viewers")
+    if not checkBundleEnabled(session, cmd="scipionwrite"):
         return
 
     model = model[0] # model is a tuple, let us get the major model id
@@ -126,9 +116,9 @@ def scipionwrite(session, model, prefix=None):
     modelName = model._get_name()
     if isinstance(model, AtomicStructure) or \
         (not isinstance(model, Volume) and modelName.find('cif')!= -1):
-        modelFileName = d['chimerapdbtemplatefilename'].replace("__","__%s_" % (model.id)[0] )
+        modelFileName = getConfig(session, CHIMERA_PDB_TEMPLATE_FILE_NAME).replace("__", "__%s_" % (model.id)[0])
     elif (isinstance(model, Volume) or modelName.find('mrc')!= -1):
-        modelFileName = d['chimeramaptemplatefilename'].replace("__","__%s_" % (model.id)[0] )
+        modelFileName = getConfig(session, CHIMERA_MAP_TEMPLATE_FILE_NAME).replace("__", "__%s_" % (model.id)[0])
     else:
         session.logger.error("I do not know how to save model %s\n" % modelName)
         return
@@ -142,7 +132,7 @@ def scipionwrite(session, model, prefix=None):
 
     if not (prefix == "DONOTSAVESESSION_"):
         session.logger.info("Saving session")
-        command = 'save %s' % d['sessionfile']
+        command = 'save %s' % getConfig(session, SESSIONFILE)
         run(session, command)
 
 scipionwrite_desc = CmdDesc(
@@ -156,12 +146,11 @@ def scipionss(session):
     #   logger: chimerax.core.logger.Logger instance
     #   models: chimerax.core.models.Models instance
     session.logger.info("Saving session")
-    d = readConfigFile(session, chimeraConfigFileName)
-    if not d['enablebundle']:
-        session.logger.error("scipionwrite cannot be called from Analyze or Viewers")
+
+    if not checkBundleEnabled(session, cmd="scipionss"):
         return
 
-    command = 'save %s' % d['sessionfile']
+    command = 'save %s' % getConfig(session, SESSIONFILE)
     run(session, command)
 
 scipionss_desc = CmdDesc()
@@ -172,12 +161,9 @@ def scipionrs(session):
     #   logger: chimerax.core.logger.Logger instance
     #   models: chimerax.core.models.Models instance
     session.logger.info("Restoring session")
-    d = readConfigFile(session, chimeraConfigFileName)
-    if not d['enablebundle']:
-        session.logger.error("scipionwrite cannot be called from Analyze or Viewers")
+    if not checkBundleEnabled(session, cmd="scipionrs"):
         return
-
-    command = 'open %s' % d['sessionfile']
+    command = 'open %s' % getConfig(SESSIONFILE)
     run(session, command)
 
 scipionrs_desc = CmdDesc()
