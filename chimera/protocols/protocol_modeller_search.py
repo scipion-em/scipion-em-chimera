@@ -424,13 +424,11 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         else:
             userSeq = self.inputSequence1.get()  # SEQ object from Scipion
             # get target sequence imported by the user
-
             outFile = self.OUTFILE1
-            print("self.preTemplate(userSeq, outFile): ", self.preTemplate(userSeq, outFile))
             self.targetSeqID1 = self.preTemplate(userSeq, outFile)
 
-    def prePreRequisites(self, fileName, chainIdDict, userSeq, inFile, \
-                         outFile, addSeq, yourAlignment, inputSeqAlign, \
+    def prePreRequisites(self, fileName, chainIdDict, userSeq, inFile,
+                         outFile, addSeq, yourAlignment, inputSeqAlign,
                          programToAlign1, programToAlign2):
         # get sequence of structure chain with id chainId (selected by the user)
         self.selectedModel = chainIdDict['model']
@@ -572,12 +570,10 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
 
         # input vol with its origin coordinates
         pdbModelCounter = 1
-
-        if (not hasattr(self, 'addTemplate') and
-                hasattr(self, 'inputSequence1') and
+        if (not self.addTemplate and
+                self.inputSequence1.get() is not None and
                 self._getOutFastaSequencesFile is not None):
             alignmentFile1 = self._getOutFastaSequencesFile(self.OUTFILE1)
-            print("alignmentFile1: ", alignmentFile1)
             f.write("open %s\n" % alignmentFile1)
             f.write("blastprotein %s:%s database %s matrix %s "
                     "cutoff %.3f maxSeqs %d log true\n" %
