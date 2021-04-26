@@ -1,44 +1,20 @@
-# Workflow to send master to pypi and tag  the branch:
-# You need to edit FOLDER_WITH_VERSION with the folder that has the __version__ value. 
-
-name: master to pypi with comments and tag
-
-
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
+name: Build
 on:
   push:
-    branches: [ master ]
-
-env:
-  FOLDER_WITH_VERSION: chimera
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+    branches:
+      - devel
+  pull_request:
+    types: [opened, synchronize, reopened]
 jobs:
-  deploy:
-
+  sonarcloud:
+    name: SonarCloud
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine
-        pip install scipion-pyworkflow scipion-em
-        
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        python setup.py sdist bdist_wheel
-        twine upload dist/* -c "${{ secrets.PYPI_COMMENT }}"
-    - name: Get version and tag
-      run: |
-        export PACKAGE_VERSION=$(python -c "import $FOLDER_WITH_VERSION; print('VERSION', 'v'+$FOLDER_WITH_VERSION.__version__)" | grep VERSION | sed "s/VERSION //g")
-        git tag $PACKAGE_VERSION
-        git push origin $PACKAGE_VERSION
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
