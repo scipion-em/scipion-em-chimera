@@ -8,7 +8,7 @@ name: master to pypi with comments and tag
 # events but only for the master branch
 on:
   push:
-    branches: [ master ]
+    branches: [ devel ]
 
 env:
   FOLDER_WITH_VERSION: chimera
