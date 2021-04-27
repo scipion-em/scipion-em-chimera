@@ -90,11 +90,12 @@ FAQ
 Buildbot status
 ===============
 
-Status devel version: 
+Status devel version:
 
 .. image:: http://scipion-test.cnb.csic.es:9980/badges/chimera_devel.svg
 
 Status production version: 
 
 .. image:: http://scipion-test.cnb.csic.es:9980/badges/chimera_prod.svg
+
 
