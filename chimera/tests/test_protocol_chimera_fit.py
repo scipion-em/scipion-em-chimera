@@ -178,11 +178,13 @@ class TestChimeraFit2(TestImportData):
         protChimera.setObjLabel('chimera fit\n volume and pdb\n save volume '
                                 'and model')
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__3_000425.getFileName(),
+        Map_output = eval("protChimera.DONOTSAVESESSION_Map__2_%06d"
+                          % protChimera.getObjId())
+        PDB_output = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d"
+                          % protChimera.getObjId())
+        self.assertIsNotNone(PDB_output.getFileName(),
             "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__2_000425.getFileName()))
+        self.assertTrue(os.path.exists(Map_output.getFileName()))
 
     def testChimeraFitFromVolAndmmCIFWithSavingVol(self):
         """ This test checks that chimera runs with a volume provided
@@ -209,11 +211,13 @@ class TestChimeraFit2(TestImportData):
         protChimera.setObjLabel('chimera fit\n volume and mmCIF\n save volume '
                                 'and model')
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__3_000559.getFileName(),
+        Map_output = eval("protChimera.DONOTSAVESESSION_Map__2_%06d"
+                          % protChimera.getObjId())
+        PDB_output = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d"
+                          % protChimera.getObjId())
+        self.assertIsNotNone(PDB_output.getFileName(),
             "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__2_000559.getFileName()))
+        self.assertTrue(os.path.exists(Map_output.getFileName()))
 
     def testChimeraFitFromVolAssocToPDBWithSavingVol(self):
         # This test checks that chimera runs when a volume is provided
@@ -238,11 +242,13 @@ class TestChimeraFit2(TestImportData):
         protChimera.setObjLabel('chimera fit\n pdb and associated volume\n '
                                 'save volume and model')
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__3_000919.getFileName(),
+        Map_output = eval("protChimera.DONOTSAVESESSION_Map__2_%06d"
+                          % protChimera.getObjId())
+        PDB_output = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d"
+                          % protChimera.getObjId())
+        self.assertIsNotNone(PDB_output.getFileName(),
             "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__2_000919.getFileName()))
+        self.assertTrue(os.path.exists(Map_output.getFileName()))
 
     def testChimeraFitFromVolAssocTommCIFWithSavingVol(self):
         # This test checks that chimera runs when a volume is provided
@@ -267,11 +273,13 @@ class TestChimeraFit2(TestImportData):
         protChimera.setObjLabel('chimera fit\n mmCIF and associated volume\n '
                                 'save volume and model')
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__3_001061.getFileName(),
+        Map_output = eval("protChimera.DONOTSAVESESSION_Map__2_%06d"
+                          % protChimera.getObjId())
+        PDB_output = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d"
+                          % protChimera.getObjId())
+        self.assertIsNotNone(PDB_output.getFileName(),
             "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__2_001061.getFileName()))
+        self.assertTrue(os.path.exists(Map_output.getFileName()))
 
     def testChimeraFitFromPDBWithoutVol(self):
         # This test corroborates that chimera does not run unless a volume
@@ -355,11 +363,13 @@ class TestChimeraFit2(TestImportData):
         protChimera.setObjLabel('chimera fit\n pdb and associated volume\n '
                                 'plus other pdbs\n save volume and model')
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__3_000773.getFileName(),
+        Map_output = eval("protChimera.DONOTSAVESESSION_Map__2_%06d"
+                          % protChimera.getObjId())
+        PDB_output = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d"
+                          % protChimera.getObjId())
+        self.assertIsNotNone(PDB_output.getFileName(),
             "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__2_000773.getFileName()))
+        self.assertTrue(os.path.exists(Map_output.getFileName()))
 
     def testChimeraFitFromChimeraPDB(self):
         # This test checks that chimera runs with objects not imported
@@ -387,8 +397,10 @@ class TestChimeraFit2(TestImportData):
         protChimera.setObjLabel("chimera fit \npdb and volume\n save volume "
                                 "and model")
         self.launchProtocol(protChimera)
-        structure2_PDB = protChimera.DONOTSAVESESSION_Atom_struct__3_000090
-        map2 = protChimera.DONOTSAVESESSION_Map__2_000090
+        map2 = eval("protChimera.DONOTSAVESESSION_Map__2_%06d"
+                          % protChimera.getObjId())
+        structure2_PDB = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d"
+                          % protChimera.getObjId())
 
         extraCommands = ""
         extraCommands += "move 24.11,45.76,24.60 model #3 " \
@@ -409,8 +421,10 @@ class TestChimeraFit2(TestImportData):
                                 "\nsave "
                                 "volume and model")
         self.launchProtocol(protChimera)
-        structure3_PDB = protChimera.DONOTSAVESESSION_Atom_struct__3_000136
-        map3 = protChimera.DONOTSAVESESSION_Map__2_000136
+        map3 = eval("protChimera.DONOTSAVESESSION_Map__2_%06d"
+                    % protChimera.getObjId())
+        structure3_PDB = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d"
+                              % protChimera.getObjId())
         extraCommands = ""
         extraCommands += "move -24.11,-45.76,-24.60 model #3 " \
                          "coord #2\n"
@@ -427,7 +441,8 @@ class TestChimeraFit2(TestImportData):
                                 "save only model")
         self.launchProtocol(protChimera)
 
-        structure4_PDB = protChimera.DONOTSAVESESSION_Atom_struct__3_000182
+        structure4_PDB = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d"
+                              % protChimera.getObjId())
         extraCommands = ""
         extraCommands += "volume #2 voxelSize 1.55\n"
         extraCommands += "scipionwrite #3 " \
@@ -444,8 +459,10 @@ class TestChimeraFit2(TestImportData):
                                 "volume\n volume resampled\n save volume "
                                 "and model\n")
         self.launchProtocol(protChimera)
-        self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__3_000220.getFileName(),
+        structure5_PDB = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d"
+                              % protChimera.getObjId())
+        map4 = eval("protChimera.DONOTSAVESESSION_Map__2_%06d"
+                    % protChimera.getObjId())
+        self.assertIsNotNone(structure5_PDB.getFileName(),
             "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__2_000220.getFileName()))
+        self.assertTrue(os.path.exists(map4.getFileName()))
