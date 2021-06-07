@@ -23,7 +23,8 @@
 # ***************************************************************************/
 
 # TODO: Fill in the next line
-# protocol to test the chimera map subtraction starting from
+# protocol to test a chimerax map subtraction starting from two maps or
+# a map and an additional map derived from an atomic structure.
 
 from ..protocols import ChimeraProtOperate
 from ..protocols import ChimeraSubtractionMaps
@@ -82,7 +83,7 @@ class TestChimeraSubtractMap(TestImportData):
     def testChimeraSubtract1(self):
         """ This test checks the subtraction in Chimera of a
         model-derived map from an imported map """
-        print("Run Chimera subtraction of a derived-model map "
+        print("Run Chimera subtraction of a model-derived map "
               "from the imported volume\n")
 
         # Import Volume
