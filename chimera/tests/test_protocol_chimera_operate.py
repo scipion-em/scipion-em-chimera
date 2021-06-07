@@ -169,13 +169,16 @@ class TestChimeraOperate(TestImportData):
         protChimera.setObjLabel('chimera operate\n volume and pdb\n save '
                                 'volume and model')
         self.launchProtocol(protChimera)
+        structure1_PDB = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d" % protChimera.getObjId())
+        structure1_Map = eval("protChimera.DONOTSAVESESSION_Map__2_%06d" % protChimera.getObjId())
+
         self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__3_000374.getFileName(),
+            structure1_PDB.getFileName(),
                              "There was a problem with the alignment")
         self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Atom_struct__3_000374.getFileName()))
+            structure1_PDB.getFileName()))
         self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__2_000374.getFileName()))
+            structure1_Map.getFileName()))
 
     def testChimeraOperateFromVolAndmmCIF(self):
         """ This test checks that chimera runs with a volume provided
@@ -349,8 +352,8 @@ class TestChimeraOperate(TestImportData):
         protChimera = self.newProtocol(ChimeraProtOperate, **args)
         protChimera.setObjLabel('chimera operate\n volume and pdb\n ')
         self.launchProtocol(protChimera)
-        structure2_PDB = protChimera.DONOTSAVESESSION_Atom_struct__3_000090
-
+        
+        structure2_PDB = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d" % protChimera.getObjId()) 
         extraCommands = ""
         extraCommands += "move 24.11,45.76,24.60 model #3 " \
                          "coord #2\n"
@@ -365,7 +368,7 @@ class TestChimeraOperate(TestImportData):
         protChimera.setObjLabel('chimera operate\n volume associated to pdb\n'
                                 'pdb moved to start position\n ')
         self.launchProtocol(protChimera)
-        structure3_PDB = protChimera.DONOTSAVESESSION_Atom_struct__3_000128
+        structure3_PDB = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d" % protChimera.getObjId())
         extraCommands = ""
         extraCommands += "move -24.11,-45.76,-24.60 model #3 " \
                          "coord #2\n"
@@ -383,11 +386,11 @@ class TestChimeraOperate(TestImportData):
         protChimera.setObjLabel('chimera operate\n volume and pdb\n '
                                 'save volume and model')
         self.launchProtocol(protChimera)
+        structure4_PDB = eval("protChimera.DONOTSAVESESSION_Atom_struct__3_%06d.getFileName()" % protChimera.getObjId())
         self.assertIsNotNone(
-            protChimera.DONOTSAVESESSION_Atom_struct__3_000166.getFileName(),
+            structure4_PDB,
             "There was a problem with the alignment")
-        self.assertTrue(os.path.exists(
-            protChimera.DONOTSAVESESSION_Map__2_000166.getFileName()))
+        self.assertTrue(os.path.exists(structure4_PDB))
 
     def testChimeraOperateFromVolAssocToPDBPlusPDBs(self):
         # This test checks that chimera runs when a volume is provided

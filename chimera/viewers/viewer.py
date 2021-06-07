@@ -142,6 +142,7 @@ class ChimeraViewerBase(Viewer):
                     # f.write("open %s\n" % os.path.abspath(path))
                     f.write("open %s\n" % path)
 
+        f.write("view\n")
         f.close()
 
         # run in the background
