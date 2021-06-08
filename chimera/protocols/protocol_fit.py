@@ -63,7 +63,7 @@ class ChimeraProtRigidFit(ChimeraProtBase):
                   % (fn, index))
         else:
             fnVol = self.inputVolume.get()
-            print("Volume: Input volume %s\n" % fnVol)
+            # print("Volume: Input volume %s\n" % fnVol)
 
     def _validate(self):
         errors = super(ChimeraProtRigidFit, self)._validate()
