@@ -139,7 +139,6 @@ class ChimeraViewerBase(Viewer):
                 if not (filename.startswith("Atom_struct_out_") or
                         filename.startswith("tmp_")):
                     path = os.path.join(directory, filename)
-                    # f.write("open %s\n" % os.path.abspath(path))
                     f.write("open %s\n" % path)
                     
         f.write("view\n")
