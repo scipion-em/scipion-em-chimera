@@ -30,7 +30,7 @@ import pyworkflow.utils as pwutils
 
 from .constants import CHIMERA_HOME, V1_0, V1_1, V1_2_5
 
-__version__ = "3.0.6"
+__version__ = "3.0.7"
 _logo = "chimerax_logo.png"
 _references = ['Goddard2018']
 
@@ -39,10 +39,12 @@ class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
     _supportedVersions = [V1_0, V1_1, V1_2_5]
+    _lastVersion = V1_2_5  
+    _version = 'chimerax-%s' % _lastVersion
 
     @classmethod
     def _defineVariables(cls):
-        cls._defineEmVar(CHIMERA_HOME, 'chimerax-1.1')
+        cls._defineEmVar(CHIMERA_HOME, cls._version)
 
     @classmethod
     def getEnviron(cls):
@@ -79,8 +81,8 @@ class Plugin(pwem.Plugin):
     def defineBinaries(cls, env):
         from scipion.install.funcs import VOID_TGZ
 
-        cls.defineChimeraXInstallation(env, V1_1, default=True)
-        cls.defineChimeraXInstallation(env, V1_2_5, default=False, tarDir="chimerax-1.2.5-rc-2021.05.24")
+        #cls.defineChimeraXInstallation(env, V1_1, default=True)
+        cls.defineChimeraXInstallation(env, V1_2_5, default=True, tarDir="chimerax-1.2.5-rc-2021.05.24")
 
         # Scipion plugin for chimera. It will depend on the version currently active
         pathToPlugin = os.path.join(os.path.dirname(__file__),
