@@ -241,4 +241,6 @@ def scipion(session):
     scipionrs: restores chimera sesion
     scipioncombine: combines two models
     scipionshell: shows the density of a 3D Map on a spherical shell of the map at a given radius
+    
+    type "help commandname" for more information
 """)
