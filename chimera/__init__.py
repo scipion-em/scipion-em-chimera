@@ -28,9 +28,9 @@ import os
 import pwem
 import pyworkflow.utils as pwutils
 
-from .constants import CHIMERA_HOME, V1_0, V1_1
+from .constants import CHIMERA_HOME, V1_0, V1_1, V1_2_5, chimeraTARs
 
-__version__ = "3.0.6"
+__version__ = "3.1.7"
 _logo = "chimerax_logo.png"
 _references = ['Goddard2018']
 
@@ -38,11 +38,13 @@ _references = ['Goddard2018']
 class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
-    _supportedVersions = [V1_0, V1_1]
+    _supportedVersions = [V1_0, V1_1, V1_2_5]
+    _currentVersion = V1_2_5  
+    _fullVersion = 'chimerax-%s' % _currentVersion
 
     @classmethod
     def _defineVariables(cls):
-        cls._defineEmVar(CHIMERA_HOME, 'chimerax-1.1')
+        cls._defineEmVar(CHIMERA_HOME, cls._fullVersion)
 
     @classmethod
     def getEnviron(cls):
@@ -77,27 +79,50 @@ class Plugin(pwem.Plugin):
 
     @classmethod
     def defineBinaries(cls, env):
-        from scipion.install.funcs import VOID_TGZ  # Local import to avoid having scipion-app installed when building the package.
+        from scipion.install.funcs import VOID_TGZ
 
+        #cls.defineChimeraXInstallation(env, V1_1, default=True)
+        cls.defineChimeraXInstallation(env, cls._currentVersion, default=True, tarDir=chimeraTARs[cls._currentVersion])
 
-        getChimeraScript = os.path.join(os.path.dirname(__file__),
-                                        "getchimera.py")
-        chimera_cmds = [("cd .. && python " + getChimeraScript, "../ChimeraX-1.1.tar.gz"),
-                        ("cd .. && tar -xf ChimeraX-1.1.tar.gz", "bin/ChimeraX")
-                        ]
-        env.addPackage('chimerax', version='1.1',
-                       tar=VOID_TGZ,
-                       default=True,
-                       commands=chimera_cmds
-                       )
-
-
+        # Scipion plugin for chimera. It will depend on the version currently active
         pathToPlugin = os.path.join(os.path.dirname(__file__),
-                                        "Bundles", "scipion")
+                                    "Bundles", "scipion")
         pathToBinary = cls.getProgram()
+
+        activeVersion = cls.getActiveVersion()
+        installationFlagFile = "installed-%s" % activeVersion
+
         installPluginsCommand = [("%s --nogui --exit " \
-                                "--cmd 'devel install %s'" % (pathToBinary, pathToPlugin), [])]
-        env.addPackage('scipionchimera', version='1.3',
+                                  "--cmd 'devel install %s' && touch %s" % (pathToBinary, pathToPlugin, installationFlagFile),
+                                  [installationFlagFile])]
+
+        env.addPackage('scipionchimera' , version='1.3',
                        tar=VOID_TGZ,
                        default=True,
                        commands=installPluginsCommand)
+
+    @classmethod
+    def defineChimeraXInstallation(cls, env, version, default=False, tarDir=None):
+        from scipion.install.funcs import \
+            VOID_TGZ  # Local import to avoid having scipion-app installed when building the package.
+
+        getchimera_script = os.path.join(os.path.dirname(__file__),
+                                        "getchimera.py")
+
+        extractionDir = finalDir = os.path.join("bin", "ChimeraX")
+        if tarDir:
+            extractionDir = os.path.join("..", tarDir, extractionDir)
+
+        chimera_cmds = [("cd .. && python %s %s" % (getchimera_script, version), "../ChimeraX-%s.tar.gz" %version),
+                        ("cd .. && tar -xf ChimeraX-%s.tar.gz" % version, extractionDir)
+                        ]
+
+        if tarDir:
+            chimera_cmds.append(("mv ../%s/* ." % tarDir,  finalDir))
+
+        env.addPackage('chimerax', version=version,
+                       tar=VOID_TGZ,
+                       default=default,
+                       commands=chimera_cmds,
+                       )
+
