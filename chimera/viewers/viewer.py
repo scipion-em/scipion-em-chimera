@@ -88,11 +88,11 @@ class ChimeraViewerBase(Viewer):
             dim = _inputVol.getDim()[0]
             sampling = _inputVol.getSamplingRate()
 
-        bildFileName = self.protocol._getTmpPath("axis_output.bild")
+        bildFileName = self.protocol._getExtraPath("axis_output.bild")
         Chimera.createCoordinateAxisFile(dim,
                                          bildFileName=bildFileName,
                                          sampling=sampling)
-        fnCmd = self.protocol._getTmpPath("chimera_output.cxc")
+        fnCmd = self.protocol._getExtraPath("chimera_output.cxc")
         f = open(fnCmd, 'w')
         # change to workingDir
         # If we do not use cd and the project name has an space
@@ -136,10 +136,12 @@ class ChimeraViewerBase(Viewer):
 
         for filename in os.listdir(directory):
             if filename.endswith(".pdb") or filename.endswith(".cif"):
-                path = os.path.join(directory, filename)
-                # f.write("open %s\n" % os.path.abspath(path))
-                f.write("open %s\n" % path)
-
+                if not (filename.startswith("Atom_struct_out_") or
+                        filename.startswith("tmp_")):
+                    path = os.path.join(directory, filename)
+                    f.write("open %s\n" % path)
+                    
+        f.write("view\n")
         f.close()
 
         # run in the background
@@ -163,7 +165,7 @@ class ChimeraRestoreViewer(Viewer):
     _targets = [ChimeraProtRestore]
 
     def _visualize(self, obj, **args):
-        fnCmd = self.protocol._getTmpPath("chimera_restore_session.cxc")
+        fnCmd = self.protocol._getExtraPath("chimera_restore_session.cxc")
         f = open(fnCmd, 'w')
         # change to workingDir
         # If we do not use cd and the project name has an space

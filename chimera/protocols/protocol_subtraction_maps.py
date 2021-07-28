@@ -25,7 +25,6 @@
 # *
 # **************************************************************************
 
-import os
 from pwem import *
 from pwem.convert import Ccp4Header
 from pwem.objects import Volume
@@ -48,22 +47,18 @@ from pwem.constants import (SYM_DIHEDRAL_X)
 from ..constants import (CHIMERA_SYM_NAME, CHIMERA_I222r)
 from ..convert import CHIMERA_LIST
 from pwem.protocols import EMProtocol
-from .protocol_base import createScriptFile, ChimeraProtBase
-from pwem.viewers.viewer_chimera import (Chimera,
-                                         sessionFile,
-                                         chimeraMapTemplateFileName,
-                                         chimeraScriptFileName,
-                                         chimeraPdbTemplateFileName)
+from pwem.viewers.viewer_chimera import Chimera, chimeraScriptFileName
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
-from .. import Plugin
+from chimera import Plugin
 from pyworkflow.utils.properties import Message
-from ..constants import CHIMERA_CONFIG_FILE
-import configparser
+
+from chimera.utils import getEnvDictionary
+
 
 class ChimeraSubtractionMaps(EMProtocol):
     """Protocol to subtract two volumes.
         One of these volumes can be derived from an atomic structure.
-        Execute command *scipionwrite model #n [refmodel #p] [prefix stringAddedToFilename]*
+        Execute command *scipionwrite #n [prefix stringAddedToFilename]*
         from command line in order to transfer the generated maps and models to scipion.
         In addition to maps and models that the protocol saves by default,
         the user can generate and save some others"""
@@ -85,8 +80,8 @@ class ChimeraSubtractionMaps(EMProtocol):
         form.addParam('inputVolume', PointerParam, pointerClass="Volume",
                       label='Input 3D Map',
                       important=True,
-                      help="difference 3D map = minuend − subtrahend"
-                           "input here the minuend")
+                      help="Difference 3D map = minuend − subtrahend.\n"
+                           "Input here the minuend of the subtraction.")
         form.addParam('subtractOrMask', EnumParam,
                       choices=self.PROTOCOL_OPTIONS,
                       display=EnumParam.DISPLAY_HLIST,
@@ -104,23 +99,27 @@ class ChimeraSubtractionMaps(EMProtocol):
                       default=0.001,
                       allowsNull=True,
                       label='Contour level (subtrahend)',
-                      help='result = minuend − subtrahend. Calculation are made for those\n'
-                           'voxels inside a region created by this contour level\n'
-                           'empty -> chimera computes the level')
+                      help='Difference 3D map = minuend − subtrahend.\n"'
+                           'Calculation are made for those voxels '
+                           'inside a region created by this contour level\n'
+                           'Empty value -> chimera computes the level.')
         form.addParam('mapOrModel', EnumParam,
                      choices=self.MAP_OPTIONS,
                      display=EnumParam.DISPLAY_HLIST,
                      default=0, label='Subtraction/Mask of',
-                     help="difference 3D Map = minuend − subtrahend. "
-                          "Subtrahend 3D map may be provided by the user (choose '3D map') "
-                          "or created from an atomic coordinates file (choose 'atomic structure'"
-                          " If 3D Map is chosen, the sampling rate of the minuend should be"
+                     help="Difference 3D map = minuend − subtrahend.\n"
+                          "Subtrahend 3D map may be provided by the user "
+                          "(choose '3D map') "
+                          "or created from an atomic coordinates file "
+                          "(choose 'atomic structure').\n"
+                          " If 3D Map is chosen, the sampling rate of the "
+                          "minuend should be"
                           " equal to the sampling rate of the subtrahend.")
         form.addParam('inputVolume2', PointerParam, pointerClass="Volume",
                          condition=('mapOrModel==%d ' % 0),
                          important=True, allowsNull=True,
                          label='Map to subtract (subtrahend)',
-                         help="Map that has to be subtracted from the minuend 3D map")
+                         help="Map that has to be subtracted from the minuend 3D map.")
         form.addParam('resolution', FloatParam,
                          condition=('mapOrModel==%d' % 1),
                          label='Map resolution (A):',
@@ -135,7 +134,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                       important=True,
                       label='Atomic structure',
                       help="Atomic structure to derive "
-                       "a 3D map that will be subtracted from the minuend map.")
+                           "a 3D map that will be subtracted from the minuend map.")
         form.addParam('selectChain', BooleanParam,
                          condition=('mapOrModel==%d' % 1),
                          label="Select a specific chain?",
@@ -156,7 +155,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                               "of the atomic structure. These removed residues "
                               "might help you to establish a control of "
                               "appropriate levels of map density.\n"
-                              "In order to better visualize the area of removed"
+                              "In order to better visualize the area of removed "
                               "residues, 10 residues will be highligthed before "
                               "and after the first and the last residues selected,"
                               " respectively.\n")
@@ -186,24 +185,24 @@ class ChimeraSubtractionMaps(EMProtocol):
                       label="Apply symmetry to the atomic structure:",
                       default=False,
                       help="'Symmetry = Yes' indicates that symmetry will be applied. "
-                           "This option is recommended is the atomic structure "
+                           "This option is recommended if the atomic structure "
                            "corresponds to the asymmetrical unit and you want to "
                            "regenerate the structure of the whole map.\n'Symmetry = "
                            "No' indicates that symmetry will not be applied, and then  "
-                           "the map derived from the atomic structure involves the input"
-                           "atomic structure only.\n")
+                           "the map derived from the atomic structure involves only the "
+                           "atomic structure provided as input.\n")
         form.addParam('symmetryGroup', EnumParam,
                       condition=(('mapOrModel==%d and applySymmetry==True') % 1),
                       choices=CHIMERA_LIST,
                       default=CHIMERA_I222r,
                       important=True,
                       label="Symmetry",
-                      help="https://scipion-em.github.io/docs/release-2.0.0/docs/developer/symmetries.html?highlight=symmetry"
+                      help="https://scipion-em.github.io/docs/docs/developer/symmetries\n"
                            "Symmetry for a description of the symmetry groups "
                            "format in CHIMERA.\n"
                            "If no symmetry is present, use _c1_."
                            'More information: \n'
-                           'https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/sym.html'
+                           'https://www.cgl.ucsf.edu/chimerax/docs/user/commands/sym.html'
                       )
         form.addParam('symmetryOrder', IntParam, default=1,
                       condition=(('mapOrModel==%d' % 1) and
@@ -214,15 +213,18 @@ class ChimeraSubtractionMaps(EMProtocol):
         form.addParam('rangeDist', IntParam, default=100,
                       condition=(('mapOrModel==%d and applySymmetry==True') % 1),
                       label='Range of distance',
-                      help="This value allows to generate copies with centers within a certain range "
-                           "of distance of the center of the original molecule model. A models's center "
+                      help="This value allows to generate copies with centers "
+                           "within a certain range "
+                           "of distance of the center of the original molecule"
+                           " model. A models's center "
                            "is defined as the center of its bounding box.")
         form.addParam('inputPdbFiles', MultiPointerParam,
                       pointerClass="AtomStruct", allowsNull=True,
                       label='Other atomic structures',
                       help="In case you need to load more PDBx/mmCIF files, "
-                           "you can load them here. This files will NOT be used "
-                           "to create the subtrahend")
+                           "you can load them here. These structures will NOT "
+                           "be used "
+                           "to create the subtrahend.")
         form.addParam('selectAreaMap', BooleanParam,
                       condition=('mapOrModel==%d' % 1),
                       label="Map fraction around the atomic structure?",
@@ -232,8 +234,9 @@ class ChimeraSubtractionMaps(EMProtocol):
         form.addParam('radius', IntParam, default=15,
                       condition=(('mapOrModel==%d' % 1) and
                                  'selectAreaMap==True'),
-                      label="Atom radius (Angstroms)",
-                      help="Set the radius to select values of grid points "
+                      label="Atom radius (A)",
+                      help="Set the radius (Angstroms) to select values "
+                           "of grid points "
                            "farther than that radius from any atom.")
         form.addParam("filterToApplyToDiffMap", EnumParam,
                       expertLevel=LEVEL_ADVANCED,
@@ -256,12 +259,13 @@ class ChimeraSubtractionMaps(EMProtocol):
                       help="Add extra commands in cmd file. Use for testing")
         form.addSection(label='Help')
         form.addLine(''' 
-                    vop subtract #%d #%d modelId #%d minRms true onGrid #%d
-                    (If you want to use another level the above
-                     command recalculates the difference)
+                    # vol subtract #%d #%d modelId #%d minRms true onGrid #%d
+                    # (If you want to use another level the above
+                    #  command recalculates the difference)
                     scipionwrite model #n [prefix stringAddedToFilename]
                     scipionss
                     scipionrs
+                    scipioncombine #n1,n2,... [modelid n]
                     Type 'help command' in chimera command line for details 
                     (command is the command name)''')
 
@@ -292,26 +296,6 @@ class ChimeraSubtractionMaps(EMProtocol):
                   % self.atomStructName)
 
     def runChimeraStep(self):
-        config = configparser.ConfigParser()
-        _chimeraPdbTemplateFileName = \
-            os.path.abspath(self._getExtraPath(
-                chimeraPdbTemplateFileName))
-        _chimeraMapTemplateFileName = \
-            os.path.abspath(self._getExtraPath(
-                chimeraMapTemplateFileName))
-        _sessionFile = os.path.abspath(
-            self._getExtraPath(sessionFile))
-        protId = self.getObjId()
-        config['chimerax'] = {'chimerapdbtemplatefilename':
-                                  _chimeraPdbTemplateFileName % protId,
-                              'chimeramaptemplatefilename':
-                                  _chimeraMapTemplateFileName % protId,
-                              'sessionfile': _sessionFile,
-                              'enablebundle': True,
-                              'protid': self.getObjId()}
-        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
-                  'w') as configfile:
-            config.write(configfile)
 
         # building script file including the coordinate axes and the input
         # volume with samplingRate and Origin information
@@ -596,7 +580,7 @@ class ChimeraSubtractionMaps(EMProtocol):
 
         # run in the background
         cwd = os.path.abspath(self._getExtraPath())
-        Chimera.runProgram(Plugin.getProgram(), args, cwd=cwd)
+        Plugin.runChimeraProgram(Plugin.getProgram(), args, cwd=cwd, extraEnv=getEnvDictionary(self))
 
     def createOutput(self):
         # Check vol and pdb files
@@ -626,15 +610,6 @@ class ChimeraSubtractionMaps(EMProtocol):
                 keyword = filename.split(".pdb")[0].replace(".","_")
                 kwargs = {keyword: pdb}
                 self._defineOutputs(**kwargs)
-
-        # upodate config file flag enablebundle
-        # so scipionwrite is disabled
-        config = configparser.ConfigParser()
-        config.read(self._getExtraPath(CHIMERA_CONFIG_FILE))
-        config.set('chimerax', 'enablebundle', 'False')
-        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
-                  'w') as configfile:
-            config.write(configfile)
 
     def symMethod(self, f, modelId, sym, order=None, range=None):
         if sym == "Cn" and order != 1:

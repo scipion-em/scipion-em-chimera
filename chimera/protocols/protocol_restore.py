@@ -24,28 +24,27 @@
 # *  e-mail address 'scipion@cnb.csic.es'
 # *
 # **************************************************************************
-import configparser
-
 from pyworkflow.protocol.params import PointerParam, StringParam
 import os
-from pwem.viewers.viewer_chimera import (Chimera,
-                                         chimeraScriptFileName,
-                                         chimeraPdbTemplateFileName,
-                                         chimeraMapTemplateFileName,
-                                         sessionFile)
+from pwem.viewers.viewer_chimera import sessionFile
 from .protocol_base import ChimeraProtBase
-from ..constants import CHIMERA_CONFIG_FILE
+from chimera import Plugin
+
+from chimera.utils import getEnvDictionary
 
 
 class ChimeraProtRestore(ChimeraProtBase):
     """This protocol opens Chimera and restores a session
       that has been stored each time a 3Dmap or an atomic structure 
       by using `scipionwrite` or `scipionss` commad.
-        Execute command *scipionwrite [model #n] [refmodel #p]
-        [saverefmodel 0|1]* from command line in order to transfer fitted
-        pdb to scipion. Default values are model=#0,
-        refmodel =#1 and saverefmodel 0 (false).
-        model refers to the pdb file. refmodel to a 3Dmap"""
+      Execute command *scipionwrite #n [prefix stringAddedToFilename]
+      model refers to the pdb file"""
+        # Execute command *scipionwrite [model #n] [refmodel #p]
+        # [saverefmodel 0|1]* from command line in order to transfer fitted
+        # pdb to scipion. Default values are model=#0,
+        # refmodel =#1 and saverefmodel 0 (false).
+        # model refers to the pdb file. refmodel to a 3Dmap"""
+
     _label = 'restore session'
 
     def _defineParams(self, form):
@@ -82,9 +81,15 @@ class ChimeraProtRestore(ChimeraProtBase):
         self.parentProt.setProject(self.getProject())  # I do not really
         # understand this line
 
-        self.inputVolume = self.parentProt.inputVolume
-        self.pdbFileToBeRefined = self.parentProt.pdbFileToBeRefined
-        self.inputPdbFiles = self.parentProt.inputPdbFiles
+        if hasattr(self, 'inputVolume') and \
+                self.inputVolume is not None:
+            self.inputVolume = self.parentProt.inputVolume
+        if hasattr(self, 'pdbFileToBeRefined') and \
+                self.pdbFileToBeRefined is not None:
+            self.pdbFileToBeRefined = self.parentProt.pdbFileToBeRefined
+        if hasattr(self, 'inputPdbFiles') and \
+                self.inputPdbFiles is not None:
+            self.inputPdbFiles = self.parentProt.inputPdbFiles
 
     def runChimeraStep(self):
         # create CMD file
@@ -95,35 +100,9 @@ class ChimeraProtRestore(ChimeraProtBase):
         #     args = " --nogui --cmd " + self._getTmpPath(
         #         chimeraScriptFileName)
 
-        program = Chimera.getProgram()
-
-        config = configparser.ConfigParser()
-        _chimeraPdbTemplateFileName = \
-            os.path.abspath(self._getExtraPath(
-                chimeraPdbTemplateFileName))
-        _chimeraMapTemplateFileName = \
-            os.path.abspath(self._getExtraPath(
-                chimeraMapTemplateFileName))
-        _sessionFile = os.path.abspath(
-            self._getExtraPath(sessionFile))
-        protId = self.getObjId()
-        config['chimerax'] = {'chimerapdbtemplatefilename':
-                                  _chimeraPdbTemplateFileName % protId,
-                              'chimeramaptemplatefilename':
-                                  _chimeraMapTemplateFileName % protId,
-                              'sessionfile': _sessionFile,
-                              'enablebundle': True,
-                              'protid': self.getObjId()}
-        with open(self._getExtraPath(CHIMERA_CONFIG_FILE),
-                  'w') as configfile:
-            config.write(configfile)
-
         # run in the background
         cwd = os.path.abspath(self._getExtraPath())
-        Chimera.runProgram(program, os.path.abspath(parentSessionFileName), cwd=cwd)
-
-    def createOutput(self):
-        super(ChimeraProtRestore, self).createOutput()
+        Plugin.runChimeraProgram(Plugin.getProgram(), os.path.abspath(parentSessionFileName), cwd=cwd, extraEnv=getEnvDictionary(self))
 
     def _validate(self):
         errors = super(ChimeraProtRestore, self)._validate()

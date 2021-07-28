@@ -3,13 +3,10 @@ ChimeraX bundle names must start with "ChimeraX-"
 to avoid clashes with package names in pypi.python.org.
 When uploaded to the ChimeraX toolshed, the bundle
 will be displayed without the ChimeraX- prefix.
-
-Tutorial
-https://www.cgl.ucsf.edu/chimerax/docs/devel/tutorials/tutorial_hello.htm
 -->
 
 <BundleInfo name="ChimeraX-ScipionExtensions"
-            version="1.2" package="chimerax.scipionExtensions"
+            version="1.3" package="chimerax.scipionExtensions"
             minSessionVersion="1" maxSessionVersion="10">
 
   <!-- Additional information about bundle source -->
@@ -20,9 +17,13 @@ https://www.cgl.ucsf.edu/chimerax/docs/devel/tutorials/tutorial_hello.htm
   <!-- Synopsis is a one-line description
        Description is a full multi-line description -->
   <Synopsis>Command to allow interaction between scipion and chimera</Synopsis>
-  <Description>scipionwrite: saves model file
+  <Description>
+    scipionwrite: saves model file
     scipionss: saves chimera session
     scipionrs: restores chimera sesion
+    scipioncombine: combines two models
+    scipionshell: shows the density of a 3D Map on a spherical shell of the map at a given radius
+    scipion: summary with all scipion related commands
   </Description>
 
   <!-- Categories is a list where this bundle should appear -->
@@ -35,6 +36,9 @@ https://www.cgl.ucsf.edu/chimerax/docs/devel/tutorials/tutorial_hello.htm
     <DataFile>docs/user/commands/scipionwrite.html</DataFile>
     <DataFile>docs/user/commands/scipionss.html</DataFile>
     <DataFile>docs/user/commands/scipionrs.html</DataFile>
+    <DataFile>docs/user/commands/scipioncombine.html</DataFile>
+    <DataFile>docs/user/commands/scipionshell.html</DataFile>
+    <DataFile>docs/user/commands/scipion.html</DataFile>
   </DataFiles>
 
   <!-- Dependencies on other ChimeraX/Python packages -->
@@ -56,6 +60,14 @@ https://www.cgl.ucsf.edu/chimerax/docs/devel/tutorials/tutorial_hello.htm
     <ChimeraXClassifier>ChimeraX :: Command :: scipionrs :: General ::
         Restore last chimera session saved with scipionss
     </ChimeraXClassifier>
+     <ChimeraXClassifier>ChimeraX :: Command :: scipioncombine :: General ::
+        Combine two models
+    </ChimeraXClassifier>
+     <ChimeraXClassifier>ChimeraX :: Command :: scipionshell :: General ::
+        shows the density of a 3D Map on a spherical shell of the map at a given radius r
+    </ChimeraXClassifier>
+     <ChimeraXClassifier>ChimeraX :: Command :: scipion :: General ::
+       summary with all scipion related commands </ChimeraXClassifier>
   </Classifiers>
 
 </BundleInfo>
