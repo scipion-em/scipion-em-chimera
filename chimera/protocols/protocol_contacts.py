@@ -119,7 +119,7 @@ class ChimeraProtContacts(EMProtocol):
                             "default contact rule: -0.4 (from 0.0 to -1.0)\n"
                             "default clash rule: 0.6 (from 0.4 to 1.0)\n"
                             'More information: \n'
-                            'https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/findclash.html'
+                            'https://www.cgl.ucsf.edu/chimerax/docs/user/commands/clashes.html#top'
                        )
         group.addParam('allowance', FloatParam,
                        label="allowance (Angstroms): ", default=0.0,
@@ -127,7 +127,7 @@ class ChimeraProtContacts(EMProtocol):
                        help="default contact rule: 0.0\n"
                             "default clash rule: 0.4\n"
                             'More information: \n'
-                            'https://www.cgl.ucsf.edu/chimera/current/docs/UsersGuide/midas/findclash.html'
+                            'https://www.cgl.ucsf.edu/chimerax/docs/user/commands/clashes.html#top'
                        )
         form.addLine('')
 
