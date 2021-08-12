@@ -52,7 +52,7 @@ def scipionshellcrown(session,
     # very likely divisions is irrelevant here
     command = "shape icosahedron " \
               "radius %s " \
-              "divisions 2000 " \ 
+              "divisions 2000 " \
               "orientation %s " \
               "sphereFactor %s" % (sphereRadius,
                                    orientation,
