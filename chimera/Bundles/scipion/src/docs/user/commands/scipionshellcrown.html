@@ -23,11 +23,11 @@ The command  <b>scipionshellcrown</b> creates a crown from a
 where
  <ul>
   <li><bf>modelId:</bf> model id of the 3D map to be analyzed</li>
-  <li><bf>radius:</bf> radius at which the density is going to be shown</li>
+  <li><bf>radius:</bf> radius at which the density is going to be shown (pixels)</li>
   <li><bf>outModelId:</bf> id of the output icosahedron showing the density surface</li>
   <li><bf>orientation:</bf> symmetry used to create the icosahedron used to define the surface to be shown (default 222r)</li>
   <li><bf>sphereFactor:</bf> weight of the sphere component in an interpolation between an icosahedron and a sphere of equal radius (1.0: sphere; 0.0: icosahedron) (default=1)</li>
-  <li><bf>crownwidth:</bf> shell width (default=10A)</li>
+  <li><bf>crownwidth:</bf> shell width (default = 10A, the crown goes from the selected radius minus 10A to the selected radius)</li>
  </ul>
 </p>
 
