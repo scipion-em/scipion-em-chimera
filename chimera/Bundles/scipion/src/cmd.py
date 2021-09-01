@@ -19,6 +19,83 @@ import ntpath
 def getConfig(session, key):
         return os.environ.get(key, False)
 
+
+def scipionshellcrown(session,
+                 model=None,
+                 sphereRadius=None,
+                 orientation='222r',
+                 sphereFactor='1',
+                 modelid=None,
+                 crownwidth=10):
+
+    """ Shows a shell of a 3D Map at radius sphereRadius
+    and with width=width
+
+    :param session:  chimera session
+    :param model: 3D map to be analyzed
+    :param sphereRadius: 3D density obtained at this radius
+    :param orientation: virus symmetry, i.e: 222, 222r, etc.
+    :param sphereFactor: allows generating a shape that is an
+    interpolation between an icosahedron and a sphere of equal radius.
+    :param modelid: output model_id. keep always the same value to
+     overwrite the previous surface.
+    :param crownwidth: shell width
+    :return: none
+    example: scipionshellcrown #1 220  10  orientation 222r   sphereFactor 1 crownwidth 60
+
+    """
+    # set model style as surface
+    mapModelId = model[0].id_string # model is a tuple, id = 1
+    command = "volume #%s style surface " % (mapModelId)
+    run(session, command)
+
+    # very likely divisions is irrelevant here
+    command = "shape icosahedron " \
+              "radius %s " \
+              "divisions 2000 " \
+              "orientation %s " \
+              "sphereFactor %s" % (sphereRadius,
+                                   orientation,
+                                   sphereFactor)
+    outIcosahedronId = run(session, command).id_string # id = 2
+
+    # delete output model
+    command = "close #%s;" % modelid
+    run(session, command)
+
+    # mask  in icosahedron
+    command = "volume mask #%s surfaces #%s " \
+              "fullMap true modelId %s slab %s" % \
+              (mapModelId, outIcosahedronId, modelid, crownwidth) # model id
+    run(session, command)
+
+    command = "color #%s gray all; " \
+              "lighting soft; " \
+              "cofr coordinateSystem #%s; " \
+              "lighting shadows true; " \
+              'ui tool show "Side View"' \
+              % (modelid, modelid)
+    run(session, command)
+
+    command = 'hide #%s;' \
+              'close #%s' \
+              %(mapModelId,
+                outIcosahedronId)
+    run(session, command)
+
+scipionshellcrown_desc = CmdDesc(
+    required=[('model', TopModelsArg),
+              ('sphereRadius', StringArg),
+              ('modelid', StringArg)
+              ],
+    optional= [
+               ('orientation', StringArg),
+               ('sphereFactor', StringArg),
+               ('crownwidth', StringArg),
+               ]
+)
+
+
 def scipionshell(session,
                  model=None,
                  sphereRadius=None,
@@ -31,8 +108,6 @@ def scipionshell(session,
 
     :param session:  chimera session
     :param model: 3D map to be analized
-    :param colorRadius: max and minimum values used by the colormap
-    will be taken at this radius.
     :param sphereRadius: 3D density optained at this radius
     :param orientation: virus symmetry, i.e: 222, 222r, etc.
     :param sphereFactor: allows generating a shape that is an
@@ -241,6 +316,7 @@ def scipion(session):
     scipionrs: restores chimera sesion
     scipioncombine: combines two models
     scipionshell: shows the density of a 3D Map on a spherical shell of the map at a given radius
+    scipionshellcrown: cut a shell from a 3D Map at a given radius
     
-    type "help commandname" for more information
+    type "help command_name" for more information
 """)

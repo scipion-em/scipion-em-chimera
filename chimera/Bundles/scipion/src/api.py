@@ -40,6 +40,9 @@ class _MyAPI(BundleAPI):
         elif ci.name == "scipionshell":
             func = cmd.scipionshell
             desc = cmd.scipionshell_desc
+        elif ci.name == "scipionshellcrown":
+            func = cmd.scipionshellcrown
+            desc = cmd.scipionshellcrown_desc
         elif ci.name == "scipion":
             func = cmd.scipion
             desc = cmd.scipion_desc

@@ -23,6 +23,7 @@ will be displayed without the ChimeraX- prefix.
     scipionrs: restores chimera sesion
     scipioncombine: combines two models
     scipionshell: shows the density of a 3D Map on a spherical shell of the map at a given radius
+    scipionshellcrown: shows a shell of a 3D map between two radii
     scipion: summary with all scipion related commands
   </Description>
 
@@ -38,6 +39,7 @@ will be displayed without the ChimeraX- prefix.
     <DataFile>docs/user/commands/scipionrs.html</DataFile>
     <DataFile>docs/user/commands/scipioncombine.html</DataFile>
     <DataFile>docs/user/commands/scipionshell.html</DataFile>
+    <DataFile>docs/user/commands/scipionshellcrown.html</DataFile>
     <DataFile>docs/user/commands/scipion.html</DataFile>
   </DataFiles>
 
@@ -65,6 +67,9 @@ will be displayed without the ChimeraX- prefix.
     </ChimeraXClassifier>
      <ChimeraXClassifier>ChimeraX :: Command :: scipionshell :: General ::
         shows the density of a 3D Map on a spherical shell of the map at a given radius r
+    </ChimeraXClassifier>
+     <ChimeraXClassifier>ChimeraX :: Command :: scipionshellcrown :: General ::
+        shows a shell of a 3D map between two radii
     </ChimeraXClassifier>
      <ChimeraXClassifier>ChimeraX :: Command :: scipion :: General ::
        summary with all scipion related commands </ChimeraXClassifier>
