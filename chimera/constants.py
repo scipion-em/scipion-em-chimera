@@ -25,6 +25,8 @@
 # **************************************************************************
 
 CHIMERA_HOME = 'CHIMERA_HOME'
+ALPHAFOLD_HOME = 'ALPHAFOLD_HOME'
+ALPHAFOLD_DATABASE_DIR = 'ALPHAFOLD_DATABASE_DIR'
 CLUSTALO = 'clustalo'
 MUSCLE = 'muscle'
 CHIMERAX=True
