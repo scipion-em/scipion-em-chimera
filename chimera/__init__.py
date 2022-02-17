@@ -28,7 +28,8 @@ import os
 import pwem
 import pyworkflow.utils as pwutils
 
-from .constants import CHIMERA_HOME, V1_0, V1_1, V1_2_5, chimeraTARs
+from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR, 
+                        V1_0, V1_1, V1_2_5, chimeraTARs)
 
 __version__ = "3.1.7"
 _logo = "chimerax_logo.png"
@@ -45,6 +46,8 @@ class Plugin(pwem.Plugin):
     @classmethod
     def _defineVariables(cls):
         cls._defineEmVar(CHIMERA_HOME, cls._fullVersion)
+        cls._defineVar(ALPHAFOLD_HOME, None)
+        cls._defineVar(ALPHAFOLD_DATABASE_DIR, None)
 
     @classmethod
     def getEnviron(cls):
