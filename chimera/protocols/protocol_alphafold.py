@@ -191,8 +191,8 @@ class ProtImportAtomStructAlphafold(EMProtocol):
         """
         # get environ variables.
         CONDA_ACTIVATION_CMD = Plugin.getCondaActivationCmd()
-        ALPHAFOLD_HOME = Plugin.getVar(ALPHAFOLD_HOME)
-        ALPHAFOLD_DATABASE_DIR = Plugin.getVar(ALPHAFOLD_DATABASE_DIR)
+        ALPHAFOLD_HOME = Plugin.getVar('ALPHAFOLD_HOME')
+        ALPHAFOLD_DATABASE_DIR = Plugin.getVar('ALPHAFOLD_DATABASE_DIR')
         OUTPUT_DIR = os.path.abspath(self._getExtraPath())
         inputFastaFile = self.createInputFastaFile(seqs)
         if len(seqs) > 1:
@@ -230,7 +230,7 @@ bash {ALPHAFOLD_HOME}/run_alphafold.sh  \
         f = open(alphaFoldScriptName, "w")
         f.write(command)
         f.close()
-        self.runJob('bash', alphaFoldScriptName) 
+        self.runJob('bash', alphaFoldScriptName, cwd=ALPHAFOLD_HOME) 
 
 
     def _getModelFromEBI(self, uniProtID):
