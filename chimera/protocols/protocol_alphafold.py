@@ -146,7 +146,7 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                           label = 'Extra commands for alphafold',
                           help = "Add extra commands in cmd file. Use for testing")
         form.addParam('hideMessage', params.BooleanParam, default=False,
-                      condition='source != %d' % (self.IMPORT_FROM_EBI),
+                      condition='source != %d and source!= %d' % (self.IMPORT_FROM_EBI, self.IMPORT_LOCAL_ALPHAFOLD),
                       label='Hide help popup window',
                       help='If set to Yes no help message will be shown in chimera at start up.')
 
