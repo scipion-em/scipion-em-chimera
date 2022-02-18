@@ -228,11 +228,11 @@ cd {ALPHAFOLD_HOME}
 {gpu} \
 {extraFlags}
 """
-        alphaFoldScriptName = self._getExtraPath("alphafold.sh")
+        alphaFoldScriptName = os.path.abspath(self._getExtraPath("alphafold.sh"))
         f = open(alphaFoldScriptName, "w")
         f.write(command)
         f.close()
-        self.runJob('bash', alphaFoldScriptName, cwd=ALPHAFOLD_HOME) 
+        self.runJob('/bin/bash', alphaFoldScriptName, cwd=ALPHAFOLD_HOME) 
 
 
     def _getModelFromEBI(self, uniProtID):
@@ -358,9 +358,9 @@ session.logger.error('''{msg}''')
         if not hideMessage:
             title = "help"
             msg = """Wait untill google colab ends and then
-save atomic model with the command
-scipionwrite #modelID [prefix _myprefix].
-The first 5 models are avaialble at ~/Downloads/ChimeraX/Alphafold"""
+close chimera,
+Some complementary information is
+ avaialble at ~/Downloads/ChimeraX/Alphafold"""
             f.write(f"""
 session.logger.error('''{msg}''')
 """)
@@ -376,10 +376,19 @@ session.logger.error('''{msg}''')
         models = _findDownloadDirAndGetModels()
         outDir = self._getExtraPath()
         from pathlib import Path
+
+        outFileNames = []
         for m in models:
             ash = AtomicStructHandler(m)
             baseName = Path(m).stem
             ash.writeAsCif(self._getExtraPath(baseName) + ".cif")
+            outFileNames.append(self._getExtraPath(baseName) + ".cif")
+
+        if not outFileNames:
+            error_message = f"No atomic model selected"
+            raise Exception(error_message)
+        else:
+            self.createOutputStep(outFileNames)
 
     def createOutputStep(self, atomStructPaths):
         """ Copy the atomic  structure and register the output object.
