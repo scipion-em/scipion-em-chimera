@@ -191,6 +191,7 @@ class ProtImportAtomStructAlphafold(EMProtocol):
         """
         # get environ variables.
         CONDA_ACTIVATION_CMD = Plugin.getCondaActivationCmd()
+        CONDA_ACTIVATION_CMD = CONDA_ACTIVATION_CMD.replace('&','') 
         ALPHAFOLD_HOME = Plugin.getVar('ALPHAFOLD_HOME')
         ALPHAFOLD_DATABASE_DIR = Plugin.getVar('ALPHAFOLD_DATABASE_DIR')
         OUTPUT_DIR = os.path.abspath(self._getExtraPath())
@@ -216,6 +217,7 @@ TF_FORCE_UNIFIED_MEMORY=1
 XLA_PYTHON_CLIENT_MEM_FRACTION=0.5
 XLA_PYTHON_CLIENT_ALLOCATOR=platform
 #
+cd {ALPHAFOLD_HOME}
 bash {ALPHAFOLD_HOME}/run_alphafold.sh  \
 -d {ALPHAFOLD_DATABASE_DIR} \
 -o {OUTPUT_DIR} \
