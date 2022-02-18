@@ -408,8 +408,8 @@ session.logger.error('''{msg}''')
         return errors
 
     def _citations(self):
-        # TODO 
-        return ['']
+        return ['AlphaFold2021']
+
 
     # def _summary(self):
     #     summary = []
