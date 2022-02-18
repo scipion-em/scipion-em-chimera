@@ -290,16 +290,11 @@ bash {ALPHAFOLD_HOME}/run_alphafold.sh  \
         f.write("run(session, 'alphafold search %s')\n" % sequence_data)
         # Show help window
         if not hideMessage:
-            title = "help"
             msg = """Select desired homologous sequence and save the
 corresponding atomic model with the command
-scipionwrite #modelID [prefix best]"""
+scipionwrite #modelID [prefix myprefix]"""
             f.write(f"""
-try:
-    from PyQt5.QtWidgets import QMessageBox
-    QMessageBox.about(None, '{title}', '''{msg}''')
-except Exception as e:
-    pass
+session.logger.error('''{msg}''')
 """)
         
         # run the script:
@@ -362,14 +357,10 @@ except Exception as e:
             title = "help"
             msg = """Wait untill google colab ends and then
 save atomic model with the command
-scipionwrite #modelID [prefix best].
+scipionwrite #modelID [prefix _myprefix].
 The first 5 models are avaialble at ~/Downloads/ChimeraX/Alphafold"""
             f.write(f"""
-try:
-    from PyQt5.QtWidgets import QMessageBox
-    QMessageBox.about(None, '{title}', '''{msg}''')
-except Exception as e:
-    pass
+session.logger.error('''{msg}''')
 """)
         f.close()
 
