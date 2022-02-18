@@ -218,7 +218,7 @@ XLA_PYTHON_CLIENT_MEM_FRACTION=0.5
 XLA_PYTHON_CLIENT_ALLOCATOR=platform
 #
 cd {ALPHAFOLD_HOME}
-bash {ALPHAFOLD_HOME}/run_alphafold.sh  \
+/bin/bash {ALPHAFOLD_HOME}/run_alphafold.sh  \
 -d {ALPHAFOLD_DATABASE_DIR} \
 -o {OUTPUT_DIR} \
 -f {inputFastaFile} \
@@ -408,7 +408,7 @@ session.logger.error('''{msg}''')
         return errors
 
     def _citations(self):
-        return ['AlphaFold2021']
+        return ['Alphafold2021']
 
 
     # def _summary(self):
