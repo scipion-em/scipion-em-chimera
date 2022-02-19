@@ -37,4 +37,14 @@
    doi = "https://doi.org/10.1002/pro.3235",
    url = "https://onlinelibrary.wiley.com/doi/full/10.1002/pro.3235"
 }
+@Article{Alphafold2021,
+   Author="Tunyasuvunakool, K.  and Adler, J.  and Wu, Z.  and Green, T.  and Zielinski, M.  and Žídek, A.  and Bridgland, A.  and Cowie, A.  and Meyer, C.  and Laydon, A.  and Velankar, S.  and Kleywegt, G. J.  and Bateman, A.  and Evans, R.  and Pritzel, A.  and Figurnov, M.  and Ronneberger, O.  and Bates, R.  and Kohl, S. A. A.  and Potapenko, A.  and Ballard, A. J.  and Romera-Paredes, B.  and Nikolov, S.  and Jain, R.  and Clancy, E.  and Reiman, D.  and Petersen, S.  and Senior, A. W.  and Kavukcuoglu, K.  and Birney, E.  and Kohli, P.  and Jumper, J.  and Hassabis, D. ",
+   Title="{{H}ighly accurate protein structure prediction for the human proteome}",
+   Journal="Nature",
+   Year="2021",
+   Volume="596",
+   Number="7873",
+   Pages="590--596",
+   Month="08"
+}
 """
