@@ -29,6 +29,7 @@ from email.policy import default
 from os.path import exists
 import os
 import time
+import json
 import pyworkflow.protocol.params as params
 import requests
 import xml.etree.ElementTree as ET
@@ -55,7 +56,8 @@ class ProtImportAtomStructAlphafold(EMProtocol):
     IMPORT_FROM_SEQ_BLAST = 1
     IMPORT_REMOTE_ALPHAFOLD = 2
     IMPORT_LOCAL_ALPHAFOLD = 3
-    
+    INPUTFASTAFILE = 'seqs'    
+
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
 
@@ -176,7 +178,7 @@ class ProtImportAtomStructAlphafold(EMProtocol):
             print("WRONG source")
 
     def createInputFastaFile(self, seqs):
-        fastaFileName = self._getExtraPath("seqs.fasta")
+        fastaFileName = self._getExtraPath(self.INPUTFASTAFILE + ".fasta")
         f = open(fastaFileName, "w")
         for id, seq in seqs:
             f.write(f"> {id}\n")
@@ -233,6 +235,19 @@ cd {ALPHAFOLD_HOME}
         f.write(command)
         f.close()
         self.runJob('/bin/bash', alphaFoldScriptName, cwd=ALPHAFOLD_HOME) 
+
+        outFileNames = []
+        outputdir = self._getExtraPath(self.INPUTFASTAFILE)
+        searchPattern = self._getExtraPath(os.path.join(outputdir, "ranked_?.pdb"))
+        print("searchPattern", searchPattern)
+        for outFileName in glob.glob(searchPattern):
+            outFileNames.append(outFileName)
+        # check if we have any output
+        if not outFileNames:
+            error_message = f"No atomic model selected"
+            raise Exception(error_message)
+        else:
+            self.createOutputStep(outFileNames)
 
 
     def _getModelFromEBI(self, uniProtID):
@@ -413,6 +428,10 @@ session.logger.error('''{msg}''')
 
     def _validate(self):
         errors = []
+        ALPHAFOLD_HOME = Plugin.getVar('ALPHAFOLD_HOME')
+        binary = os.path.join(ALPHAFOLD_HOME, "run_alphafold.sh") 
+        if not os.path.exists(binary):
+            errors.append("Alphafold binary does not exists")
         # TODO check alphafold exists
         return errors
 
@@ -420,9 +439,23 @@ session.logger.error('''{msg}''')
         return ['Alphafold2021']
 
 
-    # def _summary(self):
-    #     summary = []
-    #     return summary
+    def _summary(self):
+         summary = []
+         summary.append('PLDDTs')
+         try:
+             outputdir = self._getExtraPath(self.INPUTFASTAFILE)
+             fileName = os.path.join(outputdir, 'ranking_debug.json')
+             if os.path.exists(fileName):
+                 self._log.info('inside if')
+                 f = open(fileName)
+                 data = json.load(f)
+                 for i, model in enumerate(data['order']):
+                     summary.append("%d %s" % (i, (data['plddts'][model])[:5]))
+             else:
+                 summary.append('alphafold ranking not yet computed')
+         except:
+             summary.append('Cannot create summary')
+         return summary 
 
 #----------------- utils -----------------
 
