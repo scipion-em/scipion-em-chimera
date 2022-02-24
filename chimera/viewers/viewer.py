@@ -223,6 +223,7 @@ class ChimeraAlphafoldViewer(Viewer):
             f.write("open %s\n" % fileName)
         # set alphafold colormap
         f.write("color bfactor palette alphafold\n")
+        f.write("key red:low orange: yellow: cornflowerblue: blue:high\n")
         Chimera.runProgram(Chimera.getProgram(), fnCmd + "&")
         return []
 
