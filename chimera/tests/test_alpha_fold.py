@@ -1,6 +1,5 @@
 # ***************************************************************************
-# * Authors:    Marta Martinez (mmmtnez@cnb.csic.es)
-# *             Roberto Marabini (roberto@cnb.csic.es)
+# * Authors:   Roberto Marabini (roberto@cnb.csic.es)
 # *
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -132,4 +131,37 @@ class TestAlphafoldImport(TestBase):
         self.launchProtocol(prot1)
 
     def testImportStructureLocal(self):
-        pass
+        message = """This test requires a valid alphafold instalation.
+        So by default is not actived
+        """
+        INTERACTIVE = False
+        if not INTERACTIVE:
+            self.assertTrue(True)
+            print(message)
+            return
+
+        # import sequence
+        uniProtID = 'P0DKB3'
+        args = {'inputSequenceName': 'seq_name',
+                'inputProteinSequence': emprot.ProtImportSequence.IMPORT_FROM_UNIPROT,
+                'uniProtSequence': uniProtID
+                }
+
+        prot = self.newProtocol(emprot.ProtImportSequence, **args)
+        prot.setObjLabel('import from uniprotID')
+        self.launchProtocol(prot)
+
+        sequence = prot.outputSequence
+        listSeq = [sequence, sequence]
+        extraCommands = "run(session, 'exit')\n"
+        args = {'source': ProtImportAtomStructAlphafold.IMPORT_LOCAL_ALPHAFOLD,
+                'inputSequenceS': listSeq,
+                'doGpu': True,
+                'gpusToUse': 1,
+                'extraFlags': '-c reduced_dbs',
+                'hideMessage': True,
+                'extraCommands': extraCommands
+                }
+        prot1 = self.newProtocol(ProtImportAtomStructAlphafold, **args)
+        prot1.setObjLabel('execute local alphafold\n')
+        self.launchProtocol(prot1)
