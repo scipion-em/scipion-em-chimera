@@ -37,6 +37,7 @@ from ..protocols.protocol_fit import ChimeraProtRigidFit
 from ..protocols.protocol_operate import ChimeraProtOperate
 from ..protocols.protocol_restore import ChimeraProtRestore
 from ..protocols.protocol_modeller_search import ChimeraModelFromTemplate
+from ..protocols.protocol_alphafold import ProtImportAtomStructAlphafold
 
 from pwem.viewers.viewer_chimera import (Chimera,
                                          sessionFile)
@@ -48,7 +49,7 @@ class ChimeraViewerBase(Viewer):
     _environments = [DESKTOP_TKINTER]
 
     def _visualize(self, obj, **args):
-        # THe input map or pdb may be a parameter from the protocol
+        # The input map or pdb may be a parameter from the protocol
         # or from the parent protocol.
         dim = 150.
         sampling = 1.
@@ -203,3 +204,27 @@ class ChimeraModelFromTemplateViewer(ChimeraViewerBase):
 class ChimeraSubtractionMapsViewer(ChimeraViewerBase):
     _label = 'viewer subtract maps'
     _targets = [ChimeraSubtractionMaps]
+
+class ChimeraAlphafoldViewer(Viewer):
+    _label = 'viewer alphafold'
+    _targets = [ProtImportAtomStructAlphafold]
+
+    def _visualize(self, obj, **args):
+        fnCmd = self.protocol._getExtraPath("chimera_alphafold.cxc")
+        f = open(fnCmd, 'w')
+        # change to workingDir
+        # If we do not use cd and the project name has an space
+        # the protocol fails even if we pass absolute paths
+        f.write('cd %s\n' % os.getcwd())
+
+        # get path to atomstructs
+        for output in self.protocol._outputs:
+            fileName = os.path.abspath(eval(f'self.protocol.{output}.getFileName()'))
+            f.write("open %s\n" % fileName)
+        # set alphafold colormap
+        f.write("color bfactor palette alphafold\n")
+        f.write("key red:low orange: yellow: cornflowerblue: blue:high\n")
+        Chimera.runProgram(Chimera.getProgram(), fnCmd + "&")
+        return []
+
+
