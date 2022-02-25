@@ -4,3 +4,11 @@
 22-July-2019   - add chimera contancts protocol 
                - reformat model building menu
                - implement model, from template protocol (model building by homology)
+This file has not been update for a while
+Sep 18, 2020   - update to chimerax (from chimera)
+10-Nov-2020    - add scipioncpmbine
+11-Jan-2021    - change tml dir by extra since tmp is deleted as soon as the protocol ends
+27-April-2021  - add sonarcloud to github actions
+ 8-June-2021   - update tests with dinamic names that include the id of the protocol
+28-July-2021   - upddate to chimerax 1.2.5 (from chimera 1.1)
+               - add command scipionshell that allow to visualice a virus shell by shell

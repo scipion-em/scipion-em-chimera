@@ -5,17 +5,155 @@ from .constants import *
 # devel install /home/roberto/Software/Plugins3/scipion-em-chimera/chimera/Bundles/scipion
 from chimerax.core.commands import CmdDesc      # Command description
 from chimerax.core.commands import TopModelsArg, ModelsArg
-from chimerax.core.commands import StringArg
+from chimerax.core.commands import StringArg, FloatArg, IntArg
+
 from chimerax.core.commands import run # execute chimera cli command
 from chimerax.map.volume import Volume # model type 3D map
 from chimerax.atomic.structure import AtomicStructure # model type atomic structure
 
-import os
+import os, time
+# import numpy as np
 import ntpath
 
 
 def getConfig(session, key):
         return os.environ.get(key, False)
+
+
+def scipionshellcrown(session,
+                 model=None,
+                 sphereRadius=None,
+                 orientation='222r',
+                 sphereFactor='1',
+                 modelid=None,
+                 crownwidth=10):
+
+    """ Shows a shell of a 3D Map at radius sphereRadius
+    and with width=width
+
+    :param session:  chimera session
+    :param model: 3D map to be analyzed
+    :param sphereRadius: 3D density obtained at this radius
+    :param orientation: virus symmetry, i.e: 222, 222r, etc.
+    :param sphereFactor: allows generating a shape that is an
+    interpolation between an icosahedron and a sphere of equal radius.
+    :param modelid: output model_id. keep always the same value to
+     overwrite the previous surface.
+    :param crownwidth: shell width
+    :return: none
+    example: scipionshellcrown #1 220  10  orientation 222r   sphereFactor 1 crownwidth 60
+
+    """
+    # set model style as surface
+    mapModelId = model[0].id_string # model is a tuple, id = 1
+    command = "volume #%s style surface " % (mapModelId)
+    run(session, command)
+
+    # very likely divisions is irrelevant here
+    command = "shape icosahedron " \
+              "radius %s " \
+              "divisions 2000 " \
+              "orientation %s " \
+              "sphereFactor %s" % (sphereRadius,
+                                   orientation,
+                                   sphereFactor)
+    outIcosahedronId = run(session, command).id_string # id = 2
+
+    # delete output model
+    command = "close #%s;" % modelid
+    run(session, command)
+
+    # mask  in icosahedron
+    command = "volume mask #%s surfaces #%s " \
+              "fullMap true modelId %s slab %s" % \
+              (mapModelId, outIcosahedronId, modelid, crownwidth) # model id
+    run(session, command)
+
+    command = "color #%s gray all; " \
+              "lighting soft; " \
+              "cofr coordinateSystem #%s; " \
+              "lighting shadows true; " \
+              'ui tool show "Side View"' \
+              % (modelid, modelid)
+    run(session, command)
+
+    command = 'hide #%s;' \
+              'close #%s' \
+              %(mapModelId,
+                outIcosahedronId)
+    run(session, command)
+
+scipionshellcrown_desc = CmdDesc(
+    required=[('model', TopModelsArg),
+              ('sphereRadius', StringArg),
+              ('modelid', StringArg)
+              ],
+    optional= [
+               ('orientation', StringArg),
+               ('sphereFactor', StringArg),
+               ('crownwidth', StringArg),
+               ]
+)
+
+
+def scipionshell(session,
+                 model=None,
+                 sphereRadius=None,
+                 orientation='222r',
+                 sphereFactor='1',
+                 modelid=None):
+
+    """ Shows the density of a 3D Map on a spherical shell
+    of the map at radius sphereRadius
+
+    :param session:  chimera session
+    :param model: 3D map to be analized
+    :param sphereRadius: 3D density optained at this radius
+    :param orientation: virus symmetry, i.e: 222, 222r, etc.
+    :param sphereFactor: allows generating a shape that is an
+    interpolation between an icosahedron and a sphere of equal radius.
+    :param modelid: output model_id. keep always the same value to
+     overwrite the previous surface.
+    :return: none
+    """
+
+    mapModelId = model[0].id_string # model is a tuple
+    [(x0, y0, z0), (x1, y1, z1)] = model[0].ijk_bounds()
+    command = "volume #%s style image " \
+              "positionPlanes %d,%d,%d " \
+              "orthoplanes xyz;" \
+              "ui mousemode right 'move planes' " % (mapModelId,
+                                   x1//2,  y1//2, z1//2
+                                   )
+    run(session, command)
+    command = "shape icosahedron " \
+              "mesh false " \
+              "divisions 2000 " \
+              "radius %s " \
+              "orientation %s " \
+              "modelid %s " \
+              "sphereFactor %s" % (sphereRadius,
+                                   orientation,
+                                   modelid,
+                                   sphereFactor)
+    icosahedronId = run(session, command).id_string
+    session.logger.info("icosahedronId: " + str(icosahedronId))
+    command = "color sample #%s map #%s palette gray; " \
+              "lighting soft; cofr coordinateSystem #%s" \
+              %(icosahedronId, mapModelId, mapModelId)
+    run(session, command)
+
+scipionshell_desc = CmdDesc(
+    required=[('model', TopModelsArg),
+              ('sphereRadius', StringArg),
+              ('modelid', StringArg)
+              ],
+    optional= [
+               ('orientation', StringArg),
+               ('sphereFactor', StringArg),
+               ]
+)
+
 
 def scipioncombine(session, models=None, modelid=None):
     """Emulate copy/combine chimera command. It will not handle
@@ -88,6 +226,9 @@ scipioncombine_desc = CmdDesc(
     required = [('models', TopModelsArg)],
     optional= [('modelid', StringArg)],
 )
+
+
+scipion_desc = CmdDesc()
 
 def checkBundleEnabled(session, cmd="scipion"):
     """ Checks if bundle is enabled, this should happens under protocol execution process
@@ -167,3 +308,15 @@ def scipionrs(session):
     run(session, command)
 
 scipionrs_desc = CmdDesc()
+
+def scipion(session):
+    print("""List of Scipion commands:
+    scipionwrite: saves model file
+    scipionss: saves chimera session
+    scipionrs: restores chimera sesion
+    scipioncombine: combines two models
+    scipionshell: shows the density of a 3D Map on a spherical shell of the map at a given radius
+    scipionshellcrown: cut a shell from a 3D Map at a given radius
+    
+    type "help command_name" for more information
+""")

@@ -30,9 +30,13 @@ MUSCLE = 'muscle'
 CHIMERAX=True
 
 # Supported Versions
-V1_0 = 'V1_0'
-V1_1 = 'V1_1'
+V1_0 = '1.0'
+V1_1 = '1.1'
+V1_2_5 = '1.2.5'
 
+chimeraTARs={V1_1: 'ChimeraX-1.1.tar.gz',
+             V1_2_5: "chimerax-1.2.5-rc-2021.05.24",
+}
 
 CHIMERA_TO_SCIPION = {}
 CHIMERA_CYCLIC = 0  # SYM_CYCLIC = 0
