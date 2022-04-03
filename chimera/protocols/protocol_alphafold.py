@@ -61,14 +61,21 @@ class ProtImportAtomStructAlphafold(EMProtocol):
     IMPORT_LOCAL_ALPHAFOLD = 3
     INPUTFASTAFILE = 'seqs'    
 
+    CHIMERA = 0
+    PHENIX = 1
+
+    url = {}
+    url[CHIMERA] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold_colab.ipyb"
+    url[PHENIX] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/phenix_alphafold_colab.ipyb"
+
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
 
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('source', params.EnumParam,
-                      choices=['UniProt ID', 
-                               'Blast', 
+                      choices=['Chimera', 
+                               'Phenix', 
                                'colabfold', 
                                'local alphafold',
                                ],
@@ -98,6 +105,20 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                                  'source == %d '  % (self.IMPORT_FROM_SEQ_BLAST,
                                                      self.IMPORT_REMOTE_ALPHAFOLD),
                        help="Input the aminoacid sequence to blast or send to colab lab")
+        # list different colabs if source == IMPORT_REMOTE_ALPHAFOLD
+        form.addParam('colabID', params.EnumParam,
+                       choices=['Chimera', 
+                                'Phenix', 
+                                ],
+                       display=params.EnumParam.DISPLAY_HLIST,
+                       label="Colab Notebook ",
+                       default=self.CHIMERA,
+                       condition='source == %d or ' % self.IMPORT_REMOTE_ALPHAFOLD,
+                       help='Execute alphafold in Google-colab.\n'
+                            '  Two notebooks are available from\n'
+                            'Chimera and Phenix respectively'
+                            )
+                    
         form.addParam('inputSequenceS', params.MultiPointerParam,
                       pointerClass="Sequence", allowsNull=True,
                       label='Structures',
@@ -155,6 +176,10 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                       label='Hide help popup window',
                       help='If set to Yes no help message will be shown in chimera at start up.')
 
+    def _getDefaultParallel(self):
+        """This protocol doesn't have mpi version"""
+        return (0, 0)
+
 
     def _insertAllSteps(self):
         hideMessage = self.hideMessage.get()
@@ -166,7 +191,8 @@ class ProtImportAtomStructAlphafold(EMProtocol):
             self._insertFunctionStep('_getModelFromBlast', inputSequence, hideMessage)
         elif self.source == self.IMPORT_REMOTE_ALPHAFOLD:
             inputSequence = self.inputSequence.get().getSequence()
-            self._insertFunctionStep('_getModelFromColab', inputSequence, hideMessage)
+            colabID = self.colabID.get()
+            self._insertFunctionStep('_getModelFromColab', inputSequence, colabID, hideMessage)
         elif self.source == self.IMPORT_LOCAL_ALPHAFOLD:
             seqs = []
             for seq in self.inputSequenceS:
@@ -181,6 +207,7 @@ class ProtImportAtomStructAlphafold(EMProtocol):
             print("WRONG source")
 
     def createInputFastaFile(self, seqs):
+        """Get sequence as string and create the corresponding fata file"""
         fastaFileName = self._getExtraPath(self.INPUTFASTAFILE + ".fasta")
         f = open(fastaFileName, "w")
         for id, seq in seqs:
@@ -344,10 +371,20 @@ session.logger.error('''{msg}''')
         else:
             self.createOutputStep(outFileNames)
 
-    def _getModelFromColab(self, sequence_data, hideMessage):
+    def _getModelFromColab(self, sequence_data, colabID, hideMessage):
         """run colab to get an alphafold prediction
         We will use chimera for this.
         """
+        # connect to localfold, we need to create a QT browser
+        # QT is available in chimera's python
+        colabScriptFileName = os.path.abspath(self._getExtraPath("colab.py"))
+        f = open(self._getTmpPath(colabScriptFileName), "w")
+
+
+
+
+
+
         # create script chimera
         dim = 150  # eventually we will create a PDB library that
                    # computes PDB dim
@@ -359,47 +396,47 @@ session.logger.error('''{msg}''')
                                          sampling=sampling)
         chimeraScriptFileName = "chimeraPythonScript.py"
         f = open(self._getTmpPath(chimeraScriptFileName), "w")
-        f.write('from chimerax.core.commands import run\n')
+#         f.write('from chimerax.core.commands import run\n')
 
-        f.write("run(session, 'open %s')\n" % tmpFileName)
-        f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
-        f.write("run(session, 'alphafold predict %s')\n" % sequence_data)
+#         f.write("run(session, 'open %s')\n" % tmpFileName)
+#         f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
+#         f.write("run(session, 'alphafold predict %s')\n" % sequence_data)
 
-        _chimeraScriptFileName = os.path.abspath(
-            self._getTmpPath(chimeraScriptFileName))
-        if len(self.extraCommands.get()) > 2:
-            f.write(self.extraCommands.get())
-            args = " --nogui " + _chimeraScriptFileName
-        else:
-            args = " " + _chimeraScriptFileName
-        if not hideMessage:
-            title = "help"
-            msg = """Wait untill google colab ends and then
-close chimera,
-Some complementary information is
- avaialble at ~/Downloads/ChimeraX/Alphafold"""
-            f.write(f"""
-session.logger.error('''{msg}''')
-""")
+#         _chimeraScriptFileName = os.path.abspath(
+#             self._getTmpPath(chimeraScriptFileName))
+#         if len(self.extraCommands.get()) > 2:
+#             f.write(self.extraCommands.get())
+#             args = " --nogui " + _chimeraScriptFileName
+#         else:
+#             args = " " + _chimeraScriptFileName
+#         if not hideMessage:
+#             title = "help"
+#             msg = """Wait untill google colab ends and then
+# close chimera,
+# Some complementary information is
+#  avaialble at ~/Downloads/ChimeraX/Alphafold"""
+#             f.write(f"""
+# session.logger.error('''{msg}''')
+# """)
         f.close()
 
-        self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
+#         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
 
-        # run in the background
-        cwd = os.path.abspath(self._getExtraPath())
-        Plugin.runChimeraProgram(Plugin.getProgram(), args, 
-                                 cwd=cwd, extraEnv=getEnvDictionary(self))
-        # wait untill chimera is closed
-        models = _findDownloadDirAndGetModels()
-        outDir = self._getExtraPath()
-        from pathlib import Path
+#         # run in the background
+#         cwd = os.path.abspath(self._getExtraPath())
+#         Plugin.runChimeraProgram(Plugin.getProgram(), args, 
+#                                  cwd=cwd, extraEnv=getEnvDictionary(self))
+#         # wait untill chimera is closed
+#         models = _findDownloadDirAndGetModels()
+#         outDir = self._getExtraPath()
+#         from pathlib import Path
 
         outFileNames = []
-        for m in models:
-            ash = AtomicStructHandler(m)
-            baseName = Path(m).stem
-            ash.writeAsCif(self._getExtraPath(baseName) + ".cif")
-            outFileNames.append(self._getExtraPath(baseName) + ".cif")
+#         for m in models:
+#             ash = AtomicStructHandler(m)
+#             baseName = Path(m).stem
+#             ash.writeAsCif(self._getExtraPath(baseName) + ".cif")
+#             outFileNames.append(self._getExtraPath(baseName) + ".cif")
 
         if not outFileNames:
             error_message = f"No atomic model selected"
