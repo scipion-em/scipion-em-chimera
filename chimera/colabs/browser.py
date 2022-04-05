@@ -1,12 +1,12 @@
 
 class createColabScript():
     """Create script file used to run colabfold"""
-    def __init__(self, sequence, 
+    def __init__(self, 
                 scriptFilePointer, 
                 extraPath, 
-                flavour, 
-                url):
-        
+                url,
+                injectJavaScriptList):
+        print("createColabScript::init")
         colabCommand = f'''
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -22,25 +22,34 @@ class MainWindow(QMainWindow):
     CHIMERA = 0
     PHENIX = 1
 
-    def __init__(self, sequence, extraPath, flavour, url):
-        #TODO; pass colab book URL
+    def __init__(self, extraPath, url, injectJavaScriptList):
         super(MainWindow,self).__init__()
-        self.sequence = sequence
         self.extraPath = extraPath
+        ###
+        # Phase 1 create browser and connect
+        ###
         # The QWebEngineView class provides a widget 
         # that is used to view and edit web documents.
         self.browser = QWebEngineView()
         # URL to open in the browser
         self.browser.setUrl(QUrl(url))
+        
+        ###
+        # Phase 2 java script injection with data
+        # and start execution
+        ###
         # execute after page is loaded
-        self.browser.page().loadFinished.connect(self._set_colab_sequence)
+        for javaCommand in injectJavaScriptList:
+            self.command = javaCommand
+            self.browser.page().loadFinished.connect(self.executeJavaScript)
 
         self.setCentralWidget(self.browser)
-        # execute after page is loaded
-        if flavour == self.CHIMERA:
-            self.browser.page().loadFinished.connect(self._run_colab) 
         # show browser
         self.show()
+
+        ###
+        # Phase 3 retrieve data
+        ###
 
         ## In this minimal web browser downloads
         # are not automatic This signal is emitted whenever a 
@@ -52,20 +61,11 @@ class MainWindow(QMainWindow):
             self.on_downloadRequested
         )
 
-    def _set_colab_sequence(self, sequence):
-        """ Upload sequece to colab."""
+    def executeJavaScript(self):
+        """ Execute javascript command in self.command"""
         p = self.browser.page()
-        #p.runJavaScript("throw document.readyState ")
-        command = ('document.querySelector("paper-input").setAttribute("value", "{sequence}");')  + 'document.querySelector("paper-input").dispatchEvent(new Event("change"));'
-        p.runJavaScript(command)
-
-        # document.querySelectorAll("paper-input")[1].setAttribute("value", "kkgg"); for second entry
-
-
-    def _run_colab(self):
-        """ press start button. TODO not sure if we can use this for phenix""" 
-        p = self.browser.page()
-        p.runJavaScript('document.querySelector("colab-run-button").click()')
+        # p.runJavaScript("throw document.readyState ")  # For DEBUGING
+        p.runJavaScript(self.command)
         
     def on_downloadRequested(self, download):
         """ Handle downloads.
@@ -89,11 +89,11 @@ class MainWindow(QMainWindow):
 
 # construct  QApplication 
 app = QApplication(sys.argv)
+# 
 # create QWidget
-window = MainWindow(sequence='{sequence}',
-                    extraPath='{extraPath}',
+window = MainWindow(extraPath='{extraPath}',
                     url='{url}',
-                    flavour={flavour}
+                    injectJavaScriptList={injectJavaScriptList}
                     )
 app.exec_()
 '''

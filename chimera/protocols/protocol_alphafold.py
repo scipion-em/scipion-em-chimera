@@ -65,7 +65,7 @@ class ProtImportAtomStructAlphafold(EMProtocol):
 
     url = {}
     url[CHIMERA] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold_colab.ipynb"
-    url[PHENIX] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/phenix_alphafold_colab.ipynb"
+    url[PHENIX]  = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/phenix_alphafold_colab.ipynb"
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
@@ -378,20 +378,52 @@ session.logger.error('''{msg}''')
         # QT is available in chimera's python
         colabScriptFileName = os.path.abspath(self._getExtraPath("colab.py"))
         f = open(self._getTmpPath(colabScriptFileName), "w")
-        createcolabscript = createColabScript(sequence=sequence_data,
-                                              scriptFilePointer=f,
-                                              flavour=colabID,
+        injectJavaScriptList = []
+
+        ###
+        # 1 CASE
+        # monomer, chimera
+        ###
+        if colabID == self.CHIMERA:
+            injectJavaScriptList.append(
+                f'''document.querySelector("paper-input").setAttribute("value", "{sequence_data}");  + 
+                   document.querySelector("paper-input").dispatchEvent(new Event("change"));
+                ''')
+            injectJavaScriptList.append('document.querySelector("colab-run-button").click()')
+        ###
+        # 2 CASE 
+        # phenix multimer, reuse result
+        ###
+        elif colabID == self.PHENIX:  
+            counter = 0
+            objId = self.getObjId()
+            injectJavaScriptList.append(
+                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").setAttribute("value", "{sequence_data}");'''
+            )
+            injectJavaScriptList.append(
+                f'''document.querySelector("paper-input").dispatchEvent(new Event("change"));'''
+            )
+
+            injectJavaScriptList.append(
+                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").setAttribute("value", "{objId}");')  + 
+                    document.querySelector("paper-input").dispatchEvent(new Event("change"));
+                ''')
+            injectJavaScriptList.append('document.querySelectorAll("colab-run-button")[{counter}].click()')
+
+
+        createcolabscript = createColabScript(scriptFilePointer=f,
                                               url=self.url[colabID],
                                               extraPath=os.path.abspath(self._getExtraPath()),
+                                              injectJavaScriptList=injectJavaScriptList,
                                               )
-        f.close
+        f.close()
         args = " --nogui " + colabScriptFileName
         cwd = os.path.abspath(self._getExtraPath())
         Plugin.runChimeraProgram(Plugin.getProgram(), args, 
                                  cwd=cwd, extraEnv=getEnvDictionary(self))
 
 
-
+        # uncompress file should be in results.zip in the extra directory
 
 
 
