@@ -25,6 +25,8 @@ class MainWindow(QMainWindow):
     def __init__(self, extraPath, url, injectJavaScriptList):
         super(MainWindow,self).__init__()
         self.extraPath = extraPath
+        self.injectJavaScriptList = injectJavaScriptList
+        self.counter = 0
         ###
         # Phase 1 create browser and connect
         ###
@@ -40,7 +42,6 @@ class MainWindow(QMainWindow):
         ###
         # execute after page is loaded
         for javaCommand in injectJavaScriptList:
-            self.command = javaCommand
             self.browser.page().loadFinished.connect(self.executeJavaScript)
 
         self.setCentralWidget(self.browser)
@@ -65,7 +66,8 @@ class MainWindow(QMainWindow):
         """ Execute javascript command in self.command"""
         p = self.browser.page()
         # p.runJavaScript("throw document.readyState ")  # For DEBUGING
-        p.runJavaScript(self.command)
+        p.runJavaScript(self.injectJavaScriptList[self.counter])
+        self.counter += 1
         
     def on_downloadRequested(self, download):
         """ Handle downloads.
