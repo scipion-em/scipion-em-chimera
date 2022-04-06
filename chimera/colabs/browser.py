@@ -66,6 +66,7 @@ class MainWindow(QMainWindow):
         """ Execute javascript command in self.command"""
         p = self.browser.page()
         # p.runJavaScript("throw document.readyState ")  # For DEBUGING
+        print("executeJavaScript", self.injectJavaScriptList[self.counter])
         p.runJavaScript(self.injectJavaScriptList[self.counter])
         self.counter += 1
         

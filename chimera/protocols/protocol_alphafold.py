@@ -86,6 +86,13 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                            '* EBI database by homologous (Blast)\n '
                            '* Execute alphafold in Google-colab'
                            '* Execute alphafold Locally (multimer supported)\n')
+        form.addParam('useTemplatesFromPDB', params.IntParam,
+                      label='Use Templates from PDB',
+                      default=-1,
+                      condition='source == %d' % (self.IMPORT_REMOTE_ALPHAFOLD),
+                      help="Number of PDB templates to use. Set to -1 to disable"
+                           "Suggested value=20"
+                    )
         form.addParam('uniProtId', params.StringParam,
                       condition='source == %d'  %
                                 (self.IMPORT_FROM_EBI),
@@ -191,7 +198,8 @@ class ProtImportAtomStructAlphafold(EMProtocol):
         elif self.source == self.IMPORT_REMOTE_ALPHAFOLD:
             inputSequence = self.inputSequence.get().getSequence()
             colabID = self.colabID.get()
-            self._insertFunctionStep('_getModelFromColab', inputSequence, colabID, hideMessage)
+            useTemplatesFromPDB = self.useTemplatesFromPDB.get()
+            self._insertFunctionStep('_getModelFromColab', inputSequence, colabID, hideMessage, useTemplatesFromPDB)
         elif self.source == self.IMPORT_LOCAL_ALPHAFOLD:
             seqs = []
             for seq in self.inputSequenceS:
@@ -370,7 +378,7 @@ session.logger.error('''{msg}''')
         else:
             self.createOutputStep(outFileNames)
 
-    def _getModelFromColab(self, sequence_data, colabID, hideMessage):
+    def _getModelFromColab(self, sequence_data, colabID, hideMessage, useTemplatesFromPDB=-1):
         """run colab to get an alphafold prediction
         We will use chimera for this.
         """
@@ -405,11 +413,22 @@ session.logger.error('''{msg}''')
             )
 
             injectJavaScriptList.append(
-                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").setAttribute("value", "{objId}");')  + 
-                    document.querySelector("paper-input").dispatchEvent(new Event("change"));
-                ''')
-            injectJavaScriptList.append('document.querySelectorAll("colab-run-button")[{counter}].click()')
+                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").setAttribute("value", "{objId}");'''
+            )
+            injectJavaScriptList.append(            
+                f'''document.querySelector("paper-input").dispatchEvent(new Event("change"));'''
+            )
+            injectJavaScriptList.append(f'document.querySelectorAll("colab-run-button")[{counter}].click()')
+            counter += 1
+            if useTemplatesFromPDB>0:
+                injectJavaScriptList.append(            
+                    '''document.querySelector("input[aria-labelledby=formwidget-5-label]").click()'''
+                )
+                injectJavaScriptList.append(            
+                    f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").setAttribute("value", "{useTemplatesFromPDB}")'''
+                )
 
+                
 
         createcolabscript = createColabScript(scriptFilePointer=f,
                                               url=self.url[colabID],
