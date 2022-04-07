@@ -427,6 +427,9 @@ session.logger.error('''{msg}''')
                 injectJavaScriptList.append(            
                     f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").setAttribute("value", "{useTemplatesFromPDB}")'''
                 )
+                injectJavaScriptList.append(            
+                    '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click()'''
+                )
 
                 
 
