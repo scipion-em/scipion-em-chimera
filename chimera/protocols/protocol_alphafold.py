@@ -86,13 +86,6 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                            '* EBI database by homologous (Blast)\n '
                            '* Execute alphafold in Google-colab'
                            '* Execute alphafold Locally (multimer supported)\n')
-        form.addParam('useTemplatesFromPDB', params.IntParam,
-                      label='Use Templates from PDB',
-                      default=-1,
-                      condition='source == %d' % (self.IMPORT_REMOTE_ALPHAFOLD),
-                      help="Number of PDB templates to use. Set to -1 to disable"
-                           "Suggested value=20"
-                    )
         form.addParam('uniProtId', params.StringParam,
                       condition='source == %d'  %
                                 (self.IMPORT_FROM_EBI),
@@ -124,6 +117,13 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                             '  Two notebooks are available from\n'
                              'Chimera and Phenix respectively'
                              )
+        form.addParam('useTemplatesFromPDB', params.IntParam,
+                      label='Use Templates from PDB',
+                      default=-1,
+                      condition='source == %d and colabID == %d' % (self.IMPORT_REMOTE_ALPHAFOLD, self.PHENIX),
+                      help="Number of PDB templates to use. Set to -1 to disable"
+                           "Suggested value=20"
+                    )
                     
         form.addParam('inputSequenceS', params.MultiPointerParam,
                       pointerClass="Sequence", allowsNull=True,
@@ -403,7 +403,7 @@ session.logger.error('''{msg}''')
         # phenix multimer, reuse result
         ###
         elif colabID == self.PHENIX:  
-            counter = 0
+            #counter = 0
             objId = self.getObjId()
             injectJavaScriptList.append(
                 f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").setAttribute("value", "{sequence_data}");'''
@@ -418,8 +418,8 @@ session.logger.error('''{msg}''')
             injectJavaScriptList.append(            
                 f'''document.querySelector("paper-input").dispatchEvent(new Event("change"));'''
             )
-            injectJavaScriptList.append(f'document.querySelectorAll("colab-run-button")[{counter}].click()')
-            counter += 1
+            #injectJavaScriptList.append(f'document.querySelectorAll("colab-run-button")[{counter}].click()')
+            #counter += 1
             if useTemplatesFromPDB>0:
                 injectJavaScriptList.append(            
                     '''document.querySelector("input[aria-labelledby=formwidget-5-label]").click()'''
