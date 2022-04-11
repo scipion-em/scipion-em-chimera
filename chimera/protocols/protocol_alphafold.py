@@ -62,10 +62,13 @@ class ProtImportAtomStructAlphafold(EMProtocol):
 
     CHIMERA = 0
     PHENIX = 1
+    TEST = 2
 
     url = {}
     url[CHIMERA] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold_colab.ipynb"
     url[PHENIX]  = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/phenix_alphafold_colab.ipynb"
+    url[TEST]  = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/test_colab.ipynb"
+
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
@@ -108,6 +111,7 @@ class ProtImportAtomStructAlphafold(EMProtocol):
         form.addParam('colabID', params.EnumParam,
                         choices=['Chimera', 
                                  'Phenix', 
+                                 'Test'
                                  ],
                         display=params.EnumParam.DISPLAY_HLIST,
                         label="Colab Notebook ",
@@ -431,7 +435,9 @@ session.logger.error('''{msg}''')
                     '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click()'''
                 )
 
-                
+        elif colabID == self.TEST:
+            injectJavaScriptList.append('document.querySelector("colab-run-button").click()')
+
 
         createcolabscript = createColabScript(scriptFilePointer=f,
                                               url=self.url[colabID],
@@ -446,33 +452,31 @@ session.logger.error('''{msg}''')
 
 
         # uncompress file should be in results.zip in the extra directory
+        # create results dir
+        # uncompress data in
+        # best model should go to output
+        # identify other different from best
+        # other accesible though  chimera
 
+        ########################################
+        # create script chimera (move to visualize)
+        # dim = 150  # eventually we will create a PDB library that
+        #            # computes PDB dim
+        # sampling = 1.
+        # tmpFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
+        # # chimeraScriptFileName = "chimeraScript.py"
+        # Chimera.createCoordinateAxisFile(dim,
+        #                                  bildFileName=tmpFileName,
+        #                                  sampling=sampling)
+        # chimeraScriptFileName = "chimeraPythonScript.py"
+        # f = open(self._getTmpPath(chimeraScriptFileName), "w")
+        # f.write('from chimerax.core.commands import run\n')
 
-
-        # create script chimera
-        dim = 150  # eventually we will create a PDB library that
-                   # computes PDB dim
-        sampling = 1.
-        tmpFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
-        # chimeraScriptFileName = "chimeraScript.py"
-        Chimera.createCoordinateAxisFile(dim,
-                                         bildFileName=tmpFileName,
-                                         sampling=sampling)
-        chimeraScriptFileName = "chimeraPythonScript.py"
-        f = open(self._getTmpPath(chimeraScriptFileName), "w")
-#         f.write('from chimerax.core.commands import run\n')
-
-#         f.write("run(session, 'open %s')\n" % tmpFileName)
-#         f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
-#         f.write("run(session, 'alphafold predict %s')\n" % sequence_data)
-
-#         _chimeraScriptFileName = os.path.abspath(
-#             self._getTmpPath(chimeraScriptFileName))
-#         if len(self.extraCommands.get()) > 2:
-#             f.write(self.extraCommands.get())
-#             args = " --nogui " + _chimeraScriptFileName
-#         else:
-#             args = " " + _chimeraScriptFileName
+        # f.write("run(session, 'open %s')\n" % 'best_model.pdb')
+        # f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
+        # f.write("color bfactor palette alphafold\n")
+        # f.write("key red:low orange: yellow: cornflowerblue: blue:high\n")
+        #######################################################
 #         if not hideMessage:
 #             title = "help"
 #             msg = """Wait untill google colab ends and then
@@ -485,22 +489,9 @@ session.logger.error('''{msg}''')
         f.close()
 
 #         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
-
-#         # run in the background
-#         cwd = os.path.abspath(self._getExtraPath())
-#         Plugin.runChimeraProgram(Plugin.getProgram(), args, 
-#                                  cwd=cwd, extraEnv=getEnvDictionary(self))
-#         # wait untill chimera is closed
-#         models = _findDownloadDirAndGetModels()
-#         outDir = self._getExtraPath()
-#         from pathlib import Path
-
         outFileNames = []
-#         for m in models:
-#             ash = AtomicStructHandler(m)
-#             baseName = Path(m).stem
-#             ash.writeAsCif(self._getExtraPath(baseName) + ".cif")
-#             outFileNames.append(self._getExtraPath(baseName) + ".cif")
+        bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
+        outFileNames.append(bestModelFileName)
 
         if not outFileNames:
             error_message = f"No atomic model selected"

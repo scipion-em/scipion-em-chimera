@@ -14,6 +14,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtWebEngineWidgets import *
 import sys
+import os
 
 class WebPage(QWebEnginePage):
     """override chooseFiles method so we can inject the filename"""
@@ -34,6 +35,7 @@ class MainWindow(QMainWindow):
     """
     CHIMERA = 0
     PHENIX = 1
+    TEST = 2
 
     def __init__(self, extraPath, url,
                  injectJavaScriptList, uploadFile):
@@ -75,6 +77,7 @@ class MainWindow(QMainWindow):
         # download has been triggered. The download argument holds 
         # the state of the download. The download has to be explicitly accepted
         # with QWebEngineDownloadItem::accept() or it will be cancelled.
+        print("call to on_downloadRequested")
         self.p.profile().downloadRequested.connect(
             self.on_downloadRequested
         )
@@ -93,16 +96,36 @@ class MainWindow(QMainWindow):
         the state of the download. The download has to be explicitly accepted
         with QWebEngineDownloadItem::accept() or it will be cancelled.
         """
-        download.setPath(self.extraPath)
-        download.accept()
-        download.finished.connect(self.foo)
+        old_path = download.url().path()  # download.path()
+        print("old_path", old_path)
+        #path, _ = QFileDialog.getSaveFileName(
+        #    self, "Save File", old_path, "*.zip"
+        #)
+        try:
+            extraPath = os.path.join(self.extraPath, "results.zip")
+            print("begin on_downloadRequested", extraPath)
+            download.setPath(extraPath)
+            # download.setPath(extraPath)
+            download.accept()
+            ##download.finished.connect(self.foo)
+            download.finished.connect(lambda:self.downloadfinished(extraPath.rsplit('/')[-1]))
+
+            from chimerax.core.commands import run # execute chimera cli command
+            print("on_downloadRequested_exit")
+            run(session, 'exit') # exit script
+        except Exception as e:
+            print("ERROR", e)
+
         # download.finished.connect(lambda: print("download finished"))
+
+    def downloadfinished(self,filename):
+        print(filename+' Downloaded!')
 
     def foo(self):
         """ Prepare files for Scipion"""
         print("finished")
-        self.hide();
-        self.close();
+        #self.hide();
+        #self.close();
 
 
 # construct  QApplication 
