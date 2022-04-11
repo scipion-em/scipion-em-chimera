@@ -445,9 +445,11 @@ session.logger.error('''{msg}''')
                                               injectJavaScriptList=injectJavaScriptList,
                                               )
         f.close()
-        args = " --nogui " + colabScriptFileName
+        ## args = " --nogui --exit " + colabScriptFileName
+        args = colabScriptFileName
         cwd = os.path.abspath(self._getExtraPath())
-        Plugin.runChimeraProgram(Plugin.getProgram(), args, 
+        print("self.getPython()", Plugin.getPython())
+        Plugin.runChimeraProgram(Plugin.getProgram(progName=Plugin.getPython()), args, 
                                  cwd=cwd, extraEnv=getEnvDictionary(self))
 
 

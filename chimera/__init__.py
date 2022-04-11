@@ -27,7 +27,7 @@ import os
 
 import pwem
 import pyworkflow.utils as pwutils
-
+from glob import glob
 from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR, 
                         V1_0, V1_1, V1_2_5, V1_3, chimeraTARs)
 
@@ -75,6 +75,12 @@ class Plugin(pwem.Plugin):
         """ Return the program binary that will be used. """
         cmd = cls.getHome('bin', progName)
         return str(cmd)
+
+    @classmethod
+    def getPython(cls, progName="python*"):
+        """ Return the program binary that will be used. """
+        path = glob(cls.getHome('bin', progName))
+        return path[0]
 
     @classmethod
     def isVersionActive(cls):

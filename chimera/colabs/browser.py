@@ -96,9 +96,9 @@ class MainWindow(QMainWindow):
         the state of the download. The download has to be explicitly accepted
         with QWebEngineDownloadItem::accept() or it will be cancelled.
         """
-        old_path = download.url().path()  # download.path()
-        print("old_path", old_path)
-        #path, _ = QFileDialog.getSaveFileName(
+        # old_path = download.url().path()  # download.path()
+        # print("old_path", old_path)
+        # path, _ = QFileDialog.getSaveFileName(
         #    self, "Save File", old_path, "*.zip"
         #)
         try:
@@ -107,12 +107,12 @@ class MainWindow(QMainWindow):
             download.setPath(extraPath)
             # download.setPath(extraPath)
             download.accept()
-            ##download.finished.connect(self.foo)
-            download.finished.connect(lambda:self.downloadfinished(extraPath.rsplit('/')[-1]))
+            #download.finished.connect(self.foo)
+            ##download.finished.connect(lambda:self.downloadfinished(extraPath.rsplit('/')[-1]))
 
-            from chimerax.core.commands import run # execute chimera cli command
-            print("on_downloadRequested_exit")
-            run(session, 'exit') # exit script
+            #from chimerax.core.commands import run # execute chimera cli command
+            #print("on_downloadRequested_exit")
+            #run(session, 'exit') # exit script
         except Exception as e:
             print("ERROR", e)
 
@@ -124,8 +124,8 @@ class MainWindow(QMainWindow):
     def foo(self):
         """ Prepare files for Scipion"""
         print("finished")
-        #self.hide();
-        #self.close();
+        self.hide();
+        self.close();
 
 
 # construct  QApplication 
