@@ -6,7 +6,8 @@ class createColabScript():
                 extraPath, 
                 url,
                 injectJavaScriptList,
-                uploadfile=None):
+                transferFn,
+                resultsFile):
 
         colabCommand = f'''
 from PyQt5.QtCore import *
@@ -18,15 +19,12 @@ import os
 
 class WebPage(QWebEnginePage):
     """override chooseFiles method so we can inject the filename"""
-    def __init__(self, parent=None, uploadFile=None):
+    def __init__(self, parent=None, transferFn=None):
         super(WebPage, self).__init__(parent)
-        self.uploadFile = uploadFile
+        self.transferFn = transferFn
 
     def chooseFiles(self, mode, oldfiles, mimetypes):
-        #TODO: change returned file
-        print('uploadFile', self.uploadFile)
-        return ['/home/roberto/ScipionUserData/projects/TestPhenixProtSearchFit/Runs/000850_ProtImportPdb/extra/5ni1.cif']
-
+        return [self.transferFn]
 
 # The QMainWindow class provides a main application window
 class MainWindow(QMainWindow):
@@ -38,11 +36,13 @@ class MainWindow(QMainWindow):
     TEST = 2
 
     def __init__(self, extraPath, url,
-                 injectJavaScriptList, uploadFile):
+                 injectJavaScriptList, transferFn, resultsFile):
         super(MainWindow,self).__init__()
         self.extraPath = extraPath
         self.injectJavaScriptList = injectJavaScriptList
         self.counter = 0
+        self.transferFn=transferFn
+        self.resultsFile=resultsFile
         ###
         # Phase 1 create browser and connect
         ###
@@ -52,7 +52,8 @@ class MainWindow(QMainWindow):
         # URL to open in the browser
         self.browser = QWebEngineView()
         # inject my version of WebPage
-        self.p = WebPage(self.browser, uploadFile=uploadFile)
+        self.p = WebPage(self.browser, 
+                        transferFn=transferFn)
         self.browser.setPage(self.p)  
         self.browser.setUrl(QUrl(url))
 
@@ -96,23 +97,12 @@ class MainWindow(QMainWindow):
         the state of the download. The download has to be explicitly accepted
         with QWebEngineDownloadItem::accept() or it will be cancelled.
         """
-        # old_path = download.url().path()  # download.path()
-        # print("old_path", old_path)
-        # path, _ = QFileDialog.getSaveFileName(
-        #    self, "Save File", old_path, "*.zip"
-        #)
-        try:
-            extraPath = os.path.join(self.extraPath, "results.zip")
-            print("begin on_downloadRequested", extraPath)
-            download.setPath(extraPath)
-            # download.setPath(extraPath)
-            download.accept()
-            #download.finished.connect(self.foo)
-            ##download.finished.connect(lambda:self.downloadfinished(extraPath.rsplit('/')[-1]))
 
-            #from chimerax.core.commands import run # execute chimera cli command
-            #print("on_downloadRequested_exit")
-            #run(session, 'exit') # exit script
+        try:
+            download.setPath(self.resultsFile)
+            download.accept()
+            download.finished.connect(self.foo)
+            ##download.finished.connect(lambda:self.downloadfinished(outPutFile.rsplit('/')[-1]))
         except Exception as e:
             print("ERROR", e)
 
@@ -122,7 +112,7 @@ class MainWindow(QMainWindow):
         print(filename+' Downloaded!')
 
     def foo(self):
-        """ Prepare files for Scipion"""
+        """ Close colab"""
         print("finished")
         self.hide();
         self.close();
@@ -135,8 +125,15 @@ app = QApplication(sys.argv)
 window = MainWindow(extraPath='{extraPath}',
                     url='{url}',
                     injectJavaScriptList={injectJavaScriptList},
-                    uploadFile='{uploadfile}',
+                    transferFn='{transferFn}',
+                    resultsFile='{resultsFile}',
                     )
 app.exec_()
 '''
         scriptFilePointer.write(colabCommand)
+
+
+#function KeepClicking(){
+#   console.log("Clicking");
+#   document.querySelector("colab-toolbar-button#connect").click()
+#}setInterval(KeepClicking,60000)        

@@ -208,10 +208,22 @@ class ChimeraSubtractionMapsViewer(ChimeraViewerBase):
 class ChimeraAlphafoldViewer(Viewer):
     _label = 'viewer alphafold'
     _targets = [ProtImportAtomStructAlphafold]
-
+    #TODO: plot coverage
     def _visualize(self, obj, **args):
+        # create axis file
+        models = 1
+        dim = 150
+        sampling = 1.
+        extraFileName = os.path.abspath(self.protocol._getExtraPath("axis_input.bild"))
+        Chimera.createCoordinateAxisFile(dim,
+                                         bildFileName=extraFileName,
+                                         sampling=sampling)
+
         fnCmd = self.protocol._getExtraPath("chimera_alphafold.cxc")
         f = open(fnCmd, 'w')
+        f.write("open %s\n" % extraFileName)
+        models +=1
+        f.write("cofr 0,0,0\n")  # set center of coordinates
         # change to workingDir
         # If we do not use cd and the project name has an space
         # the protocol fails even if we pass absolute paths
@@ -221,6 +233,17 @@ class ChimeraAlphafoldViewer(Viewer):
         for output in self.protocol._outputs:
             fileName = os.path.abspath(eval(f'self.protocol.{output}.getFileName()'))
             f.write("open %s\n" % fileName)
+            models +=1
+        # if exists upload other results files 
+        # model_?_unrelaxed.pdb
+        pattern = self.protocol._getExtraPath("results/model_?_unrelaxed.pdb")
+        print("cwd", os.getcwd())
+        print("pattern", pattern)
+        from glob import glob
+        for model in glob(pattern):
+            f.write("open %s\n" % model)
+            f.write(f"hide #{models} models\n")
+            models +=1
         # set alphafold colormap
         f.write("color bfactor palette alphafold\n")
         f.write("key red:low orange: yellow: cornflowerblue: blue:high\n")

@@ -26,6 +26,7 @@
 # **************************************************************************
 
 
+from asyncio.log import logger
 from os.path import exists
 import os
 import time
@@ -69,6 +70,7 @@ class ProtImportAtomStructAlphafold(EMProtocol):
     url[PHENIX]  = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/phenix_alphafold_colab.ipynb"
     url[TEST]  = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/test_colab.ipynb"
 
+    resultsFile = 'results.zip'
 
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
@@ -381,6 +383,13 @@ session.logger.error('''{msg}''')
             raise Exception(error_message)
         else:
             self.createOutputStep(outFileNames)
+    def uncompress(self, resultsFile):
+        import zipfile
+        print("uncompress", resultsFile)
+        print("path", self._getExtraPath('results'))
+        
+        with zipfile.ZipFile(resultsFile, 'r') as zip_ref:
+            zip_ref.extractall(path=self._getExtraPath('results'))
 
     def _getModelFromColab(self, sequence_data, colabID, hideMessage, useTemplatesFromPDB=-1):
         """run colab to get an alphafold prediction
@@ -391,12 +400,16 @@ session.logger.error('''{msg}''')
         colabScriptFileName = os.path.abspath(self._getExtraPath("colab.py"))
         f = open(self._getTmpPath(colabScriptFileName), "w")
         injectJavaScriptList = []
+        outFileNames = []
 
         ###
         # 1 CASE
         # monomer, chimera
         ###
+        transferFn = None
         if colabID == self.CHIMERA:
+            bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
+            outFileNames.append(bestModelFileName)
             injectJavaScriptList.append(
                 f'''document.querySelector("paper-input").setAttribute("value", "{sequence_data}");  + 
                    document.querySelector("paper-input").dispatchEvent(new Event("change"));
@@ -407,23 +420,26 @@ session.logger.error('''{msg}''')
         # phenix multimer, reuse result
         ###
         elif colabID == self.PHENIX:  
-            #counter = 0
+            counter = 0
             objId = self.getObjId()
             injectJavaScriptList.append(
                 f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").setAttribute("value", "{sequence_data}");'''
             )
-            injectJavaScriptList.append(
-                f'''document.querySelector("paper-input").dispatchEvent(new Event("change"));'''
-            )
+#            injectJavaScriptList.append(
+#                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").dispatchEvent(new Event("change"));'''
+#            )
 
             injectJavaScriptList.append(
                 f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").setAttribute("value", "{objId}");'''
             )
-            injectJavaScriptList.append(            
-                f'''document.querySelector("paper-input").dispatchEvent(new Event("change"));'''
-            )
-            #injectJavaScriptList.append(f'document.querySelectorAll("colab-run-button")[{counter}].click()')
-            #counter += 1
+#            injectJavaScriptList.append(            
+#                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").dispatchEvent(new Event("change"));'''
+#            )
+            injectJavaScriptList.append(f'document.querySelectorAll("colab-run-button")[{counter}].click()')
+#            injectJavaScriptList.append(
+#                f'''querySelectorAll("colab-run-button")[{counter}].dispatchEvent(new Event("change"));'''
+#            )
+            counter += 1
             if useTemplatesFromPDB>0:
                 injectJavaScriptList.append(            
                     '''document.querySelector("input[aria-labelledby=formwidget-5-label]").click()'''
@@ -434,66 +450,35 @@ session.logger.error('''{msg}''')
                 injectJavaScriptList.append(            
                     '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click()'''
                 )
+                transferFn = useTemplatesFromPDB
+                
 
         elif colabID == self.TEST:
+            transferFn = '/tmp/kk.zip'
+            bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
+            outFileNames.append(bestModelFileName)
+            if not os.path.isfile(transferFn):
+                print(f"ERROR: Test file {transferFn} is not available")
+                return
             injectJavaScriptList.append('document.querySelector("colab-run-button").click()')
 
-
+        resultsFile = os.path.abspath(self._getExtraPath(self.resultsFile))
         createcolabscript = createColabScript(scriptFilePointer=f,
-                                              url=self.url[colabID],
                                               extraPath=os.path.abspath(self._getExtraPath()),
+                                              url=self.url[colabID],
                                               injectJavaScriptList=injectJavaScriptList,
+                                              transferFn = transferFn,
+                                              resultsFile = resultsFile,
                                               )
         f.close()
-        ## args = " --nogui --exit " + colabScriptFileName
+
         args = colabScriptFileName
         cwd = os.path.abspath(self._getExtraPath())
-        print("self.getPython()", Plugin.getPython())
         Plugin.runChimeraProgram(Plugin.getProgram(progName=Plugin.getPython()), args, 
                                  cwd=cwd, extraEnv=getEnvDictionary(self))
+        # uncompress Data
+        self.uncompress(resultsFile)
 
-
-        # uncompress file should be in results.zip in the extra directory
-        # create results dir
-        # uncompress data in
-        # best model should go to output
-        # identify other different from best
-        # other accesible though  chimera
-
-        ########################################
-        # create script chimera (move to visualize)
-        # dim = 150  # eventually we will create a PDB library that
-        #            # computes PDB dim
-        # sampling = 1.
-        # tmpFileName = os.path.abspath(self._getTmpPath("axis_input.bild"))
-        # # chimeraScriptFileName = "chimeraScript.py"
-        # Chimera.createCoordinateAxisFile(dim,
-        #                                  bildFileName=tmpFileName,
-        #                                  sampling=sampling)
-        # chimeraScriptFileName = "chimeraPythonScript.py"
-        # f = open(self._getTmpPath(chimeraScriptFileName), "w")
-        # f.write('from chimerax.core.commands import run\n')
-
-        # f.write("run(session, 'open %s')\n" % 'best_model.pdb')
-        # f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
-        # f.write("color bfactor palette alphafold\n")
-        # f.write("key red:low orange: yellow: cornflowerblue: blue:high\n")
-        #######################################################
-#         if not hideMessage:
-#             title = "help"
-#             msg = """Wait untill google colab ends and then
-# close chimera,
-# Some complementary information is
-#  avaialble at ~/Downloads/ChimeraX/Alphafold"""
-#             f.write(f"""
-# session.logger.error('''{msg}''')
-# """)
-        f.close()
-
-#         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
-        outFileNames = []
-        bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
-        outFileNames.append(bestModelFileName)
 
         if not outFileNames:
             error_message = f"No atomic model selected"
