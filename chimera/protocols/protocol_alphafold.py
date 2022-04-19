@@ -214,7 +214,7 @@ class ProtImportAtomStructAlphafold(EMProtocol):
             colabID = self.colabID.get()
             useTemplatesFromPDB = self.useTemplatesFromPDB.get()
             if self.template.get():
-                template = self.template.get().getFileName()
+                template = os.path.abspath(self.template.get().getFileName())
             else:
                 template = None
             self._insertFunctionStep('_getModelFromColab', inputSequence, colabID, hideMessage, useTemplatesFromPDB, template)
