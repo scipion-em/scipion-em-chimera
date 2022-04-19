@@ -29,6 +29,7 @@
 from asyncio.log import logger
 from os.path import exists
 import os
+from re import template
 import time
 import json
 import pyworkflow.protocol.params as params
@@ -62,11 +63,13 @@ class ProtImportAtomStructAlphafold(EMProtocol):
     INPUTFASTAFILE = 'seqs'    
 
     CHIMERA = 0
-    PHENIX = 1
-    TEST = 2
+    CHIMERA21 = 1
+    PHENIX = 2
+    TEST = 3
 
     url = {}
     url[CHIMERA] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold_colab.ipynb"
+    url[CHIMERA21] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold21_colab.ipynb"
     url[PHENIX]  = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/phenix_alphafold_colab.ipynb"
     url[TEST]  = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/test_colab.ipynb"
 
@@ -111,11 +114,12 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                        help="Input the aminoacid sequence to blast or send to colab lab")
         # # list different colabs if source == IMPORT_REMOTE_ALPHAFOLD
         form.addParam('colabID', params.EnumParam,
-                        choices=['Chimera', 
+                        choices=['Chimera (monomer)',
+                                 'Chimera21 (multimer)',
                                  'Phenix', 
                                  'Test'
                                  ],
-                        display=params.EnumParam.DISPLAY_HLIST,
+                        #display=params.EnumParam.DISPLAY_HLIST,
                         label="Colab Notebook ",
                         default=self.CHIMERA,
                         condition='source == %d ' % self.IMPORT_REMOTE_ALPHAFOLD,
@@ -123,14 +127,18 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                             '  Two notebooks are available from\n'
                              'Chimera and Phenix respectively'
                              )
-        form.addParam('useTemplatesFromPDB', params.IntParam,
-                      label='Use Templates from PDB',
-                      default=-1,
+        form.addParam('template', params.PointerParam, pointerClass="AtomStruct",
+                      label='Use this template',
                       condition='source == %d and colabID == %d' % (self.IMPORT_REMOTE_ALPHAFOLD, self.PHENIX),
-                      help="Number of PDB templates to use. Set to -1 to disable"
-                           "Suggested value=20"
+                      help="Fill if you want to supply a PDB template to colabfold",
+                      allowsNull=True,
                     )
-                    
+        form.addParam('useTemplatesFromPDB', params.IntParam,
+                      label='Use templates from PDB',
+                      default = -1,
+                      condition='source == %d and colabID == %d' % (self.IMPORT_REMOTE_ALPHAFOLD, self.PHENIX),
+                      help="Use this numbers of templates from PDB. If set to -1 no templates are used"
+        )                    
         form.addParam('inputSequenceS', params.MultiPointerParam,
                       pointerClass="Sequence", allowsNull=True,
                       label='Structures',
@@ -205,7 +213,11 @@ class ProtImportAtomStructAlphafold(EMProtocol):
             inputSequence = self.inputSequence.get().getSequence()
             colabID = self.colabID.get()
             useTemplatesFromPDB = self.useTemplatesFromPDB.get()
-            self._insertFunctionStep('_getModelFromColab', inputSequence, colabID, hideMessage, useTemplatesFromPDB)
+            if self.template.get():
+                template = self.template.get().getFileName()
+            else:
+                template = None
+            self._insertFunctionStep('_getModelFromColab', inputSequence, colabID, hideMessage, useTemplatesFromPDB, template)
         elif self.source == self.IMPORT_LOCAL_ALPHAFOLD:
             seqs = []
             for seq in self.inputSequenceS:
@@ -391,7 +403,7 @@ session.logger.error('''{msg}''')
         with zipfile.ZipFile(resultsFile, 'r') as zip_ref:
             zip_ref.extractall(path=self._getExtraPath('results'))
 
-    def _getModelFromColab(self, sequence_data, colabID, hideMessage, useTemplatesFromPDB=-1):
+    def _getModelFromColab(self, sequence_data, colabID, hideMessage, useTemplatesFromPDB=-1, template=None):
         """run colab to get an alphafold prediction
         We will use chimera for this.
         """
@@ -415,6 +427,14 @@ session.logger.error('''{msg}''')
                    document.querySelector("paper-input").dispatchEvent(new Event("change"));
                 ''')
             injectJavaScriptList.append('document.querySelector("colab-run-button").click()')
+        elif colabID == self.CHIMERA21:
+            bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
+            outFileNames.append(bestModelFileName)
+            injectJavaScriptList.append(
+                f'''document.querySelector("paper-input").setAttribute("value", "{sequence_data}");  + 
+                   document.querySelector("paper-input").dispatchEvent(new Event("change"));
+                ''')
+            injectJavaScriptList.append('document.querySelector("colab-run-button").click()')
         ###
         # 2 CASE 
         # phenix multimer, reuse result
@@ -425,21 +445,10 @@ session.logger.error('''{msg}''')
             injectJavaScriptList.append(
                 f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").setAttribute("value", "{sequence_data}");'''
             )
-#            injectJavaScriptList.append(
-#                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").dispatchEvent(new Event("change"));'''
-#            )
-
             injectJavaScriptList.append(
                 f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").setAttribute("value", "{objId}");'''
             )
-#            injectJavaScriptList.append(            
-#                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").dispatchEvent(new Event("change"));'''
-#            )
-            injectJavaScriptList.append(f'document.querySelectorAll("colab-run-button")[{counter}].click()')
-#            injectJavaScriptList.append(
-#                f'''querySelectorAll("colab-run-button")[{counter}].dispatchEvent(new Event("change"));'''
-#            )
-            counter += 1
+
             if useTemplatesFromPDB>0:
                 injectJavaScriptList.append(            
                     '''document.querySelector("input[aria-labelledby=formwidget-5-label]").click()'''
@@ -447,11 +456,16 @@ session.logger.error('''{msg}''')
                 injectJavaScriptList.append(            
                     f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").setAttribute("value", "{useTemplatesFromPDB}")'''
                 )
-                injectJavaScriptList.append(            
-                    '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click()'''
-                )
-                transferFn = useTemplatesFromPDB
-                
+                if template is not None:
+                    injectJavaScriptList.append(            
+                        '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click()'''
+                    )
+                    transferFn = template
+            # FIRST
+            counter = 5
+
+            for index in range(0,counter):
+                injectJavaScriptList.append(f'document.querySelectorAll("colab-run-button")[{index}].click()')                
 
         elif colabID == self.TEST:
             transferFn = '/tmp/kk.zip'
@@ -523,6 +537,7 @@ session.logger.error('''{msg}''')
 
     def _summary(self):
         summary = []
+        # TODO show for remote colab
         summary.append('PLDDTs (monomer) or iptm+ptm (multimer)')
         try:
             outputdir = self._getExtraPath(self.INPUTFASTAFILE)

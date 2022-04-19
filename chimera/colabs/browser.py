@@ -8,7 +8,7 @@ class createColabScript():
                 injectJavaScriptList,
                 transferFn,
                 resultsFile):
-
+        print("createColabScript", resultsFile)
         colabCommand = f'''
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
@@ -24,6 +24,7 @@ class WebPage(QWebEnginePage):
         self.transferFn = transferFn
 
     def chooseFiles(self, mode, oldfiles, mimetypes):
+        print("self.transferFn", self.transferFn)
         return [self.transferFn]
 
 # The QMainWindow class provides a main application window
@@ -40,7 +41,6 @@ class MainWindow(QMainWindow):
         super(MainWindow,self).__init__()
         self.extraPath = extraPath
         self.injectJavaScriptList = injectJavaScriptList
-        self.counter = 0
         self.transferFn=transferFn
         self.resultsFile=resultsFile
         ###
@@ -62,8 +62,7 @@ class MainWindow(QMainWindow):
         # and start execution
         ###
         # execute after page is loaded
-        for javaCommand in injectJavaScriptList:
-            self.browser.page().loadFinished.connect(self.executeJavaScript)
+        self.browser.page().loadFinished.connect(self.executeJavaScript)
 
         self.setCentralWidget(self.browser)
         # show browser
@@ -86,8 +85,8 @@ class MainWindow(QMainWindow):
     def executeJavaScript(self):
         """ Execute javascript command in self.command"""
         # p.runJavaScript("throw document.readyState ")  # For DEBUGING
-        self.p.runJavaScript(self.injectJavaScriptList[self.counter])
-        self.counter += 1
+        for javaCommand in self.injectJavaScriptList:
+            self.p.runJavaScript(javaCommand)
         
     def on_downloadRequested(self, download):
         """ Handle downloads.
