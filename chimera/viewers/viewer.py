@@ -208,7 +208,6 @@ class ChimeraSubtractionMapsViewer(ChimeraViewerBase):
 class ChimeraAlphafoldViewer(Viewer):
     _label = 'viewer alphafold'
     _targets = [ProtImportAtomStructAlphafold]
-    #TODO: plot coverage
     def _visualize(self, obj, **args):
         # create axis file
         models = 1
@@ -237,8 +236,6 @@ class ChimeraAlphafoldViewer(Viewer):
         # if exists upload other results files 
         # model_?_unrelaxed.pdb
         pattern = self.protocol._getExtraPath("results/model_?_unrelaxed.pdb")
-        print("cwd", os.getcwd())
-        print("pattern", pattern)
         from glob import glob
         for model in glob(pattern):
             f.write("open %s\n" % model)
@@ -248,6 +245,56 @@ class ChimeraAlphafoldViewer(Viewer):
         f.write("color bfactor palette alphafold\n")
         f.write("key red:low orange: yellow: cornflowerblue: blue:high\n")
         Chimera.runProgram(Chimera.getProgram(), fnCmd + "&")
+        # plot coverage
+        if self.protocol.source == self.IMPORT_REMOTE_ALPHAFOLD and 
+           self.protocol.colabID.get() == self.protocol.CHIMERA:
+           self.plot_alignment_coverage()
         return []
+
+    def plot_alignment_coverage(self, database_names=["mgnify", "smallbfd", "uniref90"]):
+        def read_alignments(database_names, output_dir):
+            alignments, deletions = [], []
+            from os import path
+            for name in database_names:
+                apath = path.join(output_dir, name + '_alignment')
+                dpath = path.join(output_dir, name + '_deletions')
+                if not path.exists(apath) or not path.exists(dpath):
+                    return [],[]
+                with open(apath, 'r') as f:
+                    seqs = [line.rstrip() for line in f.readlines()]
+                    alignments.append(seqs)
+                with open(dpath, 'r') as f:
+                    dcounts = [[int(value) for value in line.split(',')] for line in f.readlines()]
+                    deletions.append(dcounts)
+            return alignments, deletions
+
+        def plot_alignment_coverage(alignments):
+            counts = alignment_coverage(alignments)
+            if counts is None:
+                return
+            import matplotlib.pyplot as plt
+            fig = plt.figure(figsize=(12, 3))
+            plt.title('Number of Aligned Sequences with no Gap for each Residue Position')
+            x = range(1, len(counts)+1) # Start residue numbers at 1, not 0.
+            plt.plot(x, counts, color='black')
+            plt.xlabel('Residue number')
+            plt.ylabel('Coverage')
+            plt.show()
+
+        def alignment_coverage(alignments):
+            counts = None
+            for alignment in alignments:
+                for line in alignment:
+                    if counts is None:
+                        from numpy import zeros, int32
+                        counts = zeros((len(line),), int32)
+                    for i,c in enumerate(line):
+                        if c != '-':
+                            counts[i] += 1
+            return counts
+
+        output_dir = self.protocol._getExtraPath('results')
+        alignments, deletions = read_alignments(database_names, output_dir)
+        plot_alignment_coverage(alignments)
 
 

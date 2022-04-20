@@ -192,9 +192,13 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                           label = 'Extra commands for alphafold',
                           help = "Add extra commands in cmd file. Use for testing")
         form.addParam('hideMessage', params.BooleanParam, default=False,
-                      condition='source != %d and source!= %d' % (self.IMPORT_FROM_EBI, self.IMPORT_LOCAL_ALPHAFOLD),
+                      condition='source = %d and source!= %d' % (self.IMPORT_FROM_SEQ_BLAST),
                       label='Hide help popup window',
                       help='If set to Yes no help message will be shown in chimera at start up.')
+        form.addParam('showChimera', params.BooleanParam, default=True,
+                      condition='source = %d' % (self.IMPORT_LOCAL_ALPHAFOLD),
+                      label='show results in chimera',
+                      help='Show results in chimera.')
 
     def _getDefaultParallel(self):
         """This protocol doesn't have mpi version"""
@@ -212,12 +216,15 @@ class ProtImportAtomStructAlphafold(EMProtocol):
         elif self.source == self.IMPORT_REMOTE_ALPHAFOLD:
             inputSequence = self.inputSequence.get().getSequence()
             colabID = self.colabID.get()
+            showChimera = self.showChimera.get()
             useTemplatesFromPDB = self.useTemplatesFromPDB.get()
             if self.template.get():
                 template = os.path.abspath(self.template.get().getFileName())
             else:
                 template = None
-            self._insertFunctionStep('_getModelFromColab', inputSequence, colabID, hideMessage, useTemplatesFromPDB, template)
+            self._insertFunctionStep('_getModelFromColab', inputSequence, 
+                                     colabID, hideMessage, useTemplatesFromPDB, 
+                                     template, showChimera)
         elif self.source == self.IMPORT_LOCAL_ALPHAFOLD:
             seqs = []
             for seq in self.inputSequenceS:
@@ -293,6 +300,8 @@ cd {ALPHAFOLD_HOME}
 
         outFileNames = []
         outputdir = self._getExtraPath(self.INPUTFASTAFILE)
+        # this is OK only for chimera
+        if 
         searchPattern = os.path.join(outputdir, "ranked_?.pdb")
         for outFileName in sorted(glob.glob(searchPattern)):
             outFileNames.append(outFileName)
@@ -403,7 +412,9 @@ session.logger.error('''{msg}''')
         with zipfile.ZipFile(resultsFile, 'r') as zip_ref:
             zip_ref.extractall(path=self._getExtraPath('results'))
 
-    def _getModelFromColab(self, sequence_data, colabID, hideMessage, useTemplatesFromPDB=-1, template=None):
+    def _getModelFromColab(self, sequence_data, colabID, 
+                           hideMessage, useTemplatesFromPDB=-1, 
+                           template=None, showChimera=True):
         """run colab to get an alphafold prediction
         We will use chimera for this.
         """
@@ -416,7 +427,7 @@ session.logger.error('''{msg}''')
 
         ###
         # 1 CASE
-        # monomer, chimera
+        # monomer, chimera, do not use PDB
         ###
         transferFn = None
         if colabID == self.CHIMERA:
@@ -427,7 +438,7 @@ session.logger.error('''{msg}''')
                    document.querySelector("paper-input").dispatchEvent(new Event("change"));
                 ''')
             injectJavaScriptList.append('document.querySelector("colab-run-button").click()')
-        elif colabID == self.CHIMERA21:
+        elif colabID == self.CHIMERA21:  # multimer case
             bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
             outFileNames.append(bestModelFileName)
             injectJavaScriptList.append(
@@ -437,7 +448,7 @@ session.logger.error('''{msg}''')
             injectJavaScriptList.append('document.querySelector("colab-run-button").click()')
         ###
         # 2 CASE 
-        # phenix multimer, reuse result
+        # phenix reuse result, use PDB
         ###
         elif colabID == self.PHENIX:  
             counter = 0
@@ -464,10 +475,11 @@ session.logger.error('''{msg}''')
             # FIRST
             counter = 5
 
-            for index in range(0,counter):
-                injectJavaScriptList.append(f'document.querySelectorAll("colab-run-button")[{index}].click()')                
+            # users should run the book
+            # for index in range(0,counter):
+            #    injectJavaScriptList.append(f'document.querySelectorAll("colab-run-button")[{index}].click()')                
 
-        elif colabID == self.TEST:
+        elif colabID == self.TEST:  # only for debuging
             transferFn = '/tmp/kk.zip'
             bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
             outFileNames.append(bestModelFileName)
@@ -488,11 +500,15 @@ session.logger.error('''{msg}''')
 
         args = colabScriptFileName
         cwd = os.path.abspath(self._getExtraPath())
-        Plugin.runChimeraProgram(Plugin.getProgram(progName=Plugin.getPython()), args, 
+        Plugin.runChimeraProgram(progName=Plugin.getPython(), args, 
                                  cwd=cwd, extraEnv=getEnvDictionary(self))
         # uncompress Data
         self.uncompress(resultsFile)
 
+        # should I show the results in chimera?
+        if showChimera:
+            # create script
+            pass
 
         if not outFileNames:
             error_message = f"No atomic model selected"
@@ -505,6 +521,10 @@ session.logger.error('''{msg}''')
         :param list_string atomStructPath: list of atom struct files to be
                                         saved
         """
+
+        # open chimera so user may see and save alternative
+        # PDBs
+
         for atomStructPath in atomStructPaths:
             if not exists(atomStructPath):
                 raise Exception("Atomic structure not found at *%s*" % atomStructPath)
