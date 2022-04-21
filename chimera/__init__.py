@@ -80,7 +80,9 @@ class Plugin(pwem.Plugin):
     def getPython(cls, progName="python*"):
         """ Return the program binary that will be used. """
         path = glob(cls.getHome('bin', progName))
-        return path[0]
+        # todo only run this "vglrun in test mode
+        return "vglrun " +  path[0]
+        # return path[0]
 
     @classmethod
     def isVersionActive(cls):
