@@ -192,11 +192,11 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                           label = 'Extra commands for alphafold',
                           help = "Add extra commands in cmd file. Use for testing")
         form.addParam('hideMessage', params.BooleanParam, default=False,
-                      condition='source = %d and source!= %d' % (self.IMPORT_FROM_SEQ_BLAST),
+                      condition='source == %d' % (self.IMPORT_FROM_SEQ_BLAST),
                       label='Hide help popup window',
                       help='If set to Yes no help message will be shown in chimera at start up.')
         form.addParam('showChimera', params.BooleanParam, default=True,
-                      condition='source = %d' % (self.IMPORT_LOCAL_ALPHAFOLD),
+                      condition='source == %d' % (self.IMPORT_REMOTE_ALPHAFOLD),
                       label='show results in chimera',
                       help='Show results in chimera.')
 
@@ -300,8 +300,6 @@ cd {ALPHAFOLD_HOME}
 
         outFileNames = []
         outputdir = self._getExtraPath(self.INPUTFASTAFILE)
-        # this is OK only for chimera
-        if 
         searchPattern = os.path.join(outputdir, "ranked_?.pdb")
         for outFileName in sorted(glob.glob(searchPattern)):
             outFileNames.append(outFileName)
@@ -405,10 +403,7 @@ session.logger.error('''{msg}''')
         else:
             self.createOutputStep(outFileNames)
     def uncompress(self, resultsFile):
-        import zipfile
-        print("uncompress", resultsFile)
-        print("path", self._getExtraPath('results'))
-        
+        import zipfile        
         with zipfile.ZipFile(resultsFile, 'r') as zip_ref:
             zip_ref.extractall(path=self._getExtraPath('results'))
 
@@ -438,6 +433,7 @@ session.logger.error('''{msg}''')
                    document.querySelector("paper-input").dispatchEvent(new Event("change"));
                 ''')
             injectJavaScriptList.append('document.querySelector("colab-run-button").click()')
+            resultsFile = os.path.abspath(self._getExtraPath(self.resultsFile))
         elif colabID == self.CHIMERA21:  # multimer case
             bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
             outFileNames.append(bestModelFileName)
@@ -446,6 +442,7 @@ session.logger.error('''{msg}''')
                    document.querySelector("paper-input").dispatchEvent(new Event("change"));
                 ''')
             injectJavaScriptList.append('document.querySelector("colab-run-button").click()')
+            resultsFile = os.path.abspath(self._getExtraPath(self.resultsFile))
         ###
         # 2 CASE 
         # phenix reuse result, use PDB
@@ -478,37 +475,51 @@ session.logger.error('''{msg}''')
             # users should run the book
             # for index in range(0,counter):
             #    injectJavaScriptList.append(f'document.querySelectorAll("colab-run-button")[{index}].click()')                
+            resultsFile = os.path.abspath(self._getExtraPath(self.resultsFile))
 
         elif colabID == self.TEST:  # only for debuging
-            transferFn = '/tmp/kk.zip'
+            resultsFile = '/tmp/kk.zip'
             bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
             outFileNames.append(bestModelFileName)
-            if not os.path.isfile(transferFn):
-                print(f"ERROR: Test file {transferFn} is not available")
+            if not os.path.isfile(resultsFile):
+                print(f"ERROR: Test file {resultsFile} is not available")
                 return
-            injectJavaScriptList.append('document.querySelector("colab-run-button").click()')
 
-        resultsFile = os.path.abspath(self._getExtraPath(self.resultsFile))
-        createcolabscript = createColabScript(scriptFilePointer=f,
-                                              extraPath=os.path.abspath(self._getExtraPath()),
-                                              url=self.url[colabID],
-                                              injectJavaScriptList=injectJavaScriptList,
-                                              transferFn = transferFn,
-                                              resultsFile = resultsFile,
-                                              )
+        if colabID != self.TEST:
+            createcolabscript = createColabScript(scriptFilePointer=f,
+                                                  extraPath=os.path.abspath(self._getExtraPath()),
+                                                  url=self.url[colabID],
+                                                  injectJavaScriptList=injectJavaScriptList,
+                                                  transferFn = transferFn,
+                                                  resultsFile = resultsFile,
+                                                  )
         f.close()
 
-        args = colabScriptFileName
-        cwd = os.path.abspath(self._getExtraPath())
-        Plugin.runChimeraProgram(progName=Plugin.getPython(), args, 
-                                 cwd=cwd, extraEnv=getEnvDictionary(self))
+        if colabID != self.TEST:
+            args = colabScriptFileName
+            cwd = os.path.abspath(self._getExtraPath())
+            Plugin.runChimeraProgram(program=Plugin.getPython(), args=args, 
+                                    cwd=cwd, extraEnv=getEnvDictionary(self))
         # uncompress Data
         self.uncompress(resultsFile)
 
         # should I show the results in chimera?
         if showChimera:
-            # create script
-            pass
+            # go to results directory and load all files called model_?_unrelaxed.pdb
+            fnCmd = self._getExtraPath(os.path.join('results','results.cxc'))
+            f = open(fnCmd, 'w')
+            modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
+                                                     filePattern='model_?_unrelaxed.pdb')
+            for modelFn in modelsFns:
+                f.write(f"open {modelFn}\n")
+            f.close()
+            args = fnCmd
+            Plugin.runChimeraProgram(Plugin.getProgram(), 
+                                     extraEnv=getEnvDictionary(self), 
+                                     args=args)
+            modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath()), 
+                                                     filePattern='Atom_struct_*_*_*.cif')
+            outFileNames += modelsFns
 
         if not outFileNames:
             error_message = f"No atomic model selected"
@@ -663,8 +674,9 @@ def _waitForFile(file_path):
         if counter > 240:  # break after four hours
             break
 
-def _findDownloadDirAndGetModels():
+def _findDownloadDirAndGetModels(downloadDir, filePattern='model_?_unrelaxed.pdb'):
     "Return last subdirectory created by alphafold-colab"
     import glob
-    downloadDir = _unique_download_directory()
-    return [os.path.join(downloadDir, 'best_model.pdb')] + glob.glob(os.path.join(downloadDir, 'model_?_unrelaxed.pdb'))
+    pattern = os.path.join(downloadDir, filePattern)
+    filesNames = glob.glob(pattern)
+    return filesNames

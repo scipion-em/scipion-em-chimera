@@ -235,20 +235,22 @@ class ChimeraAlphafoldViewer(Viewer):
             models +=1
         # if exists upload other results files 
         # model_?_unrelaxed.pdb
-        pattern = self.protocol._getExtraPath("results/model_?_unrelaxed.pdb")
-        from glob import glob
-        for model in glob(pattern):
-            f.write("open %s\n" % model)
-            f.write(f"hide #{models} models\n")
-            models +=1
+        #pattern = self.protocol._getExtraPath("results/model_?_unrelaxed.pdb")
+        #from glob import glob
+        #for model in glob(pattern):
+        #    f.write("open %s\n" % model)
+        #    f.write(f"hide #{models} models\n")
+        #    models +=1
         # set alphafold colormap
         f.write("color bfactor palette alphafold\n")
         f.write("key red:low orange: yellow: cornflowerblue: blue:high\n")
+        f.close()
         Chimera.runProgram(Chimera.getProgram(), fnCmd + "&")
         # plot coverage
-        if self.protocol.source == self.IMPORT_REMOTE_ALPHAFOLD and 
-           self.protocol.colabID.get() == self.protocol.CHIMERA:
-           self.plot_alignment_coverage()
+        if self.protocol.source == self.protocol.IMPORT_REMOTE_ALPHAFOLD and \
+           (self.protocol.colabID.get() == self.protocol.CHIMERA or
+            self.protocol.colabID.get() == self.protocol.TEST):
+            self.plot_alignment_coverage()
         return []
 
     def plot_alignment_coverage(self, database_names=["mgnify", "smallbfd", "uniref90"]):
