@@ -62,13 +62,13 @@ class ProtImportAtomStructAlphafold(EMProtocol):
     IMPORT_LOCAL_ALPHAFOLD = 3
     INPUTFASTAFILE = 'seqs'    
 
-    CHIMERA = 0
-    CHIMERA21 = 1
-    PHENIX = 2
-    TEST = 3
+#   CHIMERA = 0
+    CHIMERA21 = 0
+    PHENIX = 1
+    TEST = 2
 
     url = {}
-    url[CHIMERA] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold_colab.ipynb"
+#    url[CHIMERA] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold_colab.ipynb"
     url[CHIMERA21] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold21_colab.ipynb"
     url[PHENIX]  = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/phenix_alphafold_colab.ipynb"
     url[TEST]  = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/test_colab.ipynb"
@@ -104,7 +104,8 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                            'database identifiers to UniProt accession codes '
                            'by using the "ID Mapping" tab on '
                            'https://www.uniprot.org/')
-        # TODO: add setofsequences to colab
+        # TODO: add setofsequences to colab  <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+        # check last execution of chimera
         # so far this version only handles a single sequence
         form.addParam('inputSequence', params.PointerParam, pointerClass="Sequence",
                        label='Reference sequence', allowsNull=True,
@@ -114,14 +115,14 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                        help="Input the aminoacid sequence to blast or send to colab lab")
         # # list different colabs if source == IMPORT_REMOTE_ALPHAFOLD
         form.addParam('colabID', params.EnumParam,
-                        choices=['Chimera (monomer)',
-                                 'Chimera21 (multimer)',
+                        choices=[#'Chimera (monomer)',
+                                 'Chimera21',
                                  'Phenix', 
                                  'Test'
                                  ],
                         #display=params.EnumParam.DISPLAY_HLIST,
                         label="Colab Notebook ",
-                        default=self.CHIMERA,
+                        default=self.CHIMERA21,
                         condition='source == %d ' % self.IMPORT_REMOTE_ALPHAFOLD,
                         help='Execute alphafold in Google-colab.\n'
                             '  Two notebooks are available from\n'
@@ -425,16 +426,17 @@ session.logger.error('''{msg}''')
         # monomer, chimera, do not use PDB
         ###
         transferFn = None
-        if colabID == self.CHIMERA:
-            bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
-            outFileNames.append(bestModelFileName)
-            injectJavaScriptList.append(
-                f'''document.querySelector("paper-input").setAttribute("value", "{sequence_data}");  + 
-                   document.querySelector("paper-input").dispatchEvent(new Event("change"));
-                ''')
-            injectJavaScriptList.append('document.querySelector("colab-run-button").click()')
-            resultsFile = os.path.abspath(self._getExtraPath(self.resultsFile))
-        elif colabID == self.CHIMERA21:  # multimer case
+        # if colabID == self.CHIMERA:
+        #     bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
+        #     outFileNames.append(bestModelFileName)
+        #     injectJavaScriptList.append(
+        #         f'''document.querySelector("paper-input").setAttribute("value", "{sequence_data}");  + 
+        #            document.querySelector("paper-input").dispatchEvent(new Event("change"));
+        #         ''')
+        #     injectJavaScriptList.append('document.querySelector("colab-run-button").click()')
+        #     resultsFile = os.path.abspath(self._getExtraPath(self.resultsFile))
+        # el
+        if colabID == self.CHIMERA21:  # multimer case
             bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
             outFileNames.append(bestModelFileName)
             injectJavaScriptList.append(
@@ -473,8 +475,10 @@ session.logger.error('''{msg}''')
             counter = 5
 
             # users should run the book
-            # for index in range(0,counter):
-            #    injectJavaScriptList.append(f'document.querySelectorAll("colab-run-button")[{index}].click()')                
+            #for index in range(0,counter):
+            index = 0
+            injectJavaScriptList.append(f'document.querySelectorAll("colab-run-button")[{index}].click()')                
+            # for end
             resultsFile = os.path.abspath(self._getExtraPath(self.resultsFile))
 
         elif colabID == self.TEST:  # only for debuging
@@ -505,20 +509,26 @@ session.logger.error('''{msg}''')
 
         # should I show the results in chimera?
         if showChimera:
-            # go to results directory and load all files called model_?_unrelaxed.pdb
+            # go to results directory and load all files called model_*_unrelaxed.pdb
             fnCmd = self._getExtraPath(os.path.join('results','results.cxc'))
             f = open(fnCmd, 'w')
             modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
-                                                     filePattern='model_?_unrelaxed.pdb')
+                                                     filePattern='model_*_relaxed.pdb')
             for modelFn in modelsFns:
                 f.write(f"open {modelFn}\n")
+            modelsFns = sorted(_findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
+                                                     filePattern='model_*_unrelaxed.pdb'))
+            for modelFn in modelsFns:
+                f.write(f"open {modelFn}\n")
+            f.write("matchmaker #2-%d to #1\n" % len(modelFn))
             f.close()
+            # add files saved with scipionwrite to outputs
             args = fnCmd
             Plugin.runChimeraProgram(Plugin.getProgram(), 
                                      extraEnv=getEnvDictionary(self), 
                                      args=args)
             modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath()), 
-                                                     filePattern='Atom_struct_*_*_*.cif')
+                                                     filePattern='*Atom_struct__*_*.cif')
             outFileNames += modelsFns
 
         if not outFileNames:
@@ -674,9 +684,11 @@ def _waitForFile(file_path):
         if counter > 240:  # break after four hours
             break
 
-def _findDownloadDirAndGetModels(downloadDir, filePattern='model_?_unrelaxed.pdb'):
+def _findDownloadDirAndGetModels(downloadDir, filePattern='model_*.pdb'):
     "Return last subdirectory created by alphafold-colab"
     import glob
     pattern = os.path.join(downloadDir, filePattern)
+    print("_findDownloadDirAndGetModels", "pattern", pattern)
     filesNames = glob.glob(pattern)
+    print("_findDownloadDirAndGetModels", "filesNames", filesNames)
     return filesNames
