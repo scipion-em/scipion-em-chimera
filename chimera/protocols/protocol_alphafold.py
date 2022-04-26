@@ -453,22 +453,32 @@ session.logger.error('''{msg}''')
             counter = 0
             objId = self.getObjId()
             injectJavaScriptList.append(
-                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").setAttribute("value", "{sequence_data}");'''
+                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").setAttribute("value", "{sequence_data}"); +
+                    document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").dispatchEvent(new Event("change"));
+                '''
             )
             injectJavaScriptList.append(
-                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").setAttribute("value", "{objId}");'''
+                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").setAttribute("value", "{objId}"); +
+                    document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").dispatchEvent(new Event("change"));
+                '''
             )
 
             if useTemplatesFromPDB>0:
                 injectJavaScriptList.append(            
-                    '''document.querySelector("input[aria-labelledby=formwidget-5-label]").click()'''
+                    '''document.querySelector("input[aria-labelledby=formwidget-5-label]").click() +
+                       document.querySelector("input[aria-labelledby=formwidget-5-label]").dispatchEvent(new Event("change"));
+                    '''
                 )
                 injectJavaScriptList.append(            
-                    f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").setAttribute("value", "{useTemplatesFromPDB}")'''
+                    f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").setAttribute("value", "{useTemplatesFromPDB}") +
+                        document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").dispatchEvent(new Event("change"));
+                    '''
                 )
                 if template is not None:
                     injectJavaScriptList.append(            
-                        '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click()'''
+                        '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click() +
+                           document.querySelector("input[aria-labelledby=formwidget-7-label]").dispatchEvent(new Event("change"));
+                           '''
                     )
                     transferFn = template
             # FIRST
