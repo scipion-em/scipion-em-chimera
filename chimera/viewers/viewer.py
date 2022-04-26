@@ -248,9 +248,18 @@ class ChimeraAlphafoldViewer(Viewer):
         Chimera.runProgram(Chimera.getProgram(), fnCmd + "&")
         # plot coverage
         if self.protocol.source == self.protocol.IMPORT_REMOTE_ALPHAFOLD and \
-           (self.protocol.colabID.get() == self.protocol.CHIMERA or
+           (self.protocol.colabID.get() == self.protocol.CHIMERA21 or
             self.protocol.colabID.get() == self.protocol.TEST):
-            self.plot_alignment_coverage()
+            database_names=[]
+            if self.protocol.colabID.get() == self.protocol.CHIMERA21:
+                database_names=["sequence_1_mgnify", 
+                                "sequence_1_smallbfd", 
+                                "sequence_1_uniref90"]
+            elif self.protocol.colabID.get() == self.protocol.TEST:
+                database_names=["sequence_1_mgnify", 
+                                "sequence_1_smallbfd", 
+                                "sequence_1_uniref90"]
+            self.plot_alignment_coverage(database_names=database_names)
         return []
 
     def plot_alignment_coverage(self, database_names=["mgnify", "smallbfd", "uniref90"]):
@@ -270,7 +279,7 @@ class ChimeraAlphafoldViewer(Viewer):
                     deletions.append(dcounts)
             return alignments, deletions
 
-        def plot_alignment_coverage(alignments):
+        def _plot_alignment_coverage(alignments):
             counts = alignment_coverage(alignments)
             if counts is None:
                 return
@@ -297,6 +306,4 @@ class ChimeraAlphafoldViewer(Viewer):
 
         output_dir = self.protocol._getExtraPath('results')
         alignments, deletions = read_alignments(database_names, output_dir)
-        plot_alignment_coverage(alignments)
-
-
+        _plot_alignment_coverage(alignments)
