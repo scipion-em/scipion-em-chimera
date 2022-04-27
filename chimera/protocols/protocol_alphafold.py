@@ -453,22 +453,32 @@ session.logger.error('''{msg}''')
             counter = 0
             objId = self.getObjId()
             injectJavaScriptList.append(
-                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").setAttribute("value", "{sequence_data}");'''
+                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").setAttribute("value", "{sequence_data}"); +
+                    document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").dispatchEvent(new Event("change"));
+                '''
             )
             injectJavaScriptList.append(
-                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").setAttribute("value", "{objId}");'''
+                f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").setAttribute("value", "{objId}"); +
+                    document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").dispatchEvent(new Event("change"));
+                '''
             )
 
             if useTemplatesFromPDB>0:
                 injectJavaScriptList.append(            
-                    '''document.querySelector("input[aria-labelledby=formwidget-5-label]").click()'''
+                    '''document.querySelector("input[aria-labelledby=formwidget-5-label]").click() +
+                       document.querySelector("input[aria-labelledby=formwidget-5-label]").dispatchEvent(new Event("change"));
+                    '''
                 )
                 injectJavaScriptList.append(            
-                    f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").setAttribute("value", "{useTemplatesFromPDB}")'''
+                    f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").setAttribute("value", "{useTemplatesFromPDB}") +
+                        document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").dispatchEvent(new Event("change"));
+                    '''
                 )
                 if template is not None:
                     injectJavaScriptList.append(            
-                        '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click()'''
+                        '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click() +
+                           document.querySelector("input[aria-labelledby=formwidget-7-label]").dispatchEvent(new Event("change"));
+                           '''
                     )
                     transferFn = template
             # FIRST
@@ -483,7 +493,10 @@ session.logger.error('''{msg}''')
 
         elif colabID == self.TEST:  # only for debuging
             resultsFile = '/tmp/kk.zip'
-            bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
+            # chimera
+            ## bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
+            # phenix
+            bestModelFileName = self._getExtraPath(os.path.join('results', '913_11c9a_ALPHAFOLD_cycle_1.pdb'))
             outFileNames.append(bestModelFileName)
             if not os.path.isfile(resultsFile):
                 print(f"ERROR: Test file {resultsFile} is not available")
@@ -507,20 +520,46 @@ session.logger.error('''{msg}''')
         # uncompress Data
         self.uncompress(resultsFile)
 
+        # now we can get the bestmodel for phenix
+        if colabID == self.PHENIX:
+            objId = self.getObjId()
+            modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
+                                                         filePattern='%d*.pdb' % objId)
+            bestModelFileName = modelsFns[0]
+            outFileNames.append(bestModelFileName)
+
         # should I show the results in chimera?
         if showChimera:
             # go to results directory and load all files called model_*_unrelaxed.pdb
             fnCmd = self._getExtraPath(os.path.join('results','results.cxc'))
             f = open(fnCmd, 'w')
-            modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
-                                                     filePattern='model_*_relaxed.pdb')
-            for modelFn in modelsFns:
-                f.write(f"open {modelFn}\n")
-            modelsFns = sorted(_findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
+            if colabID == self.CHIMERA21:
+                modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
+                                                         filePattern='model_*_relaxed.pdb')
+                for modelFn in modelsFns:
+                    f.write(f"open {modelFn}\n")
+                modelsFns = sorted(_findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
                                                      filePattern='model_*_unrelaxed.pdb'))
-            for modelFn in modelsFns:
-                f.write(f"open {modelFn}\n")
-            f.write("matchmaker #2-%d to #1\n" % len(modelFn))
+                for modelFn in modelsFns:
+                    f.write(f"open {modelFn}\n")
+                f.write("matchmaker #2-%d to #1\n" % (len(modelsFns)+1))
+            elif colabID == self.PHENIX:
+                objId = self.getObjId()
+                modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
+                                                         filePattern='%d*.pdb' % objId)
+                for modelFn in modelsFns:
+                    f.write(f"open {modelFn}\n")
+            elif colabID == self.TEST:
+                #chimera
+                # TODO
+                # phenix
+                objId = 913
+                modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
+                                                         filePattern='%d*.pdb' % objId)
+                for modelFn in modelsFns:
+                    f.write(f"open {modelFn}\n")
+            f.write("color bfactor palette alphafold\n")
+            f.write("key red:low orange: yellow: cornflowerblue: blue:high\n")
             f.close()
             # add files saved with scipionwrite to outputs
             args = fnCmd
@@ -557,6 +596,8 @@ session.logger.error('''{msg}''')
                     keyword = atomStructPath.split(".cif")[0].replace(".","_")
                 else:
                     keyword = atomStructPath.split(".pdb")[0].replace(".", "_")
+                if keyword[0].isdigit():  # keys can not be numbers
+                    keyword = "AS_" + keyword
                 kwargs = {keyword: pdb}
                 self._defineOutputs(**kwargs)
 
