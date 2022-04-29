@@ -20,10 +20,10 @@ while True:
     mouse.click(Button.left,1)
     mouse.position = CLICK
     mouse.click(Button.left,1)
-    mouse.position = CLICK
-    mouse.click(Button.left,1)
+    #mouse.position = CLICK
+    #mouse.click(Button.left,1)
     mouse.position = (oldPosition)
     mouse.click(Button.left,1)
     print('clicked')
 
-    time.sleep(5)
+    time.sleep(30)
