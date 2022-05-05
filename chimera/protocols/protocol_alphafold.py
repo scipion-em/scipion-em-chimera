@@ -83,7 +83,7 @@ class ProtImportAtomStructAlphafold(EMProtocol):
         form.addParam('source', params.EnumParam,
                       choices=['EBI Database', 
                                'Blast', 
-                               'Googl Colab', 
+                               'Google Colab', 
                                'Local Alphafold',
                                ],
                       display=params.EnumParam.DISPLAY_HLIST,
