@@ -81,10 +81,10 @@ class ProtImportAtomStructAlphafold(EMProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('source', params.EnumParam,
-                      choices=['Chimera', 
-                               'Phenix', 
-                               'colabfold', 
-                               'local alphafold',
+                      choices=['EBI Database', 
+                               'Blast', 
+                               'Googl Colab', 
+                               'Local Alphafold',
                                ],
                       display=params.EnumParam.DISPLAY_HLIST,
                       label="Source ",
