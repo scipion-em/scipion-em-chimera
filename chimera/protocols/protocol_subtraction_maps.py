@@ -623,8 +623,10 @@ class ChimeraSubtractionMaps(EMProtocol):
                     % (int(modelId) + 1, modelId, self.rangeDist))
 
     def getIdxRemoveResidues(self):
-        idxs = json.loads(getattr(self, 'residuesToRemove').get())['index'].split('-')
-        return idxs
+        resJson = getattr(self, 'residuesToRemove').get()
+        if resJson:
+            idxs = json.loads(resJson)['index'].split('-')
+            return idxs
 
 
     def _summary(self):
