@@ -174,7 +174,7 @@ class ChimeraSubtractionMaps(EMProtocol):
                          label="Residues to remove ", default=1,
                          important=True,
                          help="Select the first and last residues of the selected atomic "
-                              "structure chain that you want to remove.")
+                              "structure chain that you want to remove. \n(Use Ctrl for multiple selection)")
         form.addParam('applySymmetry', BooleanParam,
                       condition=('mapOrModel==%d' % 1),
                       label="Apply symmetry to the atomic structure:",
