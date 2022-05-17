@@ -166,7 +166,6 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
                                  'source == %d '  % (self.IMPORT_FROM_SEQ_BLAST,
                                                      self.IMPORT_REMOTE_ALPHAFOLD),
                        help="Input the aminoacid sequence to blast or send to Google-Colab")
-                       help="Input the aminoacid sequence to blast or send to colab lab")
         # if blast option selected then allow some expert extra parameters
         # alphafold search AAAAAAAAAAAAAAAAAAAAAAAAAAAAA  matrix BLOSUM90 cutoff 1e-3
         form.addParam('similarityMatrix', params.EnumParam,
