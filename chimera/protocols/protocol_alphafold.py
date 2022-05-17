@@ -27,6 +27,7 @@
 
 
 from asyncio.log import logger
+from email.policy import default
 from os.path import exists
 import os
 from re import template
@@ -62,10 +63,33 @@ class ProtImportAtomStructAlphafold(EMProtocol):
     IMPORT_LOCAL_ALPHAFOLD = 3
     INPUTFASTAFILE = 'seqs'    
 
-#   CHIMERA = 0
-    CHIMERA21 = 0
-    PHENIX = 1
-    TEST = 2
+    MATRIX_BLOSUM45 = 0
+    MATRIX_BLOSUM50 = 1
+    MATRIX_BLOSUM62 = 2
+    MATRIX_BLOSUM80 = 3
+    MATRIX_BLOSUM90 = 4
+    MATRIX_PAM30 = 5
+    MATRIX_PAM70 = 6
+    MATRIX_PAM250 = 7
+    MATRIX_IDENTITY = 8
+
+    matrixDict ={
+        MATRIX_BLOSUM45: 'BLOSUM45',
+        MATRIX_BLOSUM50: 'BLOSUM50', 
+        MATRIX_BLOSUM62: 'BLOSUM62', 
+        MATRIX_BLOSUM80: 'BLOSUM80', 
+        MATRIX_BLOSUM90: 'BLOSUM90', 
+        MATRIX_PAM30: 'PAM30', 
+        MATRIX_PAM70: 'PAM70', 
+        MATRIX_PAM250: 'PAM250', 
+        MATRIX_IDENTITY: 'IDENTITY',
+    }
+    matrixChoices = list(matrixDict.values())
+
+#   CHIMERA = 0 # No multimer option
+    CHIMERA21 = 0 # chimera with multimer option
+    PHENIX = 1 # phenis, I think it cannot process multimers but you may upload your pdb file
+    TEST = 2 # for testing purposes. It just copy a result file from the /tmp dir
 
     url = {}
 #    url[CHIMERA] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold_colab.ipynb"
@@ -78,7 +102,10 @@ class ProtImportAtomStructAlphafold(EMProtocol):
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
 
+# bblast
 # The matrix option indicates which amino acid similarity-matrix to use for scoring the hits (uppercase or lowercase can be used): BLOSUM45, BLOSUM50, BLOSUM62 (default), BLOSUM80, BLOSUM90, PAM30, PAM70, PAM250, or IDENTITY. The cutoff evalue is the maximum or least significant expectation value needed to qualify as a hit (default 1e-3). Results can also be limited with the maxSeqs option (default 100); this is the maximum number of unique sequences to return; more hits than this number may be obtained because multiple structures or other sequence-database entries may have the same sequence.
+# add pae to visualize resutls
+# add PAE file as scipion object, see https://alphafold.ebi.ac.uk/faq, How can I download and use the Predicted Aligned Error (PAE) file?
 
     def _defineParams(self, form):
         form.addSection(label='Input')
@@ -115,6 +142,27 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                                  'source == %d '  % (self.IMPORT_FROM_SEQ_BLAST,
                                                      self.IMPORT_REMOTE_ALPHAFOLD),
                        help="Input the aminoacid sequence to blast or send to colab lab")
+        # if blast option selected then allow some expert extra parameters
+        # alphafold search AAAAAAAAAAAAAAAAAAAAAAAAAAAAA  matrix BLOSUM90 cutoff 1e-3
+        form.addParam('similarityMatrix', params.EnumParam,
+                      choices=self.matrixChoices,
+                      default = self.MATRIX_BLOSUM62,
+                      expertLevel=params.LEVEL_ADVANCED,
+                      label='similarity-matrix', allowsNull=True,
+                      condition='source == %d '  % (self.IMPORT_FROM_SEQ_BLAST),
+                      help="The matrix option indicates which amino acid similarity-matrix"
+                             " to use for scoring the hits:"
+                             " BLOSUM45, BLOSUM50, BLOSUM62 (default), BLOSUM80, BLOSUM90, PAM30,"
+                             " PAM70, PAM250, or IDENTITY")
+        
+        form.addParam('cutoff', params.FloatParam,
+                        default = 0.001,
+                        expertLevel=params.LEVEL_ADVANCED,
+                        label='cutoff', allowsNull=True,
+                        condition='source == %d '  % (self.IMPORT_FROM_SEQ_BLAST),
+                        help="The cutoff evalue is the maximum or least significant"
+                             "expectation value needed to qualify as a hit (default 1e-3).")
+        
         # # list different colabs if source == IMPORT_REMOTE_ALPHAFOLD
         form.addParam('colabID', params.EnumParam,
                         choices=[#'Chimera (monomer)',
@@ -215,7 +263,11 @@ class ProtImportAtomStructAlphafold(EMProtocol):
             self._insertFunctionStep('_getModelFromEBI', uniProtId)
         elif self.source == self.IMPORT_FROM_SEQ_BLAST:
             inputSequence = self.inputSequence.get().getSequence()
-            self._insertFunctionStep('_getModelFromBlast', inputSequence, hideMessage)
+            cutoff = self.cutoff.get()
+            similarityMatrix = self.similarityMatrix.get()
+            
+            self._insertFunctionStep('_getModelFromBlast', 
+                  inputSequence, hideMessage, cutoff, similarityMatrix)
         elif self.source == self.IMPORT_REMOTE_ALPHAFOLD:
             inputSequence = self.inputSequence.get().getSequence()
             colabID = self.colabID.get()
@@ -242,7 +294,7 @@ class ProtImportAtomStructAlphafold(EMProtocol):
             print("WRONG source")
 
     def createInputFastaFile(self, seqs):
-        """Get sequence as string and create the corresponding fata file"""
+        """Get sequence as string and create the corresponding fasta file"""
         fastaFileName = self._getExtraPath(self.INPUTFASTAFILE + ".fasta")
         f = open(fastaFileName, "w")
         for id, seq in seqs:
@@ -347,7 +399,8 @@ cd {ALPHAFOLD_HOME}
         if not self.settings:
             raise Exception('No alphafold database settings found')
 
-    def _getModelFromBlast(self, sequence_data, hideMessage):
+    def _getModelFromBlast(self, sequence_data, hideMessage,
+                                 cutoff, similarityMatrix):
         """run a blast and search model for 5 closest matches
         :param text sequence_data: sequence in fasta format
 
@@ -368,7 +421,10 @@ cd {ALPHAFOLD_HOME}
 
         f.write("run(session, 'open %s')\n" % tmpFileName)
         f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
-        f.write("run(session, 'alphafold search %s')\n" % sequence_data)
+        print("matrix", self.matrixDict)
+        print("similarityMatrix", similarityMatrix, type(similarityMatrix))
+        matrix = self.matrixDict[similarityMatrix]
+        f.write(f"run(session, 'alphafold search {sequence_data} matrix {matrix} cutoff {cutoff}')\n")
         # Show help window
         if not hideMessage:
             msg = """Select desired homologous sequence and save the
