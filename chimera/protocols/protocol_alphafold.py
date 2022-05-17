@@ -54,10 +54,6 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
     a local alphafold NO docker instalation as
     described here: https://github.com/kalininalab/alphafold_non_docker
     """
-    @classmethod
-    def getClassPackageName(cls):
-        return "chimerax"
-
     _label = 'alphafold prediction'
     # SEQUENCEFILENAME = '_sequence.fasta'
     IMPORT_FROM_EBI = 0
@@ -82,13 +78,15 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
 
+# The matrix option indicates which amino acid similarity-matrix to use for scoring the hits (uppercase or lowercase can be used): BLOSUM45, BLOSUM50, BLOSUM62 (default), BLOSUM80, BLOSUM90, PAM30, PAM70, PAM250, or IDENTITY. The cutoff evalue is the maximum or least significant expectation value needed to qualify as a hit (default 1e-3). Results can also be limited with the maxSeqs option (default 100); this is the maximum number of unique sequences to return; more hits than this number may be obtained because multiple structures or other sequence-database entries may have the same sequence.
+
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('source', params.EnumParam,
-                      choices=['Download from EBI database with ChimeraX',
-                               'Phenix', 
-                               'ColabFold',
-                               'local AlphaFold2',
+                      choices=['EBI Database',
+                               'Blast',
+                               'Google Colab',
+                               'Local Alphafold',
                                ],
                       display=params.EnumParam.DISPLAY_HLIST,
                       label="Source ",
@@ -96,7 +94,7 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
                       help='Search alphafold model in:\n '
                            '* EBI database by uniprot ID\n '
                            '* EBI database by homologous (Blast)\n '
-                           '* Execute alphafold in Google-Colab\n'
+                           '* Execute alphafold in Google-colab'
                            '* Execute alphafold Locally (multimer supported)\n')
         form.addParam('uniProtId', params.StringParam,
                       condition='source == %d'  %
