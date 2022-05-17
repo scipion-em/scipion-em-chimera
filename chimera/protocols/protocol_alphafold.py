@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # **************************************************************************
-# *
-# * Authors:     Roberto Marabini 
+# * Authors:     Roberto Marabini
+# *              Marta Martinez
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -54,6 +54,15 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
     a local alphafold NO docker instalation as
     described here: https://github.com/kalininalab/alphafold_non_docker
     """
+
+    # To include this method in the Scipion model building menu as
+    # chimerax - alphafold prediction
+    # Otherwise it appears as chimera - alphafold prediction and
+    # you can't find the respective test when you search for it
+    @classmethod
+    def getClassPackageName(cls):
+        return "chimerax"
+
     _label = 'alphafold prediction'
     # SEQUENCEFILENAME = '_sequence.fasta'
     IMPORT_FROM_EBI = 0
@@ -83,19 +92,34 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('source', params.EnumParam,
-                      choices=['EBI Database',
-                               'Blast',
+                      choices=['EBI Database (identical sequence)',
+                               'EBI Database (homologous sequence)',
                                'Google Colab',
-                               'Local Alphafold',
+                               'Local AlphaFold',
                                ],
                       display=params.EnumParam.DISPLAY_HLIST,
-                      label="Source ",
+                      label="Source to retrieve the AlphaFold2 model:",
                       default=self.IMPORT_FROM_EBI,
-                      help='Search alphafold model in:\n '
-                           '* EBI database by uniprot ID\n '
-                           '* EBI database by homologous (Blast)\n '
-                           '* Execute alphafold in Google-colab'
-                           '* Execute alphafold Locally (multimer supported)\n')
+                      help='Retrieve the AlphaFold2 model from:\n '
+                           '* EBI database (identical sequence) in case your sequence '
+                           'is already included in the EBI database of AlphaFold2. This '
+                           'database covers the complete human proteome (including '
+                           'fragments for long proteins) and the proteomes of more than '
+                           '40 other key organisms, as well as the majority of manually '
+                           'curated UniProt entries. Since this database is continuously'
+                           ' updating, check the contents in https://alphafold.ebi.ac.uk/.\n '
+                           ' If the structure of your sequence is already included '
+                           'in the EBI database you can retrieve it writing the UniProt ID.\n '
+                           '* EBI Database (homologous sequence): In case the structure '
+                           'prediction of your sequence has not been included in the '
+                           'EBI database yet, a Blast will be launched against that database. '
+                           'According to the Blast searching parameters, which you can '
+                           'modify, some homologous sequences of your sequence will be '
+                           'retrieved and you can select one of them as close prediction '
+                           'of your sequence initial model.\n'
+                           '* Executing AlphaFold2 in Google-Colab taking advantage of '
+                           'ChimeraX or Phenix notebooks.\n'
+                           '* Executing AlphaFold2 Locally (multimer supported)\n')
         form.addParam('uniProtId', params.StringParam,
                       condition='source == %d'  %
                                 (self.IMPORT_FROM_EBI),
@@ -114,7 +138,7 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
                        condition='source == %d or '
                                  'source == %d '  % (self.IMPORT_FROM_SEQ_BLAST,
                                                      self.IMPORT_REMOTE_ALPHAFOLD),
-                       help="Input the aminoacid sequence to blast or send to colab lab")
+                       help="Input the aminoacid sequence to blast or send to Google-Colab")
         # # list different colabs if source == IMPORT_REMOTE_ALPHAFOLD
         form.addParam('colabID', params.EnumParam,
                         choices=[#'Chimera (monomer)',
@@ -128,12 +152,12 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
                         condition='source == %d ' % self.IMPORT_REMOTE_ALPHAFOLD,
                         help='Execute alphafold in Google-colab.\n'
                             '  Two notebooks are available from\n'
-                             'Chimera and Phenix respectively'
+                             'ChimeraX and Phenix, respectively'
                              )
         form.addParam('template', params.PointerParam, pointerClass="AtomStruct",
                       label='Use this template',
                       condition='source == %d and colabID == %d' % (self.IMPORT_REMOTE_ALPHAFOLD, self.PHENIX),
-                      help="Fill if you want to supply a PDB template to colabfold",
+                      help="Fill if you want to supply a PDB template to Google-Colab",
                       allowsNull=True,
                     )
         form.addParam('useTemplatesFromPDB', params.IntParam,
@@ -146,7 +170,7 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
                       pointerClass="Sequence", allowsNull=True,
                       label='Structures',
                       condition='source == %d '  % (self.IMPORT_LOCAL_ALPHAFOLD),
-                      help="Structures to be procesed by local Alphafold ")
+                      help="Structures to be procesed by local AlphaFold2 ")
 
         form.addParam('maxTemplateDate', params.StringParam,
                       label='Use Template until',
@@ -200,8 +224,8 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
                       help='If set to Yes no help message will be shown in chimera at start up.')
         form.addParam('showChimera', params.BooleanParam, default=True,
                       condition='source == %d' % (self.IMPORT_REMOTE_ALPHAFOLD),
-                      label='show results in chimera',
-                      help='Show results in chimera.')
+                      label='Show results in ChimeraX',
+                      help='Show results in ChimeraX.')
 
     def _getDefaultParallel(self):
         """This protocol doesn't have mpi version"""
