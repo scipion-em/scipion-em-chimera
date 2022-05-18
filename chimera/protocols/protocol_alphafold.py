@@ -102,7 +102,7 @@ class ProtImportAtomStructAlphafold(EMProtocol):
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
 
-# bblast
+# bblast- DONE
 # The matrix option indicates which amino acid similarity-matrix to use for scoring the hits (uppercase or lowercase can be used): BLOSUM45, BLOSUM50, BLOSUM62 (default), BLOSUM80, BLOSUM90, PAM30, PAM70, PAM250, or IDENTITY. The cutoff evalue is the maximum or least significant expectation value needed to qualify as a hit (default 1e-3). Results can also be limited with the maxSeqs option (default 100); this is the maximum number of unique sequences to return; more hits than this number may be obtained because multiple structures or other sequence-database entries may have the same sequence.
 # add pae to visualize resutls
 # add PAE file as scipion object, see https://alphafold.ebi.ac.uk/faq, How can I download and use the Predicted Aligned Error (PAE) file?
@@ -153,7 +153,7 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                       help="The matrix option indicates which amino acid similarity-matrix"
                              " to use for scoring the hits:"
                              " BLOSUM45, BLOSUM50, BLOSUM62 (default), BLOSUM80, BLOSUM90, PAM30,"
-                             " PAM70, PAM250, or IDENTITY")
+                             "  PAM70, PAM250, or IDENTITY")
         
         form.addParam('cutoff', params.FloatParam,
                         default = 0.001,
@@ -248,7 +248,7 @@ class ProtImportAtomStructAlphafold(EMProtocol):
                       help='If set to Yes no help message will be shown in chimera at start up.')
         form.addParam('showChimera', params.BooleanParam, default=True,
                       condition='source == %d' % (self.IMPORT_REMOTE_ALPHAFOLD),
-                      label='show results in chimera',
+                      label='Show results in chimera',
                       help='Show results in chimera.')
 
     def _getDefaultParallel(self):
