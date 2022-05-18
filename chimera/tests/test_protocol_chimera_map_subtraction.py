@@ -51,8 +51,7 @@ class TestImportData(TestImportBase):
     """
     pdbID = "5ni1"  # Haemoglobin atomic structure
     chainID = '{"model": 0, "chain": "A", "residues": 141}'
-    FirstResidue = '{"residue": 6, "ASP"}'
-    LastResidue = '{"residue": 10, "VAL"}'
+    removeResidues = '{"index": "6:10", "residues": "EEKSA"}'
     def _importVolume(self):
         args = {'filesPath': self.dsModBuild.getFile('volumes/emd_3488.map'),
                 'samplingRate': 1.05,
@@ -231,8 +230,7 @@ class TestChimeraSubtractMap(TestImportData):
                 'selectChain': True,
                 'selectStructureChain': self.chainID,
                 'removeResidues': True,
-                'firstResidueToRemove': self.FirstResidue,
-                'lastResidueToRemove': self.LastResidue,
+                'residuesToRemove': self.removeResidues,
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2,
@@ -293,8 +291,7 @@ class TestChimeraSubtractMap(TestImportData):
                 'selectChain': True,
                 'selectStructureChain': self.chainID,
                 'removeResidues': True,
-                'firstResidueToRemove': self.FirstResidue,
-                'lastResidueToRemove': self.LastResidue,
+                'residuesToRemove': self.removeResidues,
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2,
@@ -557,8 +554,7 @@ class TestChimeraSubtractMap(TestImportData):
                 'pdbFileToBeRefined': result,
                 'removeResidues': True,
                 'inputStructureChain': self.chainID,
-                'firstResidueToRemove': self.FirstResidue,
-                'lastResidueToRemove': self.LastResidue,
+                'residuesToRemove': self.removeResidues,
                 }
         protChimera2 = self.newProtocol(ChimeraSubtractionMaps, **args)
         protChimera2.setObjLabel('chimera subtract\n atomStruct-derived map\n '
@@ -722,8 +718,7 @@ class TestChimeraSubtractMap(TestImportData):
                 # 'selectStructureChain': self.chainID,
                 # 'removeResidues': True,
                 # 'inputStructureChain': self.chainID,
-                # 'firstResidueToRemove': self.FirstResidue,
-                # 'lastResidueToRemove': self.LastResidue,
+                # 'residuesToRemove': self.removeResidues,
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2,
@@ -789,8 +784,7 @@ class TestChimeraSubtractMap(TestImportData):
                 # 'selectStructureChain': self.chainID,
                 # 'removeResidues': True,
                 # 'inputStructureChain': self.chainID,
-                # 'firstResidueToRemove': self.FirstResidue,
-                # 'lastResidueToRemove': self.LastResidue,
+                # 'residuesToRemove': self.removeResidues,
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2,
@@ -865,8 +859,7 @@ class TestChimeraSubtractMap(TestImportData):
                 # 'selectStructureChain': self.chainID,
                 'removeResidues': True,
                 'inputStructureChain': self.chainID,
-                'firstResidueToRemove': self.FirstResidue,
-                'lastResidueToRemove': self.LastResidue,
+                'residuesToRemove': self.removeResidues,
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2,
@@ -941,8 +934,7 @@ class TestChimeraSubtractMap(TestImportData):
                 # 'selectStructureChain': self.chainID,
                 'removeResidues': True,
                 'inputStructureChain': self.chainID,
-                'firstResidueToRemove': self.FirstResidue,
-                'lastResidueToRemove': self.LastResidue,
+                'residuesToRemove': self.removeResidues,
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2
@@ -1018,8 +1010,7 @@ class TestChimeraSubtractMap(TestImportData):
                 # 'selectStructureChain': self.chainID,
                 'removeResidues': True,
                 'inputStructureChain': self.chainID,
-                'firstResidueToRemove': self.FirstResidue,
-                'lastResidueToRemove': self.LastResidue,
+                'residuesToRemove': self.removeResidues,
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2
@@ -1096,8 +1087,7 @@ class TestChimeraSubtractMap(TestImportData):
                 # 'selectStructureChain': self.chainID,
                 'removeResidues': True,
                 'inputStructureChain': self.chainID,
-                'firstResidueToRemove': self.FirstResidue,
-                'lastResidueToRemove': self.LastResidue,
+                'residuesToRemove': self.removeResidues,
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2
@@ -1174,8 +1164,7 @@ class TestChimeraSubtractMap(TestImportData):
                 # 'selectStructureChain': self.chainID,
                 'removeResidues': True,
                 'inputStructureChain': self.chainID,
-                'firstResidueToRemove': self.FirstResidue,
-                'lastResidueToRemove': self.LastResidue,
+                'residuesToRemove': self.removeResidues,
                 'applySymmetry': True,
                 'symmetryGroup': CHIMERA_CYCLIC,
                 'symmetryOrder': 2
