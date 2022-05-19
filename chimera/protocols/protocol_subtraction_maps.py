@@ -25,6 +25,8 @@
 # *
 # **************************************************************************
 
+import json
+
 from pwem import *
 from pwem.convert import Ccp4Header
 from pwem.objects import Volume
@@ -166,20 +168,13 @@ class ChimeraSubtractionMaps(EMProtocol):
                          label="Chain ", important=True,
                          help="Select a particular chain of the atomic "
                               "structure.")
-        form.addParam('firstResidueToRemove', StringParam,
+        form.addParam('residuesToRemove', StringParam,
                          condition=(('mapOrModel==%d and '
                                     'removeResidues==True') % 1),
-                         label="First residue to remove ", default=1,
+                         label="Residues to remove ", default=1,
                          important=True,
-                         help="Select the first residue of the selected atomic "
-                              "structure chain that you want to remove.")
-        form.addParam('lastResidueToRemove', StringParam,
-                         condition=(('mapOrModel==%d and '
-                                    'removeResidues==True') % 1),
-                         label="Last residue to remove ", default=2,
-                         important=True,
-                         help="Select the last residue of the selected atomic "
-                              "structure chain that you want to remove.")
+                         help="Select the first and last residues of the selected atomic "
+                              "structure chain that you want to remove. \n(Use Ctrl for multiple selection)")
         form.addParam('applySymmetry', BooleanParam,
                       condition=('mapOrModel==%d' % 1),
                       label="Apply symmetry to the atomic structure:",
@@ -398,12 +393,10 @@ class ChimeraSubtractionMaps(EMProtocol):
                         f.write("run(session,'scipionwrite #%d prefix zone_  ')\n" % modelIdZone)
 
                     if self.removeResidues == True:
-                        if (self.firstResidueToRemove.get() is not None and
-                                self.lastResidueToRemove.get() is not None):
-                            self.firstResidue = self.firstResidueToRemove.get().\
-                            split(":")[1].split(",")[0].strip()
-                            self.lastResidue = self.lastResidueToRemove.get(). \
-                                split(":")[1].split(",")[0].strip()
+                        idxRemove = self.getIdxRemoveResidues()
+                        if idxRemove is not None:
+                            self.firstResidue = idxRemove[0]
+                            self.lastResidue = idxRemove[1]
                             f.write("run(session,'sel #%d/%s:%d-%d')\n"
                                     % (modelAtomStructChain, self.selectedChain,
                                        int(self.firstResidue), int(self.lastResidue)))
@@ -426,8 +419,8 @@ class ChimeraSubtractionMaps(EMProtocol):
                                 f.write("run(session,'volume #%d level %f')\n" %
                                         (modelMapS, self.level))
                             if self.removeResidues == True:
-                                if (self.firstResidueToRemove.get() is not None and
-                                        self.lastResidueToRemove.get() is not None):
+                                idxRemove = self.getIdxRemoveResidues()
+                                if idxRemove is not None:
                                     f.write("run(session,'sel #%d:%d-%d')\n" %
                                             (modelAtomStructChainSym,
                                              int(self.firstResidue) - 10,
@@ -468,9 +461,8 @@ class ChimeraSubtractionMaps(EMProtocol):
                     f.write("run(session,'scipionwrite #%d prefix zone_  ')\n" % modelIdZone)
 
                 if self.removeResidues == True:
-                    if (self.inputStructureChain.get() is not None and
-                            self.firstResidueToRemove.get() is not None and
-                            self.lastResidueToRemove.get() is not None):
+                    idxRemove = self.getIdxRemoveResidues()
+                    if (self.inputStructureChain.get() is not None and idxRemove is not None):
                         chain = self.inputStructureChain.get()
                         self.selectedModel = chain.split(',')[0].split(':')[1].strip()
                         # TODO: Study problems with multimodels
@@ -487,10 +479,8 @@ class ChimeraSubtractionMaps(EMProtocol):
                                  os.path.basename(self.atomStructName)))
                         f.write("run(session,'sel #%d/%s')\n"
                                 % (modelAtomStruct, self.selectedChain))
-                        self.firstResidue = self.firstResidueToRemove.get(). \
-                            split(":")[1].split(",")[0].strip()
-                        self.lastResidue = self.lastResidueToRemove.get(). \
-                            split(":")[1].split(",")[0].strip()
+                        self.firstResidue = idxRemove[0]
+                        self.lastResidue = idxRemove[1]
                         f.write("run(session,'sel #%d/%s:%d-%d')\n"
                                 % (modelAtomStruct, self.selectedChain,
                                    int(self.firstResidue), int(self.lastResidue)))
@@ -511,9 +501,8 @@ class ChimeraSubtractionMaps(EMProtocol):
                         f.write("run(session, 'rename #4 id #%d')\n" % modelAtomStructChainSym)
                         f.write("run(session,'scipionwrite #%d prefix sym_ ')\n"
                                 % modelAtomStructChainSym)
-                        if (self.inputStructureChain.get() is not None and
-                                self.firstResidueToRemove.get() is not None and
-                                self.lastResidueToRemove.get() is not None):
+                        idxRemove = self.getIdxRemoveResidues()
+                        if (self.inputStructureChain.get() is not None and idxRemove is not None):
                             f.write("run(session, 'sel #%d/%s:%d-%d')\n" %
                                     (modelAtomStructChainSym,
                                      self.selectedChain,
@@ -632,6 +621,13 @@ class ChimeraSubtractionMaps(EMProtocol):
 
         f.write("run(session,'delete #%d & #%d #>%d')\n"
                     % (int(modelId) + 1, modelId, self.rangeDist))
+
+    def getIdxRemoveResidues(self):
+        resJson = getattr(self, 'residuesToRemove').get()
+        if resJson:
+            idxs = json.loads(resJson)['index'].split('-')
+            return idxs
+
 
     def _summary(self):
         summary = []
