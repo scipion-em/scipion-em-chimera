@@ -350,7 +350,7 @@ In the particular case of test testImportSequence5
 you should select a possible template for the target, 
 for example 5wt9, write in the line command "open 5wt9"  
 
-1) when chimerax opens select (in main menu)
+1) when Chimerax opens select (in main menu)
 Tools -> Sequence -> Modeller Comparative
 2) a new pop up windows appears called 'Modeller Comparative'
 3) template(s) are the Sequence alignments
@@ -366,13 +366,13 @@ in the aligned_1.fasta)
 
 5) you will need a key for modeller website
 6) press OK
-7) In main chimerax window you will see (botton) the progression of the process,
+7) In main Chimerax window you will see (botton) the progression of the process,
 e.g. 1 of 5 models generated, 2 of 5 models generated, and so on
 8) In command line rename the #id of the model in you are interested, 
 for example from #3.1 to #4 type:
 rename #3.1 id #4, enter>
-9) In command line type:  scipionwrite #4 prefix mmodel_3.1_,enter>
-9) close chimerax 
+9) In command line type:  scipionwrite #4 prefix model_3.1_,enter>
+10) Close Chimerax 
 ************************************************"""
     DISABLE_TEST = True
 
