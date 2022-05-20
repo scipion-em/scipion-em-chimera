@@ -25,41 +25,32 @@
 # *
 # **************************************************************************
 
-from pwem.wizards import GetStructureChainsWizard, pwobj, emconv
+from pwem.wizards import SelectChainWizard, SelectResidueWizard
 from .protocols import ChimeraModelFromTemplate, ChimeraSubtractionMaps
 from .editList import EntryGrid
 from .protocols.protocol_contacts import ChimeraProtContacts
 from pyworkflow.wizard import Wizard
-from pyworkflow.gui.tree import ListTreeProviderString
-from pyworkflow.gui import dialog
 
 
-class GetStructureChainsWizardChimera(GetStructureChainsWizard):
-    _targets = [(ChimeraModelFromTemplate, ['inputStructureChain']),
-                (ChimeraSubtractionMaps, ['inputStructureChain'])]
+SelectChainWizard().addTarget(protocol=ChimeraModelFromTemplate,
+                              targets=['inputStructureChain'],
+                              inputs=['pdbFileToBeRefined'],
+                              outputs=['inputStructureChain'])
 
-class GetStructureChains2WizardChimera(GetStructureChainsWizard):
-    _targets = [(ChimeraSubtractionMaps, ['selectStructureChain']),
-                (ChimeraModelFromTemplate, ['selectStructureChain'])]
+SelectChainWizard().addTarget(protocol=ChimeraSubtractionMaps,
+                              targets=['inputStructureChain'],
+                              inputs=['pdbFileToBeRefined'],
+                              outputs=['inputStructureChain'])
 
-    def show(self, form, *params):
-        protocol = form.protocol
-        try:
-            modelsLength, modelsSeq = self.getModelsChainsStep(protocol)
-        except Exception as e:
-            print("ERROR: ", e)
-            return
+SelectChainWizard().addTarget(protocol=ChimeraModelFromTemplate,
+                              targets=['selectStructureChain'],
+                              inputs=['pdbFileToBeRefined'],
+                              outputs=['selectStructureChain'])
 
-        self.editionListOfChains(modelsLength)
-        finalChainList = []
-        for i in self.chainList:
-            finalChainList.append(pwobj.String(i))
-        provider = ListTreeProviderString(finalChainList)
-        dlg = dialog.ListDialog(form.root, "Model chains", provider,
-                                "Select one of the chains (model, chain, "
-                                "number of chain residues)")
-
-        form.setVar('selectStructureChain', dlg.values[0].get())
+SelectChainWizard().addTarget(protocol=ChimeraSubtractionMaps,
+                              targets=['selectStructureChain'],
+                              inputs=['pdbFileToBeRefined'],
+                              outputs=['selectStructureChain'])
 
 
 class ProtContactsWizardChimera(Wizard):
@@ -72,63 +63,16 @@ class ProtContactsWizardChimera(Wizard):
 
     def show(self, form, *args):
         cols = ['label']
-        chainWizard = GetStructureChainsWizard()
+        chainWizard = SelectChainWizard()
         protocol = form.protocol
-        models, modelsFirstResidue = chainWizard.getModelsChainsStep(protocol)
+        models, modelsFirstResidue = chainWizard.getModelsChainsStep(protocol, 'pdbFileToBeRefined')
         rows = []
         for chainID, lenResidues in sorted(models[0].items()):
             rows.append(str(chainID))
 
         EntryGrid(cols, rows, form, self.recibingAttribute)
 
-class GetChainResiduesWizardChimera(GetStructureChainsWizard):
-    _targets = [(ChimeraSubtractionMaps, ['firstResidueToRemove'])]
-
-    def editionListOfResidues(self, modelsFirstResidue, model, chain):
-        self.residueList = []
-        for modelID, chainDic in modelsFirstResidue.items():
-            if int(model) == modelID:
-                for chainID, seq_number in chainDic.items():
-                    if chain == chainID:
-                        for i in seq_number:
-                            self.residueList.append(
-                                '{"residue": %d, "%s"}' % (i[0], str(i[1])))
-
-    def getResidues(self, form):
-        protocol = form.protocol
-        try:
-            modelsLength, modelsFirstResidue = self.getModelsChainsStep(protocol)
-        except Exception as e:
-            print("ERROR: ", e)
-            return
-        if protocol.selectStructureChain.get() is not None:
-            selection = protocol.selectStructureChain.get()
-        else:
-            selection = protocol.inputStructureChain.get()
-        model = selection.split(',')[0].split(':')[1].strip()
-        chain = selection.split(',')[1].split(':')[1].split('"')[1]
-        self.editionListOfResidues(modelsFirstResidue, model, chain)
-        finalResiduesList = []
-        for i in self.residueList:
-            finalResiduesList.append(pwobj.String(i))
-        return finalResiduesList
-
-    def show(self, form, *params):
-        finalResiduesList = self.getResidues(form)
-        provider = ListTreeProviderString(finalResiduesList)
-        dlg = dialog.ListDialog(form.root, "Chain residues", provider,
-                                "Select one residue (residue number, "
-                                "residue name)")
-        form.setVar('firstResidueToRemove', dlg.values[0].get())
-
-class GetChainResidues2WizardChimera(GetChainResiduesWizardChimera):
-    _targets = [(ChimeraSubtractionMaps, ['lastResidueToRemove'])]
-
-    def show(self, form, *params):
-        finalResiduesList = self.getResidues(form)
-        provider = ListTreeProviderString(finalResiduesList)
-        dlg = dialog.ListDialog(form.root, "Chain residues", provider,
-                                "Select one residue (residue number, "
-                                "residue name)")
-        form.setVar('lastResidueToRemove', dlg.values[0].get())
-
+SelectResidueWizard().addTarget(protocol=ChimeraSubtractionMaps,
+                                 targets=['residuesToRemove'],
+                                 inputs=['pdbFileToBeRefined', ['selectStructureChain', 'inputStructureChain']],
+                                 outputs=['residuesToRemove'])
