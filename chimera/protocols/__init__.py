@@ -30,4 +30,4 @@ from .protocol_base import ChimeraProtBase
 from .protocol_modeller_search import ChimeraModelFromTemplate
 from .protocol_contacts import ChimeraProtContacts
 from .protocol_subtraction_maps import ChimeraSubtractionMaps
-from .protocol_alphafold import ProtImportAtomStructAlphafold
+from .protocol_alphafold import ChimeraImportAtomStructAlphafold
