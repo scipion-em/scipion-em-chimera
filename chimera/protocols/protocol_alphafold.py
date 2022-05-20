@@ -421,8 +421,6 @@ cd {ALPHAFOLD_HOME}
 
         f.write("run(session, 'open %s')\n" % tmpFileName)
         f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
-        print("matrix", self.matrixDict)
-        print("similarityMatrix", similarityMatrix, type(similarityMatrix))
         matrix = self.matrixDict[similarityMatrix]
         f.write(f"run(session, 'alphafold search {sequence_data} matrix {matrix} cutoff {cutoff}')\n")
         # Show help window
@@ -507,7 +505,7 @@ session.logger.error('''{msg}''')
         # 2 CASE 
         # phenix reuse result, use PDB
         ###
-        elif colabID == self.PHENIX:  
+        elif colabID == self.PHENIX:
             counter = 0
             objId = self.getObjId()
             injectJavaScriptList.append(
@@ -532,13 +530,14 @@ session.logger.error('''{msg}''')
                         document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").dispatchEvent(new Event("change"));
                     '''
                 )
-                if template is not None:
-                    injectJavaScriptList.append(            
-                        '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click() +
-                           document.querySelector("input[aria-labelledby=formwidget-7-label]").dispatchEvent(new Event("change"));
-                           '''
-                    )
-                    transferFn = template
+            if template is not None:
+                print("TEMPLATE IS NOT NONE, INJECT JAVA SCRIPT")
+                injectJavaScriptList.append(            
+                    '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click() +
+                        document.querySelector("input[aria-labelledby=formwidget-7-label]").dispatchEvent(new Event("change"));
+                        '''
+                )
+                transferFn = template
             # FIRST
             counter = 5
 
