@@ -556,13 +556,13 @@ session.logger.error('''{msg}''')
                         document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").dispatchEvent(new Event("change"));
                     '''
                 )
-                if template is not None:
-                    injectJavaScriptList.append(            
-                        '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click() +
-                           document.querySelector("input[aria-labelledby=formwidget-7-label]").dispatchEvent(new Event("change"));
-                           '''
-                    )
-                    transferFn = template
+            if template is not None:
+                injectJavaScriptList.append(
+                    '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click() +
+                       document.querySelector("input[aria-labelledby=formwidget-7-label]").dispatchEvent(new Event("change"));
+                       '''
+                )
+                transferFn = template
             # FIRST
             counter = 5
 
