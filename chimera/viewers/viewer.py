@@ -37,7 +37,7 @@ from ..protocols.protocol_fit import ChimeraProtRigidFit
 from ..protocols.protocol_operate import ChimeraProtOperate
 from ..protocols.protocol_restore import ChimeraProtRestore
 from ..protocols.protocol_modeller_search import ChimeraModelFromTemplate
-from ..protocols.protocol_alphafold import ProtImportAtomStructAlphafold
+from ..protocols.protocol_alphafold import ChimeraImportAtomStructAlphafold
 
 from pwem.viewers.viewer_chimera import (Chimera,
                                          sessionFile)
@@ -207,7 +207,7 @@ class ChimeraSubtractionMapsViewer(ChimeraViewerBase):
 
 class ChimeraAlphafoldViewer(Viewer):
     _label = 'viewer alphafold'
-    _targets = [ProtImportAtomStructAlphafold]
+    _targets = [ChimeraImportAtomStructAlphafold]
     def _visualize(self, obj, **args):
         # create axis file
         models = 1

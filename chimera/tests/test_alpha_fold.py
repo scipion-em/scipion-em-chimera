@@ -25,7 +25,7 @@
 from os.path import exists
 from collections import Counter
 
-from ..protocols import ProtImportAtomStructAlphafold
+from ..protocols import ChimeraImportAtomStructAlphafold
 from pyworkflow.tests import BaseTest, setupTestProject
 import pwem.protocols as emprot
 
@@ -35,7 +35,7 @@ class TestBase(BaseTest):
     def setUpClass(cls):
         setupTestProject(cls)
 
-class TestAlphafoldImport(TestBase):
+class TestChimeraAlphafoldImport(TestBase):
 
     def _auxiliaryFunctio(self, pdbID):
         pass 
@@ -43,10 +43,10 @@ class TestAlphafoldImport(TestBase):
     def testImportStructureFromEBIbyUniprotID(self):
         """Import atom struct prdiction by alphafold from EBI using uniprotid"""
         uniProtID = 'A0A087WSY6'
-        args = {'source': ProtImportAtomStructAlphafold.IMPORT_FROM_EBI,
+        args = {'source': ChimeraImportAtomStructAlphafold.IMPORT_FROM_EBI,
                 'uniProtId': uniProtID
         }
-        protImportAlpha = self.newProtocol(ProtImportAtomStructAlphafold, **args)
+        protImportAlpha = self.newProtocol(ChimeraImportAtomStructAlphafold, **args)
         protImportAlpha.setObjLabel('import from EBI with \n uniProtID %s' % uniProtID)
         self.launchProtocol(protImportAlpha)
         self.assertTrue(exists(protImportAlpha.A0A087WSY6.getFileName()))
@@ -54,10 +54,10 @@ class TestAlphafoldImport(TestBase):
     def testImportStructureFromEBIbyUniprotIDFail(self):
         """Import atom struct prdiction by alphafold from EBI using uniprotid"""
         uniProtID = 'AAAAAAAAA' # this ID does not exist
-        args = {'source': ProtImportAtomStructAlphafold.IMPORT_FROM_EBI,
+        args = {'source': ChimeraImportAtomStructAlphafold.IMPORT_FROM_EBI,
                 'uniProtId': uniProtID
         }
-        protImportAlpha = self.newProtocol(ProtImportAtomStructAlphafold, **args)
+        protImportAlpha = self.newProtocol(ChimeraImportAtomStructAlphafold, **args)
         protImportAlpha.setObjLabel('import from EBI with \n INVALID uniProtID %s' % uniProtID)
         with self.assertRaises(Exception) as context:
             self.launchProtocol(protImportAlpha)
@@ -84,12 +84,12 @@ class TestAlphafoldImport(TestBase):
         extraCommands += "run(session, 'scipionwrite #2 prefix DONOTSAVESESSION_')\n"
         extraCommands += "run(session, 'exit')\n"
 
-        args = {'source': ProtImportAtomStructAlphafold.IMPORT_FROM_SEQ_BLAST,
+        args = {'source': ChimeraImportAtomStructAlphafold.IMPORT_FROM_SEQ_BLAST,
                 'inputSequence': sequence,
                 'hideMessage': True,
                 'extraCommands': extraCommands
                 }
-        prot1 = self.newProtocol(ProtImportAtomStructAlphafold, **args)
+        prot1 = self.newProtocol(ChimeraImportAtomStructAlphafold, **args)
         prot1.setObjLabel('Alpha: Run blast \n')
         self.launchProtocol(prot1)
         self.assertTrue(exists(prot1.DONOTSAVESESSION_Atom_struct__2_000054.getFileName()))
@@ -121,12 +121,12 @@ class TestAlphafoldImport(TestBase):
         sequence = prot.outputSequence
         extraCommands = "run(session, 'exit')\n"
 
-        args = {'source': ProtImportAtomStructAlphafold.IMPORT_REMOTE_ALPHAFOLD,
+        args = {'source': ChimeraImportAtomStructAlphafold.IMPORT_REMOTE_ALPHAFOLD,
                 'inputSequence': sequence,
                 'hideMessage': True,
                 'extraCommands': extraCommands
                 }
-        prot1 = self.newProtocol(ProtImportAtomStructAlphafold, **args)
+        prot1 = self.newProtocol(ChimeraImportAtomStructAlphafold, **args)
         prot1.setObjLabel('execute colabs\n')
         self.launchProtocol(prot1)
 
@@ -154,7 +154,7 @@ class TestAlphafoldImport(TestBase):
         sequence = prot.outputSequence
         listSeq = [sequence, sequence]
         extraCommands = "run(session, 'exit')\n"
-        args = {'source': ProtImportAtomStructAlphafold.IMPORT_LOCAL_ALPHAFOLD,
+        args = {'source': ChimeraImportAtomStructAlphafold.IMPORT_LOCAL_ALPHAFOLD,
                 'inputSequenceS': listSeq,
                 'doGpu': True,
                 'gpusToUse': 1,
@@ -162,6 +162,6 @@ class TestAlphafoldImport(TestBase):
                 'hideMessage': True,
                 'extraCommands': extraCommands
                 }
-        prot1 = self.newProtocol(ProtImportAtomStructAlphafold, **args)
+        prot1 = self.newProtocol(ChimeraImportAtomStructAlphafold, **args)
         prot1.setObjLabel('execute local alphafold\n')
         self.launchProtocol(prot1)
