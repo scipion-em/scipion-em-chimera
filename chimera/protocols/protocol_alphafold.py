@@ -111,7 +111,7 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
 
-# bblast
+# bblast- DONE
 # The matrix option indicates which amino acid similarity-matrix to use for scoring the hits (uppercase or lowercase can be used): BLOSUM45, BLOSUM50, BLOSUM62 (default), BLOSUM80, BLOSUM90, PAM30, PAM70, PAM250, or IDENTITY. The cutoff evalue is the maximum or least significant expectation value needed to qualify as a hit (default 1e-3). Results can also be limited with the maxSeqs option (default 100); this is the maximum number of unique sequences to return; more hits than this number may be obtained because multiple structures or other sequence-database entries may have the same sequence.
 # add pae to visualize resutls
 # add PAE file as scipion object, see https://alphafold.ebi.ac.uk/faq, How can I download and use the Predicted Aligned Error (PAE) file?
@@ -167,7 +167,6 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
                                                      self.IMPORT_REMOTE_ALPHAFOLD),
                        help="Input the aminoacid sequence to blast or send to Google-Colab")
         # if blast option selected then allow some expert extra parameters
-        # alphafold search AAAAAAAAAAAAAAAAAAAAAAAAAAAAA  matrix BLOSUM90 cutoff 1e-3
         form.addParam('similarityMatrix', params.EnumParam,
                       choices=self.matrixChoices,
                       default = self.MATRIX_BLOSUM62,
@@ -445,8 +444,6 @@ cd {ALPHAFOLD_HOME}
 
         f.write("run(session, 'open %s')\n" % tmpFileName)
         f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
-        print("matrix", self.matrixDict)
-        print("similarityMatrix", similarityMatrix, type(similarityMatrix))
         matrix = self.matrixDict[similarityMatrix]
         f.write(f"run(session, 'alphafold search {sequence_data} matrix {matrix} cutoff {cutoff}')\n")
         # Show help window
@@ -531,7 +528,7 @@ session.logger.error('''{msg}''')
         # 2 CASE 
         # phenix reuse result, use PDB
         ###
-        elif colabID == self.PHENIX:  
+        elif colabID == self.PHENIX:
             counter = 0
             objId = self.getObjId()
             injectJavaScriptList.append(
@@ -557,10 +554,11 @@ session.logger.error('''{msg}''')
                     '''
                 )
             if template is not None:
+                print("TEMPLATE IS NOT NONE, INJECT JAVA SCRIPT")
                 injectJavaScriptList.append(
                     '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click() +
-                       document.querySelector("input[aria-labelledby=formwidget-7-label]").dispatchEvent(new Event("change"));
-                       '''
+                        document.querySelector("input[aria-labelledby=formwidget-7-label]").dispatchEvent(new Event("change"));
+                        '''
                 )
                 transferFn = template
             # FIRST
@@ -633,13 +631,21 @@ session.logger.error('''{msg}''')
                     f.write(f"open {modelFn}\n")
             elif colabID == self.TEST:
                 #chimera
-                # TODO
-                # phenix
-                objId = 913
                 modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
-                                                         filePattern='%d*.pdb' % objId)
+                                                         filePattern='model_*_relaxed.pdb')
                 for modelFn in modelsFns:
                     f.write(f"open {modelFn}\n")
+                modelsFns = sorted(_findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')),
+                                                     filePattern='model_*_unrelaxed.pdb'))
+                for modelFn in modelsFns:
+                    f.write(f"open {modelFn}\n")
+                f.write("matchmaker #2-%d to #1\n" % (len(modelsFns)+1))
+                # phenix
+                #objId = 913
+                #modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')),
+                #                                         filePattern='%d*.pdb' % objId)
+                #for modelFn in modelsFns:
+                #    f.write(f"open {modelFn}\n")
             f.write("color bfactor palette alphafold\n")
             f.write("key red:low orange: yellow: cornflowerblue: blue:high\n")
             f.close()

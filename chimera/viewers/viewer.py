@@ -42,7 +42,7 @@ from ..protocols.protocol_alphafold import ChimeraImportAtomStructAlphafold
 from pwem.viewers.viewer_chimera import (Chimera,
                                          sessionFile)
 from pyworkflow.viewer import DESKTOP_TKINTER, Viewer
-
+from chimera.objects import PAE
 
 class ChimeraViewerBase(Viewer):
     """ Visualize the output of protocols protocol_fit and protocol_operate """
@@ -255,14 +255,17 @@ class ChimeraAlphafoldViewer(Viewer):
                 database_names=["sequence_1_mgnify", 
                                 "sequence_1_smallbfd", 
                                 "sequence_1_uniref90"]
+                paeFile = "best_model_pae.json"
             elif self.protocol.colabID.get() == self.protocol.TEST:
                 database_names=["sequence_1_mgnify", 
                                 "sequence_1_smallbfd", 
                                 "sequence_1_uniref90"]
-            self.plot_alignment_coverage(database_names=database_names)
+                paeFile = "best_model_pae.json"
+            self.plot_alignment_coverage(database_names=database_names,
+                                         paeFile = paeFile)
         return []
 
-    def plot_alignment_coverage(self, database_names=["mgnify", "smallbfd", "uniref90"]):
+    def plot_alignment_coverage(self, database_names=["mgnify", "smallbfd", "uniref90"], paeFile = None):
         def read_alignments(database_names, output_dir):
             alignments, deletions = [], []
             from os import path
@@ -279,25 +282,36 @@ class ChimeraAlphafoldViewer(Viewer):
                     deletions.append(dcounts)
             return alignments, deletions
 
-        def _plot_alignment_coverage(alignments):
+        def _plot_alignment_coverage(alignments, paeMatrix):
             counts = alignment_coverage(alignments)
             if counts is None:
                 return
             import matplotlib.pyplot as plt
-            fig = plt.figure(figsize=(12, 3))
+            fig1 = plt.figure(1, figsize=(12, 3))
             plt.title('Number of Aligned Sequences with no Gap for each Residue Position')
             x = range(1, len(counts)+1) # Start residue numbers at 1, not 0.
             plt.plot(x, counts, color='black')
             plt.xlabel('Residue number')
             plt.ylabel('Coverage')
+            fig2 = plt.figure(2, figsize=(12, 3))
+            plt.title('Predicted aligned error\n Expected position error (Ångströms)')
+            plt.xlabel('Scored resisue')
+            plt.ylabel('Aligned residue')
+    
+            if paeMatrix is None:
+                raise("matrix is None. I cannot plot a empty matrix")
+            else:
+                plt.imshow(paeMatrix, interpolation='none', cmap='Greens_r')
+                plt.colorbar()
             plt.show()
 
+
         def alignment_coverage(alignments):
+            from numpy import zeros, int32
             counts = None
             for alignment in alignments:
                 for line in alignment:
                     if counts is None:
-                        from numpy import zeros, int32
                         counts = zeros((len(line),), int32)
                     for i,c in enumerate(line):
                         if c != '-':
@@ -306,4 +320,8 @@ class ChimeraAlphafoldViewer(Viewer):
 
         output_dir = self.protocol._getExtraPath('results')
         alignments, deletions = read_alignments(database_names, output_dir)
-        _plot_alignment_coverage(alignments)
+        paeFile = os.path.abspath(self.protocol._getExtraPath(os.path.join('results', paeFile)))
+        paeObject = PAE(filename=paeFile)
+        paeObject.read()
+        paeMatrix = paeObject.getMatrix()
+        _plot_alignment_coverage(alignments, paeMatrix)
