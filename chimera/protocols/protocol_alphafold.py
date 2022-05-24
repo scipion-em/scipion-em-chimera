@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # **************************************************************************
-# *
-# * Authors:     Roberto Marabini 
+# * Authors:     Roberto Marabini
+# *              Marta Martinez
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -55,6 +55,15 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
     a local alphafold NO docker instalation as
     described here: https://github.com/kalininalab/alphafold_non_docker
     """
+
+    # To include this method in the Scipion model building menu as
+    # chimerax - alphafold prediction
+    # Otherwise it appears as chimera - alphafold prediction and
+    # you can't find the respective test when you search for it
+    @classmethod
+    def getClassPackageName(cls):
+        return "chimerax"
+
     _label = 'alphafold prediction'
     # SEQUENCEFILENAME = '_sequence.fasta'
     IMPORT_FROM_EBI = 0
@@ -75,13 +84,13 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
 
     matrixDict ={
         MATRIX_BLOSUM45: 'BLOSUM45',
-        MATRIX_BLOSUM50: 'BLOSUM50', 
-        MATRIX_BLOSUM62: 'BLOSUM62', 
-        MATRIX_BLOSUM80: 'BLOSUM80', 
-        MATRIX_BLOSUM90: 'BLOSUM90', 
-        MATRIX_PAM30: 'PAM30', 
-        MATRIX_PAM70: 'PAM70', 
-        MATRIX_PAM250: 'PAM250', 
+        MATRIX_BLOSUM50: 'BLOSUM50',
+        MATRIX_BLOSUM62: 'BLOSUM62',
+        MATRIX_BLOSUM80: 'BLOSUM80',
+        MATRIX_BLOSUM90: 'BLOSUM90',
+        MATRIX_PAM30: 'PAM30',
+        MATRIX_PAM70: 'PAM70',
+        MATRIX_PAM250: 'PAM250',
         MATRIX_IDENTITY: 'IDENTITY',
     }
     matrixChoices = list(matrixDict.values())
@@ -102,7 +111,7 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
     def __init__(self, **args):
         EMProtocol.__init__(self, **args)
 
-# bblast
+# bblast- DONE
 # The matrix option indicates which amino acid similarity-matrix to use for scoring the hits (uppercase or lowercase can be used): BLOSUM45, BLOSUM50, BLOSUM62 (default), BLOSUM80, BLOSUM90, PAM30, PAM70, PAM250, or IDENTITY. The cutoff evalue is the maximum or least significant expectation value needed to qualify as a hit (default 1e-3). Results can also be limited with the maxSeqs option (default 100); this is the maximum number of unique sequences to return; more hits than this number may be obtained because multiple structures or other sequence-database entries may have the same sequence.
 # add pae to visualize resutls
 # add PAE file as scipion object, see https://alphafold.ebi.ac.uk/faq, How can I download and use the Predicted Aligned Error (PAE) file?
@@ -110,19 +119,34 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
     def _defineParams(self, form):
         form.addSection(label='Input')
         form.addParam('source', params.EnumParam,
-                      choices=['EBI Database',
-                               'Blast',
+                      choices=['EBI Database (identical sequence)',
+                               'EBI Database (homologous sequence)',
                                'Google Colab',
-                               'Local Alphafold',
+                               'Local AlphaFold',
                                ],
                       display=params.EnumParam.DISPLAY_HLIST,
-                      label="Source ",
+                      label="Source to retrieve the AlphaFold2 model:",
                       default=self.IMPORT_FROM_EBI,
-                      help='Search alphafold model in:\n '
-                           '* EBI database by uniprot ID\n '
-                           '* EBI database by homologous (Blast)\n '
-                           '* Execute alphafold in Google-colab'
-                           '* Execute alphafold Locally (multimer supported)\n')
+                      help='Retrieve the AlphaFold2 model from:\n '
+                           '* EBI database (identical sequence) in case your sequence '
+                           'is already included in the EBI database of AlphaFold2. This '
+                           'database covers the complete human proteome (including '
+                           'fragments for long proteins) and the proteomes of more than '
+                           '40 other key organisms, as well as the majority of manually '
+                           'curated UniProt entries. Since this database is continuously'
+                           ' updating, check the contents in https://alphafold.ebi.ac.uk/.\n '
+                           ' If the structure of your sequence is already included '
+                           'in the EBI database you can retrieve it writing the UniProt ID.\n '
+                           '* EBI Database (homologous sequence): In case the structure '
+                           'prediction of your sequence has not been included in the '
+                           'EBI database yet, a Blast will be launched against that database. '
+                           'According to the Blast searching parameters, which you can '
+                           'modify, some homologous sequences of your sequence will be '
+                           'retrieved and you can select one of them as close prediction '
+                           'of your sequence initial model.\n'
+                           '* Executing AlphaFold2 in Google-Colab taking advantage of '
+                           'ChimeraX or Phenix notebooks.\n'
+                           '* Executing AlphaFold2 Locally (multimer supported)\n')
         form.addParam('uniProtId', params.StringParam,
                       condition='source == %d'  %
                                 (self.IMPORT_FROM_EBI),
@@ -141,9 +165,8 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
                        condition='source == %d or '
                                  'source == %d '  % (self.IMPORT_FROM_SEQ_BLAST,
                                                      self.IMPORT_REMOTE_ALPHAFOLD),
-                       help="Input the aminoacid sequence to blast or send to colab lab")
+                       help="Input the aminoacid sequence to blast or send to Google-Colab")
         # if blast option selected then allow some expert extra parameters
-        # alphafold search AAAAAAAAAAAAAAAAAAAAAAAAAAAAA  matrix BLOSUM90 cutoff 1e-3
         form.addParam('similarityMatrix', params.EnumParam,
                       choices=self.matrixChoices,
                       default = self.MATRIX_BLOSUM62,
@@ -154,7 +177,7 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
                              " to use for scoring the hits:"
                              " BLOSUM45, BLOSUM50, BLOSUM62 (default), BLOSUM80, BLOSUM90, PAM30,"
                              " PAM70, PAM250, or IDENTITY")
-        
+
         form.addParam('cutoff', params.FloatParam,
                         default = 0.001,
                         expertLevel=params.LEVEL_ADVANCED,
@@ -162,7 +185,7 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
                         condition='source == %d '  % (self.IMPORT_FROM_SEQ_BLAST),
                         help="The cutoff evalue is the maximum or least significant"
                              "expectation value needed to qualify as a hit (default 1e-3).")
-        
+
         # # list different colabs if source == IMPORT_REMOTE_ALPHAFOLD
         form.addParam('colabID', params.EnumParam,
                         choices=[#'Chimera (monomer)',
@@ -176,12 +199,12 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
                         condition='source == %d ' % self.IMPORT_REMOTE_ALPHAFOLD,
                         help='Execute alphafold in Google-colab.\n'
                             '  Two notebooks are available from\n'
-                             'Chimera and Phenix respectively'
+                             'ChimeraX and Phenix, respectively'
                              )
         form.addParam('template', params.PointerParam, pointerClass="AtomStruct",
                       label='Use this template',
                       condition='source == %d and colabID == %d' % (self.IMPORT_REMOTE_ALPHAFOLD, self.PHENIX),
-                      help="Fill if you want to supply a PDB template to colabfold",
+                      help="Fill if you want to supply a PDB template to Google-Colab",
                       allowsNull=True,
                     )
         form.addParam('useTemplatesFromPDB', params.IntParam,
@@ -194,7 +217,7 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
                       pointerClass="Sequence", allowsNull=True,
                       label='Structures',
                       condition='source == %d '  % (self.IMPORT_LOCAL_ALPHAFOLD),
-                      help="Structures to be procesed by local Alphafold ")
+                      help="Structures to be procesed by local AlphaFold2 ")
 
         form.addParam('maxTemplateDate', params.StringParam,
                       label='Use Template until',
@@ -248,8 +271,8 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
                       help='If set to Yes no help message will be shown in chimera at start up.')
         form.addParam('showChimera', params.BooleanParam, default=True,
                       condition='source == %d' % (self.IMPORT_REMOTE_ALPHAFOLD),
-                      label='show results in chimera',
-                      help='Show results in chimera.')
+                      label='Show results in ChimeraX',
+                      help='Show results in ChimeraX.')
 
     def _getDefaultParallel(self):
         """This protocol doesn't have mpi version"""
@@ -265,8 +288,8 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
             inputSequence = self.inputSequence.get().getSequence()
             cutoff = self.cutoff.get()
             similarityMatrix = self.similarityMatrix.get()
-            
-            self._insertFunctionStep('_getModelFromBlast', 
+
+            self._insertFunctionStep('_getModelFromBlast',
                   inputSequence, hideMessage, cutoff, similarityMatrix)
         elif self.source == self.IMPORT_REMOTE_ALPHAFOLD:
             inputSequence = self.inputSequence.get().getSequence()
@@ -421,8 +444,6 @@ cd {ALPHAFOLD_HOME}
 
         f.write("run(session, 'open %s')\n" % tmpFileName)
         f.write("run(session, 'cofr 0,0,0')\n")  # set center of coordinates
-        print("matrix", self.matrixDict)
-        print("similarityMatrix", similarityMatrix, type(similarityMatrix))
         matrix = self.matrixDict[similarityMatrix]
         f.write(f"run(session, 'alphafold search {sequence_data} matrix {matrix} cutoff {cutoff}')\n")
         # Show help window
@@ -507,7 +528,7 @@ session.logger.error('''{msg}''')
         # 2 CASE 
         # phenix reuse result, use PDB
         ###
-        elif colabID == self.PHENIX:  
+        elif colabID == self.PHENIX:
             counter = 0
             objId = self.getObjId()
             injectJavaScriptList.append(
@@ -532,13 +553,14 @@ session.logger.error('''{msg}''')
                         document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").dispatchEvent(new Event("change"));
                     '''
                 )
-                if template is not None:
-                    injectJavaScriptList.append(            
-                        '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click() +
-                           document.querySelector("input[aria-labelledby=formwidget-7-label]").dispatchEvent(new Event("change"));
-                           '''
-                    )
-                    transferFn = template
+            if template is not None:
+                print("TEMPLATE IS NOT NONE, INJECT JAVA SCRIPT")
+                injectJavaScriptList.append(            
+                    '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click() +
+                        document.querySelector("input[aria-labelledby=formwidget-7-label]").dispatchEvent(new Event("change"));
+                        '''
+                )
+                transferFn = template
             # FIRST
             counter = 5
 
@@ -552,9 +574,9 @@ session.logger.error('''{msg}''')
         elif colabID == self.TEST:  # only for debuging
             resultsFile = '/tmp/kk.zip'
             # chimera
-            ## bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
+            bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
             # phenix
-            bestModelFileName = self._getExtraPath(os.path.join('results', '913_11c9a_ALPHAFOLD_cycle_1.pdb'))
+            #bestModelFileName = self._getExtraPath(os.path.join('results', '913_11c9a_ALPHAFOLD_cycle_1.pdb'))
             outFileNames.append(bestModelFileName)
             if not os.path.isfile(resultsFile):
                 print(f"ERROR: Test file {resultsFile} is not available")
@@ -609,13 +631,21 @@ session.logger.error('''{msg}''')
                     f.write(f"open {modelFn}\n")
             elif colabID == self.TEST:
                 #chimera
-                # TODO
-                # phenix
-                objId = 913
                 modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
-                                                         filePattern='%d*.pdb' % objId)
+                                                         filePattern='model_*_relaxed.pdb')
                 for modelFn in modelsFns:
                     f.write(f"open {modelFn}\n")
+                modelsFns = sorted(_findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
+                                                     filePattern='model_*_unrelaxed.pdb'))
+                for modelFn in modelsFns:
+                    f.write(f"open {modelFn}\n")
+                f.write("matchmaker #2-%d to #1\n" % (len(modelsFns)+1))
+                # phenix
+                #objId = 913
+                #modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
+                #                                         filePattern='%d*.pdb' % objId)
+                #for modelFn in modelsFns:
+                #    f.write(f"open {modelFn}\n")
             f.write("color bfactor palette alphafold\n")
             f.write("key red:low orange: yellow: cornflowerblue: blue:high\n")
             f.close()
