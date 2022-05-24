@@ -574,9 +574,9 @@ session.logger.error('''{msg}''')
         elif colabID == self.TEST:  # only for debuging
             resultsFile = '/tmp/kk.zip'
             # chimera
-            ## bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
+            bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
             # phenix
-            bestModelFileName = self._getExtraPath(os.path.join('results', '913_11c9a_ALPHAFOLD_cycle_1.pdb'))
+            #bestModelFileName = self._getExtraPath(os.path.join('results', '913_11c9a_ALPHAFOLD_cycle_1.pdb'))
             outFileNames.append(bestModelFileName)
             if not os.path.isfile(resultsFile):
                 print(f"ERROR: Test file {resultsFile} is not available")
@@ -631,13 +631,21 @@ session.logger.error('''{msg}''')
                     f.write(f"open {modelFn}\n")
             elif colabID == self.TEST:
                 #chimera
-                # TODO
-                # phenix
-                objId = 913
                 modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
-                                                         filePattern='%d*.pdb' % objId)
+                                                         filePattern='model_*_relaxed.pdb')
                 for modelFn in modelsFns:
                     f.write(f"open {modelFn}\n")
+                modelsFns = sorted(_findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
+                                                     filePattern='model_*_unrelaxed.pdb'))
+                for modelFn in modelsFns:
+                    f.write(f"open {modelFn}\n")
+                f.write("matchmaker #2-%d to #1\n" % (len(modelsFns)+1))
+                # phenix
+                #objId = 913
+                #modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
+                #                                         filePattern='%d*.pdb' % objId)
+                #for modelFn in modelsFns:
+                #    f.write(f"open {modelFn}\n")
             f.write("color bfactor palette alphafold\n")
             f.write("key red:low orange: yellow: cornflowerblue: blue:high\n")
             f.close()
