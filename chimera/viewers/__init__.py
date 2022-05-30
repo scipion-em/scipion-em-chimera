@@ -4,5 +4,6 @@ from .viewer import (ChimeraProtRigidFitViewer,
                      ChimeraModelFromTemplateViewer,
                      ChimeraSubtractionMapsViewer,
                      ChimeraAlphafoldViewer,
+                     PAEViewer,
                      )
 from .viewer_contacts import ChimeraProtContactsViewer
