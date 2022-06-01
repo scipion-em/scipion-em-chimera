@@ -218,11 +218,12 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
         )                    
         form.addParam('inputSequenceS', params.MultiPointerParam,
                       pointerClass="Sequence", allowsNull=True,
-                      label='Structures',
+                      label='Reference sequences',
                       condition='source == %d or (source == %d and colabID == %d)'  % (self.IMPORT_LOCAL_ALPHAFOLD,
                                                                                        self.IMPORT_REMOTE_ALPHAFOLD, 
                                                                                        self.CHIMERA21),
-                      help="Structures to be procesed by local AlphaFold2 ")
+                      help="Include here one or more sequences to get the AlphaFold2 prediction"
+                           " of a monomer (one sequence) or a multimer (several sequences). ")
 
         form.addParam('maxTemplateDate', params.StringParam,
                       label='Use Template until',
