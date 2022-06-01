@@ -66,15 +66,17 @@ class PAE(EMFile):
         with open(self.getFileName(), 'r') as f:
             data = json.load(f)
             data = data[index]
-            self.max_predicted_aligned_error = data['max_predicted_aligned_error']
+            if 'max_predicted_aligned_error' in data.keys():
+                self.max_predicted_aligned_error = data['max_predicted_aligned_error']
+            else:
+                self.max_predicted_aligned_error = None
             residue1 = data['residue1']
             residue2 = data['residue2']
             distance = data['distance']
             size = int(math.sqrt(len(residue1)))
             self.matrix = np.zeros(shape=(size, size))
-            for res1 in residue1:
-                for res2 in residue2:
-                    self.matrix[res1-1][res2-1] = distance[(res1-1) * size + res2 -1]
+            for res1, res2, dis  in zip(residue1, residue2, distance):
+                self.matrix[res1-1][res2-1] = dis
 
     def getMatrix(self):
         if self.matrix is None:
