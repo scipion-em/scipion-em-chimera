@@ -218,11 +218,12 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
         )                    
         form.addParam('inputSequenceS', params.MultiPointerParam,
                       pointerClass="Sequence", allowsNull=True,
-                      label='Structures',
+                      label='Reference sequences',
                       condition='source == %d or (source == %d and colabID == %d)'  % (self.IMPORT_LOCAL_ALPHAFOLD,
                                                                                        self.IMPORT_REMOTE_ALPHAFOLD, 
                                                                                        self.CHIMERA21),
-                      help="Structures to be procesed by local AlphaFold2 ")
+                      help="Include here one or more sequences to get the AlphaFold2 prediction"
+                           " of a monomer (one sequence) or a multimer (several sequences). ")
 
         form.addParam('maxTemplateDate', params.StringParam,
                       label='Use Template until',
@@ -584,7 +585,7 @@ session.logger.error('''{msg}''')
                 )
             if template is not None:
                 print("TEMPLATE IS NOT NONE, INJECT JAVA SCRIPT")
-                injectJavaScriptList.append(            
+                injectJavaScriptList.append(
                     '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click() +
                         document.querySelector("input[aria-labelledby=formwidget-7-label]").dispatchEvent(new Event("change"));
                         '''
@@ -603,9 +604,9 @@ session.logger.error('''{msg}''')
         elif colabID == self.TEST:  # only for debuging
             resultsFile = '/tmp/kk.zip'
             # chimera
-            bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
+            ## bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
             # phenix
-            #bestModelFileName = self._getExtraPath(os.path.join('results', '913_11c9a_ALPHAFOLD_cycle_1.pdb'))
+            bestModelFileName = self._getExtraPath(os.path.join('results', '913_11c9a_ALPHAFOLD_cycle_1.pdb'))
             outFileNames.append(bestModelFileName)
             if not os.path.isfile(resultsFile):
                 print(f"ERROR: Test file {resultsFile} is not available")
@@ -668,7 +669,7 @@ session.logger.error('''{msg}''')
                                                          filePattern='model_*_relaxed.pdb')
                 for modelFn in modelsFns:
                     f.write(f"open {modelFn}\n")
-                modelsFns = sorted(_findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
+                modelsFns = sorted(_findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')),
                                                      filePattern='model_*_unrelaxed.pdb'))
                 for modelFn in modelsFns:
                     f.write(f"open {modelFn}\n")
@@ -676,7 +677,7 @@ session.logger.error('''{msg}''')
                 paeFns = [os.path.abspath(self._getExtraPath(os.path.join('results', 'best_model_pae.json')))]
                 # phenix
                 #objId = 913
-                #modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
+                #modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')),
                 #                                         filePattern='%d*.pdb' % objId)
                 #for modelFn in modelsFns:
                 #    f.write(f"open {modelFn}\n")
