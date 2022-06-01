@@ -561,33 +561,37 @@ session.logger.error('''{msg}''')
         elif colabID == self.PHENIX:
             counter = 0
             objId = self.getObjId()
-            injectJavaScriptList.append(
+            injectJavaScriptList.append( # set sequence
                 f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").setAttribute("value", "{sequence_data}"); +
                     document.querySelector("paper-input.flex[aria-labelledby='formwidget-1-label']").dispatchEvent(new Event("change"));
                 '''
             )
-            injectJavaScriptList.append(
+            injectJavaScriptList.append( # set job id
                 f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").setAttribute("value", "{objId}"); +
                     document.querySelector("paper-input.flex[aria-labelledby='formwidget-2-label']").dispatchEvent(new Event("change"));
                 '''
             )
 
             if useTemplatesFromPDB>0:
-                injectJavaScriptList.append(            
+                injectJavaScriptList.append(  # include templates from pdb          
                     '''document.querySelector("input[aria-labelledby=formwidget-5-label]").click() +
                        document.querySelector("input[aria-labelledby=formwidget-5-label]").dispatchEvent(new Event("change"));
                     '''
                 )
-                injectJavaScriptList.append(            
+                injectJavaScriptList.append(  # set the number of templates
                     f'''document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").setAttribute("value", "{useTemplatesFromPDB}") +
                         document.querySelector("paper-input.flex[aria-labelledby='formwidget-6-label']").dispatchEvent(new Event("change"));
                     '''
                 )
             if template is not None:
-                print("TEMPLATE IS NOT NONE, INJECT JAVA SCRIPT")
-                injectJavaScriptList.append(
+                injectJavaScriptList.append( # select uplaod_manual_templates
                     '''document.querySelector("input[aria-labelledby=formwidget-7-label]").click() +
                         document.querySelector("input[aria-labelledby=formwidget-7-label]").dispatchEvent(new Event("change"));
+                        '''
+                )
+                injectJavaScriptList.append( # check do not use msa
+                    '''document.querySelector("input[aria-labelledby=formwidget-11-label]").click() +
+                        document.querySelector("input[aria-labelledby=formwidget-11-label]").dispatchEvent(new Event("change"));
                         '''
                 )
                 transferFn = template
