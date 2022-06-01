@@ -706,7 +706,7 @@ session.logger.error('''{msg}''')
         else:
             self.createOutputStep(outFileNames, paeFns)
 
-    def createOutputStep(self, atomStructPaths, paeFns):
+    def createOutputStep(self, atomStructPaths, paeFns=[]):
         """ Copy the atomic  structure and register the output object.
         :param list_string atomStructPath: list of atom struct files to be
                                         saved
