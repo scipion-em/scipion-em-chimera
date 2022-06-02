@@ -11,19 +11,26 @@ from pynput.mouse import Controller,Button
 import time
 
 mouse = Controller()
-TITLE = (975, 10)
-CLICK = (975, 121) 
+TITLE = (1433, 477)
+CLICK =  (1137, 732)
 while True:
     oldPosition = mouse.position
-    print("oldPosition", oldPosition)
+
     mouse.position = TITLE
+    time.sleep(0.01)
     mouse.click(Button.left,1)
+
     mouse.position = CLICK
+    time.sleep(0.01)
     mouse.click(Button.left,1)
-    #mouse.position = CLICK
-    #mouse.click(Button.left,1)
+    time.sleep(0.01)
+    mouse.click(Button.left,1)
+
     mouse.position = (oldPosition)
+    time.sleep(0.01)
     mouse.click(Button.left,1)
+
     print('clicked')
 
     time.sleep(30)
+
