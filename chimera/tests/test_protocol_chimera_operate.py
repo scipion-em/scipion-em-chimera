@@ -287,8 +287,8 @@ class TestChimeraOperate(TestImportData):
         self.assertFalse(structure1_PDB.getVolume())
 
         extraCommands = ""
-        extraCommands += "move -24.11,-45.76,-24.60 model #3 " \
-                         "coord #2\n"
+        extraCommands += "move -24.11,-45.76,-24.60 model #2 " \
+                         "coord #1\n"
         extraCommands += "scipionwrite #2 " \
                          "prefix DONOTSAVESESSION_\n"
         extraCommands += "exit\n"
@@ -315,8 +315,8 @@ class TestChimeraOperate(TestImportData):
         self.assertFalse(structure1_mmCIF.getVolume())
 
         extraCommands = ""
-        extraCommands += "move -24.11,-45.76,-24.60 model #3 " \
-                         "coord #2\n"
+        extraCommands += "move -24.11,-45.76,-24.60 model #2 " \
+                         "coord #1\n"
         extraCommands += "scipionwrite #2 " \
                          "prefix DONOTSAVESESSION_\n"
         extraCommands += "exit\n"

@@ -27,10 +27,11 @@ import os
 
 import pwem
 import pyworkflow.utils as pwutils
+from glob import glob
+from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR, 
+                        V1_0, V1_1, V1_2_5, V1_3, chimeraTARs)
 
-from .constants import CHIMERA_HOME, V1_0, V1_1, V1_2_5, chimeraTARs
-
-__version__ = "3.1.7"
+__version__ = "3.2"
 _logo = "chimerax_logo.png"
 _references = ['Goddard2018']
 
@@ -38,13 +39,15 @@ _references = ['Goddard2018']
 class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
-    _supportedVersions = [V1_0, V1_1, V1_2_5]
-    _currentVersion = V1_2_5  
+    _supportedVersions = [V1_3]
+    _currentVersion = V1_3  
     _fullVersion = 'chimerax-%s' % _currentVersion
 
     @classmethod
     def _defineVariables(cls):
         cls._defineEmVar(CHIMERA_HOME, cls._fullVersion)
+        cls._defineVar(ALPHAFOLD_HOME, None)
+        cls._defineVar(ALPHAFOLD_DATABASE_DIR, None)
 
     @classmethod
     def getEnviron(cls):
@@ -74,6 +77,12 @@ class Plugin(pwem.Plugin):
         return str(cmd)
 
     @classmethod
+    def getPython(cls, progName="python*"):
+        """ Return the program binary that will be used. """
+        path = glob(cls.getHome('bin', progName))
+        return path[0]
+
+    @classmethod
     def isVersionActive(cls):
         return cls.getActiveVersion().startswith(V1_0)
 
@@ -91,9 +100,11 @@ class Plugin(pwem.Plugin):
 
         activeVersion = cls.getActiveVersion()
         installationFlagFile = "installed-%s" % activeVersion
-
+        ff = open("/tmp/kk.cxc", "w")
+        ff.write(f'devel install {pathToPlugin}')
+        ff.close()
         installPluginsCommand = [("%s --nogui --exit " \
-                                  "--cmd 'devel install %s' && touch %s" % (pathToBinary, pathToPlugin, installationFlagFile),
+                                  "/tmp/kk.cxc && touch %s" % (pathToBinary, installationFlagFile),
                                   [installationFlagFile])]
 
         env.addPackage('scipionchimera' , version='1.3',

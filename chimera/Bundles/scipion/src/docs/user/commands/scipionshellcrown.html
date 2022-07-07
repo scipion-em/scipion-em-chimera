@@ -1,0 +1,64 @@
+<html><head>
+<link rel="stylesheet" type="text/css" href="../userdocs.css" />
+<title>Command: scipionshellcrown</title>
+</head><body>
+
+<a name="top"></a>
+<a href="../index.html">
+<img width="60px" src="../ChimeraX-docs-icon.svg" alt="ChimeraX docs icon"
+class="clRight" title="User Guide Index"/></a>
+
+<h3><a href="../index.html#commands">Command</a>: scipionshellcrown</h3>
+<h3 class="usage"><a href="usageconventions.html">Usage</a>:
+<br>
+    <b>scipionshellcrown modelId radius outModelId orientation XX   sphereFactor YY crownwidth ZZ</b>
+</h3>
+
+<p> 
+The command  <b>scipionshellcrown</b> creates a crown from a
+    3D Map using a a quasy-spherical shell.
+
+</p>
+<p>
+where
+ <ul>
+  <li><bf>modelId:</bf> model id of the 3D map to be analyzed</li>
+  <li><bf>radius:</bf> radius at which the density is going to be shown (Angstroms)</li>
+  <li><bf>outModelId:</bf> id of the output icosahedron showing the density surface</li>
+  <li><bf>orientation:</bf> symmetry used to create the icosahedron used to define the surface to be shown (default 222r)</li>
+  <li><bf>sphereFactor:</bf> weight of the sphere component in an interpolation between an icosahedron and a sphere of equal radius (1.0: sphere; 0.0: icosahedron) (default=1)</li>
+  <li><bf>crownwidth:</bf> shell width (default = 10A, the crown goes from the selected_radius - crownwidth/2 to  selected_radius + crownwidth/2)</li>
+ </ul>
+</p>
+
+
+<h3>
+    Examples
+</h3>
+    <blockquote>
+    <b>scipionshellcrown #1 250  10 orientation 222r sphereFactor 0.7 crownwidth 5</b>
+    </blockquote>
+
+    will create a3D map with a shell pf thickness 5A of the model #1.
+The outher shell is defined by spherical icosahedron with symmetry 222r and sphereFactor 0.7.
+The model id of the output will be 10.
+
+<h3>
+Remark
+</h3>
+  <ul>
+    <li>In case the 3D map and the icosahedron do not fit, select <b>center</b> in <b>Origin index</b>
+        of <b>Map Coordinates</b> menu.</li>
+    <li>Although <b>orthoplanes</b> is the visualization option
+        by default, you can select <b>plane</b> instead in the
+<b>Volume Viewer</b> menu to see only the transversal plane.</li>
+      <li> The plane/orthoplanes can be moved using the right
+          mouse button</li>
+  </ul>
+
+</p>
+
+<hr>
+<address>scipion@cnb.csic.es</address>
+</body>
+</html>
