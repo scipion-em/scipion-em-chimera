@@ -58,7 +58,7 @@ To check the installation, simply run the following Scipion tests:
 
 - **Supported versions of ChimeraX**
 
-1.0, 1.1
+1.0, 1.1, 1.2 and 1.3
 
 
 =========
@@ -71,6 +71,7 @@ Protocols
 * operate: Provides access to Chimera and allows to save the result in Scipion framework.
 * restore: This protocol opens Chimera and restores the session previously saved with commands *scipionwrite* or *scipionss*. 
 * map subtraction: Protocol to identify remnant densities in a density map by subtracting two maps or masking one of them.
+* alphafold prediction: finds and retrieves existing models from the AlphaFold Database, runs new AlphaFold predictions using Google Colab, executes a local implementation of alphafold. 
 
 
 ========
@@ -98,3 +99,17 @@ Status production version:
 
 .. image:: http://scipion-test.cnb.csic.es:9980/badges/chimera_prod.svg
 
+
+======================
+Chimera Extra commands
+======================
+A set of comamnd to allow interaction between scipion and chimerax has been implemented.
+They may be executed from ChimeraX command line:
+  
+* scipionwrite: saves model file
+* scipionss: saves chimera session
+* scipionrs: restores chimera sesion
+* scipioncombine: combines two models
+* scipionshell: shows the density of a 3D Map on a spherical shell of the map at a given radius
+* scipionshellcrown: shows a shell of a 3D map between two radii
+* scipion: summary with all scipion related commands
