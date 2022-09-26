@@ -5,3 +5,4 @@ include chimera/protocols.conf
 include chimera/Bundles/scipion/*
 include chimera/Bundles/scipion/src/*
 include chimera/Bundles/scipion/src/docs/user/commands/*
+include chimera/colabs/*

@@ -31,7 +31,8 @@ from glob import glob
 from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR, 
                         V1_0, V1_1, V1_2_5, V1_3, chimeraTARs)
 
-__version__ = "3.2.1"
+__version__ = "3.3.2"
+
 _logo = "chimerax_logo.png"
 _references = ['Goddard2018']
 
