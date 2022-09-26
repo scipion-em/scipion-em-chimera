@@ -1,4 +1,8 @@
-from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets
+try:
+    from PyQt6 import QtCore, QtWidgets, QtWebEngineWidgets
+except Exception:
+    from PyQt5 import QtCore, QtWidgets, QtWebEngineWidgets
+
 
 
 class Widget(QtWidgets.QWidget):
