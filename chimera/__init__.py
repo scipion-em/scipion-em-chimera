@@ -31,7 +31,7 @@ from glob import glob
 from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR, 
                         V1_0, V1_1, V1_2_5, V1_3, chimeraTARs)
 
-__version__ = "3.2"
+__version__ = "3.2.1"
 _logo = "chimerax_logo.png"
 _references = ['Goddard2018']
 
@@ -81,8 +81,8 @@ class Plugin(pwem.Plugin):
         """ Return the program binary that will be used. """
         path = glob(cls.getHome('bin', progName))
         # todo only run this "vglrun in test mode
-        return "vglrun " +  path[0]
-        # return path[0]
+        # return "vglrun " +  path[0]
+        return path[0]
 
     @classmethod
     def isVersionActive(cls):
