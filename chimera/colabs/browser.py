@@ -10,10 +10,18 @@ class createColabScript():
                 resultsFile):
         print("createColabScript", resultsFile)
         colabCommand = f'''
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtWebEngineWidgets import *
+try:
+    from PyQt6.QtCore import *
+    from PyQt6.QtWidgets import *
+    from PyQt6.QtGui import *
+    from PyQt6.QtWebEngineWidgets import *
+    from PyQt6.QtWebEngineCore import *
+except Exception:
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+    from PyQt5.QtGui import *
+    from PyQt5.QtWebEngineWidgets import *
+
 import sys
 import os
 
@@ -127,7 +135,7 @@ window = MainWindow(extraPath='{extraPath}',
                     transferFn='{transferFn}',
                     resultsFile='{resultsFile}',
                     )
-app.exec_()
+app.exec()
 '''
         scriptFilePointer.write(colabCommand)
 
