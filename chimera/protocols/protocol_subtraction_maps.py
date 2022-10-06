@@ -171,7 +171,7 @@ class ChimeraSubtractionMaps(EMProtocol):
         form.addParam('residuesToRemove', StringParam,
                          condition=(('mapOrModel==%d and '
                                     'removeResidues==True') % 1),
-                         label="Residues to remove ", default=1,
+                         label="Residues to remove ", default=None,
                          important=True,
                          help="Select the first and last residues of the selected atomic "
                               "structure chain that you want to remove. \n(Use Ctrl for multiple selection)")

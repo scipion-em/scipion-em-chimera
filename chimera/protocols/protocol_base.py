@@ -290,5 +290,5 @@ class ChimeraProtBase(EMProtocol):
 
     def is_tool(self, name):
         """Check whether `name` is on PATH."""
-        from distutils.spawn import find_executable
-        return find_executable(name) is not None
+        from shutil import which
+        return which(name) is not None
