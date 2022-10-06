@@ -36,10 +36,12 @@ V1_0 = '1.0'
 V1_1 = '1.1'
 V1_2_5 = '1.2.5'
 V1_3 = '1.3'
+V1_4 = '1.4'
 
 chimeraTARs={V1_1: 'ChimeraX-1.1.tar.gz',
              V1_2_5: "chimerax-1.2.5-rc-2021.05.24",
              V1_3: "chimerax-1.3",
+             V1_4: "chimerax-1.4",
 }
 
 CHIMERA_TO_SCIPION = {}
