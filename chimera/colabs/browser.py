@@ -106,10 +106,17 @@ class MainWindow(QMainWindow):
         """
 
         try:
-            download.setPath(self.resultsFile)
+            resultsDir = os.path.dirname(self.resultsFile)
+            download.setDownloadDirectory(resultsDir)
+            #download.setPath(self.resultsFile)
+            if hasattr(download, 'finished'):
+                download.finished.connect(self.foo)              # Qt 5
+            else:
+                download.isFinishedChanged.connect(self.foo)     # Qt 6
+
             download.accept()
-            download.finished.connect(self.foo)
-            ##download.finished.connect(lambda:self.downloadfinished(outPutFile.rsplit('/')[-1]))
+            ## download.finished.connect(self.foo)
+            ## download.finished.connect(lambda:self.downloadfinished(outPutFile.rsplit('/')[-1]))
         except Exception as e:
             print("ERROR", e)
 
