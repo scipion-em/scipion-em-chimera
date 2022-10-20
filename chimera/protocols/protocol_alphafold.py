@@ -608,9 +608,9 @@ session.logger.error('''{msg}''')
         elif colabID == self.TEST:  # only for debuging
             resultsFile = '/tmp/kk.zip'
             # chimera
-            ## bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
+            bestModelFileName = self._getExtraPath(os.path.join('results', 'best_model.pdb'))
             # phenix
-            bestModelFileName = self._getExtraPath(os.path.join('results', '913_11c9a_ALPHAFOLD_cycle_1.pdb'))
+            # bestModelFileName = self._getExtraPath(os.path.join('results', '913_11c9a_ALPHAFOLD_cycle_1.pdb'))
             outFileNames.append(bestModelFileName)
             if not os.path.isfile(resultsFile):
                 print(f"ERROR: Test file {resultsFile} is not available")

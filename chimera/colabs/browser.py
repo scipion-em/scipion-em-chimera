@@ -130,6 +130,7 @@ class MainWindow(QMainWindow):
         print("finished")
         self.hide();
         self.close();
+        QApplication.quit();
 
 
 # construct  QApplication 
