@@ -267,7 +267,6 @@ class ChimeraProtContacts(EMProtocol):
                         d2['atomId'] = "'" + info[7] + "'"  # 'NE2'
                         d['overlap'] = info[8]  # '0.620'
                         d['distance'] = info[9]  # '2.660'
-
                     else:
                         info = line.split()
                         # 5ni1_unit_cell_HEM.cif #1.2/A002 HEM 1 ND   5ni1_unit_cell_HEM.cif #1.2/A HIS 87 NE2    0.620    2.660
@@ -287,6 +286,13 @@ class ChimeraProtContacts(EMProtocol):
 
                         d['overlap'] = info[10]  # '0.620'
                         d['distance'] = info[11]  # '2.660'
+
+                    AA_1 = d1['aaName']; AA_2 = d2['aaName']
+                    if ( ( (AA_1 == "'Arg'") or (AA_1 == "'Lys'")) and ((AA_2 == "'Glu'") or (AA_2=="'Asp'"))) or \
+                       ( ( (AA_2 == "'Arg'") or (AA_2 == "'Lys'")) and ((AA_1 == "'Glu'") or (AA_1=="'Asp'"))) :
+                        d['salineBridge'] = 1
+                    else:
+                        d['salineBridge'] = 0
 
                     if d1['modelId'] == d2['modelId']:
                         if d1['protId'] <= d2['protId']:
@@ -408,7 +414,8 @@ class ChimeraProtContacts(EMProtocol):
              aaNumber_2,
              atomId_2,
              overlap,
-             distance
+             distance,
+             salineBridge
         FROM {}
 
         """
@@ -503,9 +510,9 @@ def connectDB(sqliteFN, tableName=None):
              aaNumber_2 int,
              atomId_2   char(8),
              overlap float,
-             distance float
+             distance float,
+             salineBridge int default 0
              );"""
-
         c.execute(commandDropTable.format(tableName))
         c.execute(commandCreateTable.format(tableName))
     return c, conn

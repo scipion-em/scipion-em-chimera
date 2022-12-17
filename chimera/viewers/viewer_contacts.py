@@ -113,14 +113,14 @@ class ChimeraProtContactsViewer(ProtocolViewer):
             commandDisplayInteractions = """
 SELECT count(*), protId_2, modelId_2, chainId_2,
        aaName_2 || aaNumber_2, protId_1, modelId_1,
-       chainId_1,  aaName_1 || aaNumber_1
+       chainId_1,  aaName_1 || aaNumber_1, salineBridge
 FROM view_ND_2
 WHERE modelId_1='{}' AND protId_1='{}' AND chainId_1='{}'
   AND modelId_2='{}' AND protId_2='{}' AND chainId_2='{}'
 GROUP BY protId_1, modelId_1, chainId_1,
          aaNumber_1, aaName_1, protId_2,
          modelId_2, chainId_2, aaNumber_2,
-         aaName_2
+         aaName_2, salineBridge
 ORDER BY protId_2, modelId_2, chainId_2,
         protId_1, modelId_1, chainId_1,
         aaNumber_2, aaName_2,  aaNumber_1, aaName_1;
@@ -129,14 +129,14 @@ ORDER BY protId_2, modelId_2, chainId_2,
             commandDisplayInteractions = """
 SELECT count(*), protId_1, modelId_1, chainId_1,
        aaName_1 || aaNumber_1, protId_2, modelId_2,
-       chainId_2,  aaName_2 || aaNumber_2
+       chainId_2,  aaName_2 || aaNumber_2, salineBridge
 FROM   view_ND_2
 WHERE modelId_1='{}' AND protId_1='{}' AND chainId_1='{}'
   AND modelId_2='{}' AND protId_2='{}' AND chainId_2='{}'
 GROUP BY protId_1, modelId_1, chainId_1,
          aaNumber_1, aaName_1, protId_2,
          modelId_2, chainId_2, aaNumber_2,
-         aaName_2
+         aaName_2, salineBridge
 ORDER BY protId_1, modelId_1, chainId_1,
          protId_2, modelId_2, chainId_2,
          aaNumber_1, aaName_1,  aaNumber_2, aaName_2;
@@ -159,7 +159,7 @@ ORDER BY protId_1, modelId_1, chainId_1,
             all_rows = self.c.fetchall()
 
             f.write("RESULTS for: {}\n".format(', '.join(str(s) for s in row)))
-            f.write("# atoms, prot_1, model_1, chain_1, AA_1, prot_2, model_2, chain2, AA_2\n")
+            f.write("# atoms, prot_1, model_1, chain_1, AA_1, prot_2, model_2, chain2, AA_2 salineBridge\n")
             first = None
             last = None
             first2 = None
@@ -284,7 +284,8 @@ ORDER BY modelId_1, protId_1, chainId_1, modelId_2, protId_2,  chainId_2;
                                                                  chain_1=row[3],
                                                                  model_2=row[4],
                                                                  prot_2=row[5],
-                                                                 chain_2=row[6])
+                                                                 chain_2=row[6]
+                                                                 )
                            )
         if self.protocol.SYMMETRY.get() and not \
                 os.path.exists(self.protocol.getSymmetrizedModelName()):

@@ -65,7 +65,8 @@ class ProtContactsWizardChimera(Wizard):
         cols = ['label']
         chainWizard = SelectChainWizard()
         protocol = form.protocol
-        models, modelsFirstResidue = chainWizard.getModelsChainsStep(protocol, 'pdbFileToBeRefined')
+        models, modelsFirstResidue = chainWizard.getModelsChainsStep(
+            protocol, protocol.pdbFileToBeRefined.get())
         rows = []
         for chainID, lenResidues in sorted(models[0].items()):
             rows.append(str(chainID))
