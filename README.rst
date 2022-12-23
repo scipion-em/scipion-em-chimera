@@ -111,7 +111,7 @@ They may be executed from ChimeraX command line:
 * scipionwrite: saves model file
 * scipionss: saves chimera session
 * scipionrs: restores chimera sesion
-* scipioncombine: combines two models
+* scipioncombine: combines two models [No longer needed since chimerax now implements combine]
 * scipionshell: shows the density of a 3D Map on a spherical shell of the map at a given radius
 * scipionshellcrown: shows a shell of a 3D map between two radii
 * scipion: summary with all scipion related commands
