@@ -10,10 +10,18 @@ class createColabScript():
                 resultsFile):
         print("createColabScript", resultsFile)
         colabCommand = f'''
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from PyQt5.QtWebEngineWidgets import *
+try:
+    from PyQt6.QtCore import *
+    from PyQt6.QtWidgets import *
+    from PyQt6.QtGui import *
+    from PyQt6.QtWebEngineWidgets import *
+    from PyQt6.QtWebEngineCore import *
+except Exception:
+    from PyQt5.QtCore import *
+    from PyQt5.QtWidgets import *
+    from PyQt5.QtGui import *
+    from PyQt5.QtWebEngineWidgets import *
+
 import sys
 import os
 
@@ -76,7 +84,7 @@ class MainWindow(QMainWindow):
         # are not automatic This signal is emitted whenever a 
         # download has been triggered. The download argument holds 
         # the state of the download. The download has to be explicitly accepted
-        # with QWebEngineDownloadItem::accept() or it will be cancelled.
+        # or it will be cancelled.
         print("call to on_downloadRequested")
         self.p.profile().downloadRequested.connect(
             self.on_downloadRequested
@@ -94,14 +102,24 @@ class MainWindow(QMainWindow):
         are not automatic This signal is emitted whenever a 
         download has been triggered. The download argument holds 
         the state of the download. The download has to be explicitly accepted
-        with QWebEngineDownloadItem::accept() or it will be cancelled.
+         or it will be cancelled.
+
+        Note that qt6 has the follwoing diffrences with qt5
+        * QWebEngineDownloadItem renamed to QWebEngineDownloadRequest
+        * Deprecated path() and setPath() removed
+        * finished signal renamed to isFinishedChanged
         """
 
         try:
-            download.setPath(self.resultsFile)
+            resultsDir = os.path.dirname(self.resultsFile)
+            download.setDownloadDirectory(resultsDir)
+            #download.setPath(self.resultsFile)
+            if hasattr(download, 'finished'):
+                download.finished.connect(self.foo)              # Qt 5
+            else:
+                download.isFinishedChanged.connect(self.foo)     # Qt 6
+
             download.accept()
-            download.finished.connect(self.foo)
-            ##download.finished.connect(lambda:self.downloadfinished(outPutFile.rsplit('/')[-1]))
         except Exception as e:
             print("ERROR", e)
 
@@ -115,6 +133,7 @@ class MainWindow(QMainWindow):
         print("finished")
         self.hide();
         self.close();
+        QApplication.quit();
 
 
 # construct  QApplication 
@@ -127,7 +146,7 @@ window = MainWindow(extraPath='{extraPath}',
                     transferFn='{transferFn}',
                     resultsFile='{resultsFile}',
                     )
-app.exec_()
+app.exec()
 '''
         scriptFilePointer.write(colabCommand)
 
