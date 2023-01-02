@@ -53,7 +53,8 @@ class ChimeraProtRestore(ChimeraProtBase):
                       label="Input protocols", important=True,
                       pointerClass='ChimeraProtOperate, '
                                    'ChimeraProtRigidFit, '
-                                   'ChimeraModelFromTemplate',
+                                   'ChimeraModelFromTemplate, '
+                                   'ChimeraSubtractionMaps',
                       help="protocol to be reloaded")
 
         form.addParam('extraCommands', StringParam,
