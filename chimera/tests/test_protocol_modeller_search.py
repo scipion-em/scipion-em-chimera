@@ -36,7 +36,7 @@ from pwem.protocols.protocol_import import ProtImportPdb
 from pwem.protocols.protocol_import.sequence import \
     ProtImportSequence
 from pyworkflow.tests import *
-from pwem.convert.sequence import indexToAlphabet
+from pwem.objects.data import Alphabet
 
 
 class TestImportBase(BaseTest):
@@ -52,11 +52,11 @@ class TestImportData(TestImportBase):
     NAME = "User_Name"
     pdbID1 = "3lqd"  # Protein
     pdbID2 = "1aoi"  # DNA and protein
-    UNIPROTID1 = "Q15116" # Programmed cell death protein 1
-    UNIPROTID2 = "P01832" # Polymeric immunoglobulin receptor
+    UNIPROTID1 = "Q15116"  # Programmed cell death protein 1
+    UNIPROTID2 = "P01832"  # Polymeric immunoglobulin receptor
     UNIPROTID3 = "Q2LC89"
-    UNIPROTID4 = "Q9BQ51" # Programmed cell death 1 ligand 2
-    UNIPROTID5 = "Q9NZQ7" # Programmed cell death 1 ligand 1
+    UNIPROTID4 = "Q9BQ51"  # Programmed cell death 1 ligand 2
+    UNIPROTID5 = "Q9NZQ7"  # Programmed cell death 1 ligand 1
 
     def _importStructurePDBWoVol1(self):
         """Import the structure 3lqd (Protein structure)"""
@@ -125,8 +125,7 @@ class TestImportData(TestImportBase):
         self.assertEqual("Seq_3qld_B_mutated", sequence.getDescription())
         self.assertEqual("VHLSGEEKSA", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
-                         indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters
+                         Alphabet.alphabets[Alphabet.PROTEIN_ALPHABET]
                          )
         return sequence
 
@@ -150,8 +149,7 @@ class TestImportData(TestImportBase):
         self.assertEqual("Seq_1aoi_A_mutated", sequence.getDescription())
         self.assertEqual("LATKAARKSS", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
-                         indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters
+                         Alphabet.alphabets[Alphabet.PROTEIN_ALPHABET]
                          )
         return sequence
 
@@ -175,8 +173,7 @@ class TestImportData(TestImportBase):
         self.assertEqual("Seq_1g03__7_A_mutated", sequence.getDescription())
         self.assertEqual("PVMHPHGARR", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
-                         indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters
+                         Alphabet.alphabets[Alphabet.PROTEIN_ALPHABET]
                          )
         return sequence
 
@@ -199,8 +196,7 @@ class TestImportData(TestImportBase):
                          sequence.getDescription())
         self.assertEqual("MQIPQAPWPV", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
-                         indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters
+                         Alphabet.alphabets[Alphabet.PROTEIN_ALPHABET]
                          )
         return sequence
 
@@ -219,7 +215,7 @@ class TestImportData(TestImportBase):
                 }
         protSequence = self.newProtocol(ProtImportSequence, **args)
         protSequence.setObjLabel('import aminoacid seq,\n from 3rrq\n'
-                           'atomic structure')
+                                 'atomic structure')
         self.launchProtocol(protSequence)
         sequence = protSequence.outputSequence
 
@@ -228,8 +224,8 @@ class TestImportData(TestImportBase):
         self.assertEqual("", sequence.getDescription())
         self.assertEqual("NPPTFSPALL", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
-                         indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters)
+                         Alphabet.alphabets[Alphabet.PROTEIN_ALPHABET]
+        )
         return sequence
 
     def _importAminoacidSequence6(self):
@@ -251,8 +247,7 @@ class TestImportData(TestImportBase):
                          sequence.getDescription())
         self.assertEqual("MALFLLTCLL", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
-                         indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters
+                         Alphabet.alphabets[Alphabet.PROTEIN_ALPHABET]
                          )
         return sequence
 
@@ -275,8 +270,7 @@ class TestImportData(TestImportBase):
                          sequence.getDescription())
         self.assertEqual("LQLHQIAALF", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
-                         indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters
+                         Alphabet.alphabets[Alphabet.PROTEIN_ALPHABET]
                          )
         return sequence
 
@@ -299,8 +293,7 @@ class TestImportData(TestImportBase):
                          sequence.getDescription())
         self.assertEqual("MIFLLLMLSL", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
-                         indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters
+                         Alphabet.alphabets[Alphabet.PROTEIN_ALPHABET]
                          )
         return sequence
 
@@ -323,8 +316,7 @@ class TestImportData(TestImportBase):
                          sequence.getDescription())
         self.assertEqual("MRIFAVFIFM", sequence.getSequence()[:10])
         self.assertEqual("ACDEFGHIKLMNPQRSTVWY",
-                         indexToAlphabet(sequence.getIsAminoacids(),
-                                         sequence.getAlphabet()).letters
+                         Alphabet.alphabets[Alphabet.PROTEIN_ALPHABET]
                          )
         return sequence
 
@@ -342,7 +334,7 @@ if you want to check chimera modeler search protocol.
 
 You may enable the protocol but setting
 
-    DISABLE_TEST = False
+    DISABLE_TEST = False 
     
 HOW TO RUN THE TEST:
 
