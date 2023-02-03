@@ -413,11 +413,13 @@ cd {ALPHAFOLD_HOME}
            https://alphafold.ebi.ac.uk/files/AF-P29474-F1-model_v1.cif'''
         
         # get alphafold EBI database url
-        self._get_alphafold_database_settings()
-        data = {'uniprot_id': uniProtID, 'version': self.settings['database_version']}
+        ## self._get_alphafold_database_settings()
+        file_name = 'AF-%s-F1-model_v4.cif' % uniProtID
+        model_url = 'https://alphafold.ebi.ac.uk/files/' + file_name
+        ## data = {'uniprot_id': uniProtID, 'version': self.settings['database_version']}
         # get model
         extraDir = self._getExtraPath()
-        model_url = self.settings['database_url'].format(**data)
+        ## model_url = self.settings['database_url'].format(**data)
         outFileName = os.path.join(extraDir, uniProtID + ".cif")
         status, msg = fetch_file(model_url, retry = 3, json=False, outFilename=outFileName)
         if not status:
