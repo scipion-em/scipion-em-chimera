@@ -31,6 +31,7 @@ from pwem.viewers.viewer_chimera import chimeraScriptFileName, Chimera, chimeraP
     chimeraMapTemplateFileName, sessionFile
 from pyworkflow import VERSION_1_2
 from pyworkflow.utils import copyFile
+from pwem.objects.data import Alphabet
 
 from . import ChimeraProtBase
 
@@ -54,7 +55,6 @@ from collections import OrderedDict
 from ..constants import CLUSTALO, MUSCLE
 from chimera import Plugin
 from chimera.utils import getEnvDictionary
-
 
 class ChimeraModelFromTemplate(ChimeraProtBase):
     """Protocol to model three-dimensional structures of proteins using Modeller.
@@ -456,9 +456,9 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         # that SEQ object (str)
         # transformation of this sequence (str) in a Bio.Seq.Seq object:
         seqHandler = SequenceHandler(userSequence,
-                                     isAminoacid=userSeq.getIsAminoacids())
-        targetSeq = seqHandler._sequence  # Bio.Seq.Seq object
-
+                                     iUPACAlphabet=Alphabet.EXTENDED_PROTEIN_ALPHABET)
+        targetSeq = seqHandler.getSequence()  # Bio.Seq.Seq object
+        print("Target sequence1: %s" % targetSeq, type(targetSeq))
         # creation of Dic of IDs and sequences
         SeqDic = OrderedDict()
         SeqDic[structSeqID] = structureSeq
@@ -497,9 +497,9 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                     ID = seq.getId()
                     sequence = seq.getSequence()
                     seqHandler = SequenceHandler(sequence,
-                                                 isAminoacid=seq.getIsAminoacids())
-                    otherSeq = seqHandler._sequence  # Bio.Seq.Seq object
-                    SeqDic[ID] = otherSeq
+                                     iUPACAlphabet=Alphabet.EXTENDED_PROTEIN_ALPHABET)
+                    # otherSeq = seqHandler._sequence  # Bio.Seq.Seq object
+                    SeqDic[ID] = seqHandler.getSequence()
 
             # align sequences and save them to disk, -this will be chimera input-
             # get all sequences in a fasta file
@@ -527,8 +527,9 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         targetSeqID = userSeq.getId()  # ID associated to SEQ object (str)
         # transformation of this sequence (str) in a Bio.Seq.Seq object:
         seqHandler = SequenceHandler(userSequence,
-                                     isAminoacid=userSeq.getIsAminoacids())
-        targetSeq = seqHandler._sequence  # Bio.Seq.Seq object
+                                     iUPACAlphabet=Alphabet.EXTENDED_PROTEIN_ALPHABET)
+        targetSeq = seqHandler.getSequence()
+
         # creation of Dic of IDs and sequences
         SeqDic = OrderedDict()
         SeqDic[targetSeqID] = targetSeq

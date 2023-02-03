@@ -78,7 +78,7 @@ Protocols
 Examples
 ========
 
-See `Model Building Tutorial <https://github.com/I2PC/scipion/wiki/tutorials/tutorial_model_building_basic.pdf>`_
+See `Model Building Tutorial <https://scipion-em.github.io/docs/release-3.0.0/docs/user/user-documentation.html#model-building>`_
 
 ===
 FAQ
@@ -95,9 +95,11 @@ Status devel version:
 
 .. image:: http://scipion-test.cnb.csic.es:9980/badges/chimera_devel.svg
 
-Status production version: 
+..
+    Status production version: 
 
-.. image:: http://scipion-test.cnb.csic.es:9980/badges/chimera_prod.svg
+.. 
+    image:: http://scipion-test.cnb.csic.es:9980/badges/chimera_prod.svg
 
 
 ======================
@@ -109,7 +111,7 @@ They may be executed from ChimeraX command line:
 * scipionwrite: saves model file
 * scipionss: saves chimera session
 * scipionrs: restores chimera sesion
-* scipioncombine: combines two models
+* scipioncombine: combines two models [No longer needed since chimerax now implements combine]
 * scipionshell: shows the density of a 3D Map on a spherical shell of the map at a given radius
 * scipionshellcrown: shows a shell of a 3D map between two radii
 * scipion: summary with all scipion related commands

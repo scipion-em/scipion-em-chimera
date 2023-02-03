@@ -80,7 +80,7 @@ class TestChimeraAlphafoldImport(TestBase):
         self.launchProtocol(prot)
         sequence = prot.outputSequence
         # save model2 since model1 in the axis
-        extraCommands =  "run(session, 'alphafold fetch KVD15_HUMAN')\n"
+        extraCommands =  "run(session, 'alphafold fetch A0A087WSY6')\n"
         extraCommands += "run(session, 'scipionwrite #2 prefix DONOTSAVESESSION_')\n"
         extraCommands += "run(session, 'exit')\n"
 
@@ -92,7 +92,14 @@ class TestChimeraAlphafoldImport(TestBase):
         prot1 = self.newProtocol(ChimeraImportAtomStructAlphafold, **args)
         prot1.setObjLabel('Alpha: Run blast \n')
         self.launchProtocol(prot1)
-        self.assertTrue(exists(prot1.DONOTSAVESESSION_Atom_struct__2_000054.getFileName()))
+        result = ""
+        try:
+            result = eval(
+                "prot1.DONOTSAVESESSION_Atom_struct__2_%06d" %
+                prot1.getObjId())
+        except (NameError, SyntaxError) as e:
+            self.assertTrue(False, "Output file not found")
+        # self.assertTrue(exists(prot1.DONOTSAVESESSION_Atom_struct__2_000054.getFileName()))
 
     def testImportStructureFromColab(self):
         """Import atom struct predicted by alphafold
