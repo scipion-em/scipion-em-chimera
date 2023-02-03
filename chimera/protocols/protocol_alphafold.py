@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#th -*- coding: utf-8 -*-
 # **************************************************************************
 # * Authors:     Roberto Marabini
 # *              Marta Martinez
@@ -103,7 +103,8 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
 
     url = {}
 #    url[CHIMERA] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold_colab.ipynb"
-    url[CHIMERA21] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold21_colab.ipynb"
+    #url[CHIMERA21] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold21_colab.ipynb"
+    url[CHIMERA21] = "https://colab.research.google.com/github/RBVI/ChimeraX/blob/develop/src/bundles/alphafold/src/alphafold21_predict_colab.ipynb"
     url[PHENIX]  = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/phenix_alphafold_colab.ipynb"
     url[TEST]  = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/test_colab.ipynb"
 
@@ -649,11 +650,11 @@ session.logger.error('''{msg}''')
             f = open(fnCmd, 'w')
             if colabID == self.CHIMERA21:
                 modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
-                                                         filePattern='model_*_relaxed.pdb')
+                                                         filePattern='*_relaxed*model_*.pdb')
                 for modelFn in modelsFns:
                     f.write(f"open {modelFn}\n")
                 modelsFns = sorted(_findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
-                                                     filePattern='model_*_unrelaxed.pdb'))
+                                                     filePattern='*_unrelaxed*model_*.pdb'))
                 for modelFn in modelsFns:
                     f.write(f"open {modelFn}\n")
                 f.write("matchmaker #2-%d to #1\n" % (len(modelsFns)+1))
