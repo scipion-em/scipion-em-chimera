@@ -45,10 +45,10 @@ class Plugin(pwem.Plugin):
 
     def __init__(self):
         super().__init__()
-        # Change package name to be ChimeraX
+        # Change package name to be chimerax
         # Ideally we could have changed the folder from chimera to chimerax --> chimera module is highly used by
         # other plugins and would require updating all of them.
-        self._name = "ChimeraX"
+        self._name = "chimerax"
 
     @classmethod
     def _defineVariables(cls):
