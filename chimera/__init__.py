@@ -31,7 +31,7 @@ from glob import glob
 from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR, 
                         V1_0, V1_1, V1_2_5, V1_3, V1_4, chimeraTARs)
 
-__version__ = "3.3.5"
+__version__ = "3.3.6"
 _logo = "chimerax_logo.png"
 _references = ['Goddard2018']
 
@@ -42,6 +42,13 @@ class Plugin(pwem.Plugin):
     _supportedVersions = [V1_3]
     _currentVersion = V1_4  
     _fullVersion = 'chimerax-%s' % _currentVersion
+
+    def __init__(self):
+        super().__init__()
+        # Change package name to be ChimeraX
+        # Ideally we could have changed the folder from chimera to chimerax --> chimera module is highly used by
+        # other plugins and would require updating all of them.
+        self._name = "ChimeraX"
 
     @classmethod
     def _defineVariables(cls):
