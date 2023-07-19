@@ -1,2 +1,1 @@
-tk_html_widgets @ git+https://github.com/scipion-em/tk_html_widgets@master
 scipion-em
