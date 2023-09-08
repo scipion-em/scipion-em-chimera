@@ -133,9 +133,10 @@ class Plugin(pwem.Plugin):
         if tarDir:
             extractionDir = os.path.join("..", tarDir, extractionDir)
 
-        chimera_cmds = [("cd .. && python %s %s" % (getchimera_script, version), "../ChimeraX-%s.tar.gz" %version),
-                        ("cd .. && tar -xf ChimeraX-%s.tar.gz" % version, extractionDir)
-                        ]
+        chimera_cmds = [
+            ("pip install https://github.com/scipion-em/tk_html_widgets/archive/master.zip", []),
+            ("cd .. && python %s %s" % (getchimera_script, version), "../ChimeraX-%s.tar.gz" %version),
+            ("cd .. && tar -xf ChimeraX-%s.tar.gz" % version, extractionDir)]
 
         if tarDir:
             chimera_cmds.append(("mv ../%s/* ." % tarDir,  finalDir))

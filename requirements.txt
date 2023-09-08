@@ -1,2 +1,1 @@
-tk_html_widgets
 scipion-em
