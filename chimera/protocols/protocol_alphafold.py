@@ -43,7 +43,11 @@ from pwem.convert import AtomicStructHandler
 import pwem.objects as emobj
 
 from pwem.protocols import EMProtocol
-from pwem.viewers.viewer_chimera import chimeraScriptFileName, Chimera
+try: # TODO: TO REMOVE when pwem updated
+    from pwem.viewers.viewer_chimera import chimeraPythonFileName
+except:
+    chimeraPythonFileName = "chimeraPythonScript.py"
+from pwem.viewers.viewer_chimera import Chimera
 from chimera import Plugin
 from chimera.utils import getEnvDictionary
 from pwem.convert import AtomicStructHandler
@@ -458,8 +462,8 @@ cd {ALPHAFOLD_HOME}
         Chimera.createCoordinateAxisFile(dim,
                                          bildFileName=tmpFileName,
                                          sampling=sampling)
-        chimeraScriptFileName = "chimeraPythonScript.py"
-        f = open(self._getTmpPath(chimeraScriptFileName), "w")
+        
+        f = open(self._getTmpPath(chimeraPythonFileName), "w")
         f.write('from chimerax.core.commands import run\n')
 
         f.write("run(session, 'open %s')\n" % tmpFileName)
@@ -476,14 +480,14 @@ session.logger.error('''{msg}''')
 """)
         
         # run the script:
-        _chimeraScriptFileName = os.path.abspath(
-            self._getTmpPath(chimeraScriptFileName))
+        _chimeraPythonFileName = os.path.abspath(
+            self._getTmpPath(chimeraPythonFileName))
         if len(self.extraCommands.get()) > 2:
             # TODO: parse extra command
             f.write(self.extraCommands.get())
-            args = " --nogui " + _chimeraScriptFileName
+            args = " --nogui " + _chimeraPythonFileName
         else:
-            args = " " + _chimeraScriptFileName
+            args = " " + _chimeraPythonFileName
         f.close()
 
         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
