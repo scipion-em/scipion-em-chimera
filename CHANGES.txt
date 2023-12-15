@@ -1,3 +1,4 @@
+05-December-2023 - 3.4.0: Update the defaul binaries to chimerax-1.6.1
 14-February-2019 - Prepare beta for release
 20-August-2018 - New version of plugin version
 23-August-2018 - Validate installation, use Plugin.getHome()
