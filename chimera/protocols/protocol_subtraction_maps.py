@@ -49,7 +49,11 @@ from pwem.constants import (SYM_DIHEDRAL_X)
 from ..constants import (CHIMERA_SYM_NAME, CHIMERA_I222r)
 from ..convert import CHIMERA_LIST
 from pwem.protocols import EMProtocol
-from pwem.viewers.viewer_chimera import Chimera, chimeraScriptFileName
+try: # TODO: TO REMOVE when pwem updated
+    from pwem.viewers.viewer_chimera import chimeraPythonFileName
+except:
+    chimeraPytonFileName = "chimeraPythonScript.py"
+from pwem.viewers.viewer_chimera import Chimera
 from pyworkflow.protocol.constants import LEVEL_ADVANCED
 from chimera import Plugin
 from pyworkflow.utils.properties import Message
@@ -294,7 +298,7 @@ class ChimeraSubtractionMaps(EMProtocol):
 
         # building script file including the coordinate axes and the input
         # volume with samplingRate and Origin information
-        f = open(self._getTmpPath(chimeraScriptFileName), "w")
+        f = open(self._getTmpPath(chimeraPythonFileName), "w")
         f.write("from chimerax.core.commands import run\n")
 
         # building coordinate axes
@@ -559,10 +563,10 @@ class ChimeraSubtractionMaps(EMProtocol):
         if len(self.extraCommands.get()) > 2:
             f.write(self.extraCommands.get())
             args = " --nogui --script " + \
-                   os.path.abspath(self._getTmpPath(chimeraScriptFileName))
+                   os.path.abspath(self._getTmpPath(chimeraPythonFileName))
         else:
             args = " --script " + \
-                   os.path.abspath(self._getTmpPath(chimeraScriptFileName))
+                   os.path.abspath(self._getTmpPath(chimeraPythonFileName))
         f.close()
 
         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
