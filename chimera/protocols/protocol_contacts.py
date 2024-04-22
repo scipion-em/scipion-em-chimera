@@ -351,10 +351,10 @@ class ChimeraProtContacts(EMProtocol):
         return "view_ND_1"
 
     def getChimeraScriptFileName1(self):
-        return os.path.abspath(self._getTmpPath("chimera1.cxc"))
+        return os.path.abspath(self._getTmpPath("chimera1.py"))
 
     def getChimeraScriptFileName2(self):
-        return os.path.abspath(self._getTmpPath("chimera2.cxc"))
+        return os.path.abspath(self._getTmpPath("chimera2.py"))
 
     def endChimeraScript(self, firstValue, labelDict, outFiles, f):
         protId = firstValue
