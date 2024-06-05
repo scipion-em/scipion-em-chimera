@@ -109,11 +109,9 @@ class Plugin(pwem.Plugin):
 
         activeVersion = cls.getActiveVersion()
         installationFlagFile = "installed-%s" % activeVersion
-        ff = open("/tmp/kk.cxc", "w")
-        ff.write(f'devel install {pathToPlugin}')
-        ff.close()
-        installPluginsCommand = [("%s --nogui --exit " \
-                                  "/tmp/kk.cxc && touch %s" % (pathToBinary, installationFlagFile),
+        installPluginsCommand = [("echo 'devel install %s' > /tmp/kk.cxc && " \
+                                  "%s --nogui --exit " \
+                                  "/tmp/kk.cxc && touch %s" % (pathToPlugin, pathToBinary, installationFlagFile),
                                   [installationFlagFile])]
 
         env.addPackage('scipionchimera' , version='1.3',
