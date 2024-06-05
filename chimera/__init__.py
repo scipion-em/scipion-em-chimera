@@ -24,6 +24,7 @@
 # **************************************************************************
 
 import os
+import tempfile
 
 import pwem
 import pyworkflow.utils as pwutils
@@ -109,9 +110,11 @@ class Plugin(pwem.Plugin):
 
         activeVersion = cls.getActiveVersion()
         installationFlagFile = "installed-%s" % activeVersion
-        installPluginsCommand = [("echo 'devel install %s' > /tmp/kk.cxc && " \
-                                  "%s --nogui --exit " \
-                                  "/tmp/kk.cxc && touch %s" % (pathToPlugin, pathToBinary, installationFlagFile),
+        
+        with tempfile.NamedTemporaryFile(delete=False) as tmpFile:
+            tmpFile.write(f"devel install {pathToPlugin}")
+            tmpFn = tmpFile.name
+        installPluginsCommand = [(f"{pathToBinary} --nogui --exit {tmpFn} && touch {installationFlagFile}",
                                   [installationFlagFile])]
 
         env.addPackage('scipionchimera' , version='1.3',
