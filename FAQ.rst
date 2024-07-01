@@ -14,4 +14,9 @@
     
     where path_to_scipion3_plugins is the path to the directory with the Scipion3 plugins.
     
+ The command
+
+      `chimera --nogui --cmd "devel install /path_to_scipion3_plugins/scipion-em-chimera/chimera/Bundles/scipion; exit"`
+
+may be useful the determine the cause of the error
 

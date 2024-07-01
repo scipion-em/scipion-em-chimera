@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#th -*- coding: utf-8 -*-
 # **************************************************************************
 # * Authors:     Roberto Marabini
 # *              Marta Martinez
@@ -43,7 +43,11 @@ from pwem.convert import AtomicStructHandler
 import pwem.objects as emobj
 
 from pwem.protocols import EMProtocol
-from pwem.viewers.viewer_chimera import chimeraScriptFileName, Chimera
+try: # TODO: TO REMOVE when pwem updated
+    from pwem.viewers.viewer_chimera import chimeraPythonFileName
+except:
+    chimeraPythonFileName = "chimeraPythonScript.py"
+from pwem.viewers.viewer_chimera import Chimera
 from chimera import Plugin
 from chimera.utils import getEnvDictionary
 from pwem.convert import AtomicStructHandler
@@ -103,7 +107,8 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
 
     url = {}
 #    url[CHIMERA] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold_colab.ipynb"
-    url[CHIMERA21] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold21_colab.ipynb"
+    #url[CHIMERA21] = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/chimera_alphafold21_colab.ipynb"
+    url[CHIMERA21] = "https://colab.research.google.com/github/RBVI/ChimeraX/blob/develop/src/bundles/alphafold/src/alphafold21_predict_colab.ipynb"
     url[PHENIX]  = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/phenix_alphafold_colab.ipynb"
     url[TEST]  = "https://colab.research.google.com/github/scipion-em/scipion-em-chimera/blob/devel/chimera/colabs/test_colab.ipynb"
 
@@ -412,11 +417,13 @@ cd {ALPHAFOLD_HOME}
            https://alphafold.ebi.ac.uk/files/AF-P29474-F1-model_v1.cif'''
         
         # get alphafold EBI database url
-        self._get_alphafold_database_settings()
-        data = {'uniprot_id': uniProtID, 'version': self.settings['database_version']}
+        ## self._get_alphafold_database_settings()
+        file_name = 'AF-%s-F1-model_v4.cif' % uniProtID
+        model_url = 'https://alphafold.ebi.ac.uk/files/' + file_name
+        ## data = {'uniprot_id': uniProtID, 'version': self.settings['database_version']}
         # get model
         extraDir = self._getExtraPath()
-        model_url = self.settings['database_url'].format(**data)
+        ## model_url = self.settings['database_url'].format(**data)
         outFileName = os.path.join(extraDir, uniProtID + ".cif")
         status, msg = fetch_file(model_url, retry = 3, json=False, outFilename=outFileName)
         if not status:
@@ -455,8 +462,8 @@ cd {ALPHAFOLD_HOME}
         Chimera.createCoordinateAxisFile(dim,
                                          bildFileName=tmpFileName,
                                          sampling=sampling)
-        chimeraScriptFileName = "chimeraPythonScript.py"
-        f = open(self._getTmpPath(chimeraScriptFileName), "w")
+        
+        f = open(self._getTmpPath(chimeraPythonFileName), "w")
         f.write('from chimerax.core.commands import run\n')
 
         f.write("run(session, 'open %s')\n" % tmpFileName)
@@ -473,14 +480,14 @@ session.logger.error('''{msg}''')
 """)
         
         # run the script:
-        _chimeraScriptFileName = os.path.abspath(
-            self._getTmpPath(chimeraScriptFileName))
+        _chimeraPythonFileName = os.path.abspath(
+            self._getTmpPath(chimeraPythonFileName))
         if len(self.extraCommands.get()) > 2:
             # TODO: parse extra command
             f.write(self.extraCommands.get())
-            args = " --nogui " + _chimeraScriptFileName
+            args = " --nogui " + _chimeraPythonFileName
         else:
-            args = " " + _chimeraScriptFileName
+            args = " " + _chimeraPythonFileName
         f.close()
 
         self._log.info('Launching: ' + Plugin.getProgram() + ' ' + args)
@@ -649,11 +656,11 @@ session.logger.error('''{msg}''')
             f = open(fnCmd, 'w')
             if colabID == self.CHIMERA21:
                 modelsFns = _findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
-                                                         filePattern='model_*_relaxed.pdb')
+                                                         filePattern='*_relaxed*model_*.pdb')
                 for modelFn in modelsFns:
                     f.write(f"open {modelFn}\n")
                 modelsFns = sorted(_findDownloadDirAndGetModels(os.path.abspath(self._getExtraPath('results')), 
-                                                     filePattern='model_*_unrelaxed.pdb'))
+                                                     filePattern='*_unrelaxed*model_*.pdb'))
                 for modelFn in modelsFns:
                     f.write(f"open {modelFn}\n")
                 f.write("matchmaker #2-%d to #1\n" % (len(modelsFns)+1))
