@@ -111,7 +111,7 @@ class Plugin(pwem.Plugin):
         activeVersion = cls.getActiveVersion()
         installationFlagFile = "installed-%s" % activeVersion
         
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".cxc") as tmpFile:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".cxc") as tmpFile:
             tmpFile.write(f"devel install {pathToPlugin}")
             tmpFn = tmpFile.name
         installPluginsCommand = [(f"{pathToBinary} --nogui --exit {tmpFn} && touch {installationFlagFile}",
