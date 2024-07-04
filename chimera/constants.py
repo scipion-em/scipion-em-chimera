@@ -32,7 +32,6 @@ MUSCLE = 'muscle'
 CHIMERAX=True
 
 # Supported Versions
-V1_0 = '1.0'
 V1_1 = '1.1'
 V1_2_5 = '1.2.5'
 V1_3 = '1.3'
