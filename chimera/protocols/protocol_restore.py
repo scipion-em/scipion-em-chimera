@@ -54,6 +54,7 @@ class ChimeraProtRestore(ChimeraProtBase):
                       pointerClass='ChimeraProtOperate, '
                                    'ChimeraProtRigidFit, '
                                    'ChimeraModelFromTemplate, '
+                                   'ChimeraProtRestore, '
                                    'ChimeraSubtractionMaps',
                       help="protocol to be reloaded")
 
