@@ -24,14 +24,16 @@
 # **************************************************************************
 
 import os
+import tempfile
 
 import pwem
 import pyworkflow.utils as pwutils
 from glob import glob
-from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR, 
-                        V1_0, V1_1, V1_2_5, V1_3, V1_4, chimeraTARs)
+from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR,
+                        V1_1, V1_2_5, V1_3, V1_4, chimeraTARs, V1_6_1)
 
-__version__ = "3.3.7"
+
+__version__ = "3.4.1"
 _logo = "chimerax_logo.png"
 _references = ['Goddard2018']
 
@@ -39,8 +41,8 @@ _references = ['Goddard2018']
 class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
-    _supportedVersions = [V1_3]
-    _currentVersion = V1_4  
+    _supportedVersions = chimeraTARs.keys()
+    _currentVersion = V1_6_1
     _fullVersion = 'chimerax-%s' % _currentVersion
 
     def __init__(self):
@@ -91,9 +93,6 @@ class Plugin(pwem.Plugin):
         # return "vglrun " +  path[0]
         return path[0]
 
-    @classmethod
-    def isVersionActive(cls):
-        return cls.getActiveVersion().startswith(V1_0)
 
     @classmethod
     def defineBinaries(cls, env):
@@ -109,11 +108,11 @@ class Plugin(pwem.Plugin):
 
         activeVersion = cls.getActiveVersion()
         installationFlagFile = "installed-%s" % activeVersion
-        ff = open("/tmp/kk.cxc", "w")
-        ff.write(f'devel install {pathToPlugin}')
-        ff.close()
-        installPluginsCommand = [("%s --nogui --exit " \
-                                  "/tmp/kk.cxc && touch %s" % (pathToBinary, installationFlagFile),
+        
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".cxc") as tmpFile:
+            tmpFile.write(f"devel install {pathToPlugin}")
+            tmpFn = tmpFile.name
+        installPluginsCommand = [(f"{pathToBinary} --nogui --exit {tmpFn} && touch {installationFlagFile}",
                                   [installationFlagFile])]
 
         env.addPackage('scipionchimera' , version='1.3',

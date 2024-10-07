@@ -46,7 +46,7 @@ or link your chimerax folder to *software/em/chimerax-1.0*.
 
 - **Tests**
 
-Tested with ChimeraX version: 1.0.
+Tested with ChimeraX version: 1.X. where X is in the range 0-6
 
 To check the installation, simply run the following Scipion tests: 
 
@@ -56,9 +56,9 @@ To check the installation, simply run the following Scipion tests:
 * scipion test chimera.tests.test_protocol_contact
 * scipion test chimera.tests.test_protocol_chimera_map_subtraction
 
-- **Supported versions of ChimeraX**
-
-1.0, 1.1, 1.2 and 1.3
+NOTE: the fact that chimerax-plugins supports the above mentioned chimerax versions does not
+mean that chimerax supports your operating system. For example, if you want to install 
+chimerax 1.4 or higher you need at least ubuntu 22 version.
 
 
 =========
