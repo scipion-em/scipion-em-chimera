@@ -42,7 +42,7 @@ class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
     _supportedVersions = chimeraTARs.keys()
-    _currentVersion = V1_8
+    _currentVersion = V1_7_1
     _fullVersion = 'chimerax-%s' % _currentVersion
 
     def __init__(self):
