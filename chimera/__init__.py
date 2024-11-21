@@ -30,10 +30,10 @@ import pwem
 import pyworkflow.utils as pwutils
 from glob import glob
 from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR,
-                        V1_1, V1_2_5, V1_3, V1_4, chimeraTARs, V1_6_1)
+                        V1_1, V1_2_5, V1_3, V1_4, chimeraTARs, V1_6_1, V1_8)
 
 
-__version__ = "3.4.1"
+__version__ = "3.4.2"
 _logo = "chimerax_logo.png"
 _references = ['Goddard2018']
 
@@ -42,7 +42,7 @@ class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
     _supportedVersions = chimeraTARs.keys()
-    _currentVersion = V1_6_1
+    _currentVersion = V1_8
     _fullVersion = 'chimerax-%s' % _currentVersion
 
     def __init__(self):
