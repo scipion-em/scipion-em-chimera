@@ -40,9 +40,38 @@ OR
 - **Binary files**
 
 Chimera binaries could be installed automatically with the plugin after accepting ChimeraX licence terms,
-but you can also link an existing installation. Default installation path assumed is *software/em/chimerax-1.0,
+but you can also link an existing installation. Default installation path assumed is *software/em/chimerax-1.6,
 if you want to change it, set *CHIMERA_HOME* in *scipion.conf* file to the folder where ChimeraX is installed
-or link your chimerax folder to *software/em/chimerax-1.0*.
+or link your chimerax folder to *software/em/chimerax-1.6*.
+
+- **Linking existing chimeraX installations**
+
+Since version 1.8, chimeraX do not offer a generic tar file for any linux distribution.
+Last version we install is 1.6 but other later versions can be linked following the next steps.
+
+1.- create a folder in *software/em/chimerax-#.#* (being #.# = 1.8 or any chimeraX version you have installed)
+
+2.- create a subfolder under chimerax-#.# called *bin*
+
+OPTION1: flatpak installations:
+
+F3.- create a text file called ChimeraX with this content in the :
+
+.. code-block::
+
+    flatpak run edu.ucsf.rbvi.ChimeraX $@
+
+F4.- make it executable (chmod +x ChimeraX)
+
+
+OPTION2: other linux installations:
+
+L3.- link the existing ChimeraX binary in the bin folder. e.g: ln -s /usr/bin/chimerax ChimeraX
+
+OPTION3: ChimeraX on windows and Scipion on WSL
+
+W3.- link the existing ChimeraX.exe in the bin folder. e.g: ln -s /usr/bin/chimerax ChimeraX
+
 
 - **Tests**
 
