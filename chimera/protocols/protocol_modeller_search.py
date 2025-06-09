@@ -488,7 +488,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                 else:
                     cline = alignMuscleSequences(inFile, outFile)
                 args = ''
-                self.runJob(cline, args)
+                self.runJob(str(cline), args)
         elif addSeq == 1:
             # if there are additional sequences imported by the user
             if inputSeqAlign is not None:
