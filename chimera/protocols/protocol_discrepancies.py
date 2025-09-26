@@ -43,7 +43,7 @@ class ChimeraProtDiscrepancies(EMProtocol):
     """
     Protocol to find atom discrepancies of all atomic models versus all of the rest.
     """
-    _label = 'Find discrepancies'
+    _label = 'find discrepancies'
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
