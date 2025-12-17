@@ -42,10 +42,7 @@ from pwem.convert.headers import Ccp4Header
 from pwem.protocols import EMProtocol
 
 from pwem.viewers.viewer_chimera import (Chimera,
-                                         sessionFile,
-                                         chimeraMapTemplateFileName,
-                                         chimeraScriptFileName,
-                                         chimeraPdbTemplateFileName)
+                                         chimeraScriptFileName)
 
 from pyworkflow.protocol.params import (MultiPointerParam,
                                         PointerParam,
@@ -53,12 +50,12 @@ from pyworkflow.protocol.params import (MultiPointerParam,
 from pyworkflow.utils.properties import Message
 
 from .. import Plugin
-import configparser
-import shutil
+
 
 class ChimeraProtBase(EMProtocol):
     """Base class  for chimera protocol"""
     _version = VERSION_3_0
+
     @classmethod
     def getClassPackageName(cls):
         return "chimerax"
@@ -92,12 +89,13 @@ class ChimeraProtBase(EMProtocol):
                       help="Add extra commands in cmd file. Use for testing")
         if doHelp:
             form.addSection(label='Help')
-            # form.addLine(''' scipionwrite model #n [refmodel #p] [prefix stringAddedToFilename]
+
             form.addLine(''' scipionwrite #n [prefix stringAddedToFilename]
             scipionss
             scipionrs
             scipioncombine #n1,n2,n3... [modelid StringArg]
-            Type 'help command' in chimera command line for details (command is the command name)''')
+            Type 'help command' in chimera command line 
+            for details (command is the command name)''')
 
         return form  # DO NOT remove this return
 
@@ -202,7 +200,10 @@ class ChimeraProtBase(EMProtocol):
 
         # run in the background
         cwd = os.path.abspath(self._getExtraPath())
-        Plugin.runChimeraProgram(Plugin.getProgram(), args, cwd=cwd, extraEnv=getEnvDictionary(self))
+        Plugin.runChimeraProgram(
+            Plugin.getProgram(),
+            args, cwd=cwd,
+            extraEnv=getEnvDictionary(self))
 
     def createOutput(self):
         """ Copy the PDB structure and register the output object.
@@ -211,7 +212,8 @@ class ChimeraProtBase(EMProtocol):
         directory = self._getExtraPath()
         for filename in sorted(os.listdir(directory)):
             if not filename.startswith("tmp"):
-                # files starting with "tmp" will not be converted in scipion objects
+                # files starting with "tmp" will not be 
+                # converted in scipion objects
                 if filename.endswith(".mrc"):
                     volFileName = os.path.join(directory, filename)
                     vol = Volume()
@@ -234,7 +236,7 @@ class ChimeraProtBase(EMProtocol):
                     pdb = AtomStruct()
                     pdb.setFileName(path)
                     if filename.endswith(".cif"):
-                        keyword = filename.split(".cif")[0].replace(".","_")
+                        keyword = filename.split(".cif")[0].replace(".", "_")
                     else:
                         keyword = filename.split(".pdb")[0].replace(".", "_")
                     kwargs = {keyword: pdb}
@@ -250,7 +252,8 @@ class ChimeraProtBase(EMProtocol):
         elif not os.path.exists(program):
             errors.append("Binary '%s' does not exists.\n" % program)
 
-        # If there is any error at this point it is related to config variables
+        # If there is any error at this point it is related
+        # to config variables
         if errors:
             errors.append("Check configuration file: ~/.config/scipion/"
                           "scipion.conf")
@@ -266,7 +269,6 @@ class ChimeraProtBase(EMProtocol):
         summary = []
         if self.getOutputsSize() > 0:
             directory = self._getExtraPath()
-            counter = 1
             summary.append("Produced files:")
             for filename in sorted(os.listdir(directory)):
                 if filename.endswith(".pdb"):
