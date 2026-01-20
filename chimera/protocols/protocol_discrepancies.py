@@ -446,13 +446,17 @@ class ChimeraProtDiscrepancies(EMProtocol):
 
         for model_name, matrices in grouped_rmsd.items():
             mean_matrix = [[], []]
-            num_matrices = len(matrices)
             for line_index in range(2):
-                summed_values = [0] * len(matrices[0][line_index])
+                max_len = max(len(matrix[line_index]) for matrix in matrices for line_index in [0, 1])
+                summed_values = [0.0] * max_len
+                counts = [0] * max_len
                 for matrix in matrices:
-                    for i, value in enumerate(matrix[line_index]):
-                        summed_values[i] += value
-                mean_matrix[line_index] = [val / num_matrices for val in summed_values]
+                    for line_index in [0, 1]:
+                        for i, value in enumerate(matrix[line_index]):
+                            summed_values[i] += value
+                            counts[i] += 1
+                mean_matrix = [summed_values[i] / counts[i] if counts[i] > 0 else 0.0
+                               for i in range(max_len)]
             final_aa_rmsd.append({model_name: mean_matrix})
 
         for file_name in os.listdir(final_output_path):
