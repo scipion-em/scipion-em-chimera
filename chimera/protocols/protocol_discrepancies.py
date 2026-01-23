@@ -487,10 +487,21 @@ class ChimeraProtDiscrepancies(EMProtocol):
                     file.writelines(updated_lines)
 
         for file_name in os.listdir(final_output_path):
+            if file_name.endswith('.cif') and file_name.count('.') > 1:
+                old_path = os.path.join(final_output_path, file_name)
+                parts = file_name.split('.')
+                # Delete the first dot by joining with underscore
+                new_file_name = '_'.join(parts[:-1]) + '.' + parts[-1]
+                new_path = os.path.join(final_output_path, new_file_name)
+                os.rename(old_path, new_path)
+
+
+        for file_name in os.listdir(final_output_path):
             file_path = os.path.join(final_output_path, file_name)
             if os.path.isfile(file_path):
                 output = AtomStruct(filename=file_path)
                 output_name = os.path.splitext(file_name)[0]
                 self._defineOutputs(**{output_name: output})
                 self._defineSourceRelation(self.structures, output)
+
 
