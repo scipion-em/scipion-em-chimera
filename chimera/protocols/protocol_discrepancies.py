@@ -29,7 +29,7 @@ import subprocess
 import re
 import shutil
 import pyworkflow.utils as pwutils
-from pyworkflow.protocol import MultiPointerParam
+from pyworkflow.protocol import MultiPointerParam, params
 from pyworkflow.utils import Message
 from pwem.protocols import EMProtocol
 
@@ -53,6 +53,10 @@ class ChimeraProtDiscrepancies(EMProtocol):
         """
         form.addSection(label=Message.LABEL_INPUT)
 
+        form.addParam('reference', params.PointerParam,
+                      pointerClass='AtomStruct',
+                      label="Reference structure: ",
+                      help='Select the reference AtomStruct.')
         form.addParam('structures', MultiPointerParam, pointerClass="AtomStruct",
                       label='Atomic structure', important=True,
                       help='Select the set of atomic structures to be aligned and analyzed.')
@@ -64,11 +68,19 @@ class ChimeraProtDiscrepancies(EMProtocol):
         self._insertFunctionStep(self.run_chimerax_script_step)
         self._insertFunctionStep(self.create_folders)
         self._insertFunctionStep(self.add_rmsd)
+        self._insertFunctionStep(self.compute_mean_rmsd)
         self._insertFunctionStep(self.final_models)
 
     # --------------------------- STEPS functions -----------------------------
-    def convertStep(self):
+    def convertStep(self): #todo optimize this
         self.extra_files = []
+        ref_file = self.reference.get().getFileName()
+        dest_file = os.path.basename(ref_file).replace("_", "")
+        dest_path = self._getExtraPath(dest_file)
+        pwutils.createLink(ref_file, dest_path)
+        if not os.path.exists(dest_path):
+            raise Exception(f"Failed to create link for {ref_file} to {dest_path}")
+        self.extra_files.append(dest_file)
         for i, atomstruct in enumerate(self.structures):
             ori_file = atomstruct.get().getFileName()
             dest_file = os.path.basename(ori_file).replace("_", "")
@@ -94,11 +106,12 @@ class ChimeraProtDiscrepancies(EMProtocol):
 
         # Align every model with every other model and save RMSD values
         rmsd_counter = 1
+        ref_index = 1
         for i in range(len(self.extra_files)):
-            for j in range(i + 1, len(self.extra_files)):
-                model1 = os.path.splitext(os.path.basename(self.extra_files[i]))[0]
-                model2 = os.path.splitext(os.path.basename(self.extra_files[j]))[0]
-                chimerax_script += f"matchmaker #{i + 1} to #{j + 1} showAlignment true\n"
+            model1 = os.path.splitext(os.path.basename(self.extra_files[0]))[0]
+            model2 = os.path.splitext(os.path.basename(self.extra_files[i]))[0]
+            if model1 != model2:
+                chimerax_script += f"matchmaker #{ref_index} to #{i+1} showAlignment true\n"
                 chimerax_script += "setattr a occupancy 1111.11\n"  # Arbitrary number for later changes
                 chimerax_script += f"sequence header {rmsd_counter} rmsd save {save_path}/rmsd_{model1}_{model2}.txt\n"
                 chimerax_script += f"save {save_path}/fasta_{model1}_{model2}.fasta format fasta alignment {rmsd_counter}\n"
@@ -354,6 +367,46 @@ class ChimeraProtDiscrepancies(EMProtocol):
                         unique[k] = v
                 self.occ_position = [list(unique.keys()), list(unique.values())]
 
+    def compute_mean_rmsd(self):
+        output_path = os.path.join(self.getWorkingDir(), 'extra')
+        ref_file = os.path.splitext(os.path.basename(self.extra_files[0]))[0]  # reference is first
+        rmsd_files = [f for f in os.listdir(output_path) if f.startswith('rmsd_') and f.endswith('.txt')]
+
+        mean_rmsd = []
+        rmsd_data = []
+
+        # Leer todos los rmsd y almacenarlos en una lista
+        for rmsd_file in rmsd_files:
+            file_path = os.path.join(output_path, rmsd_file)
+            with open(file_path, 'r') as f:
+                lines = f.readlines()[1:]  # saltar header
+                vals = []
+                for line in lines:
+                    parts = line.strip().split(":")
+                    if len(parts) == 2:
+                        try:
+                            val = float(parts[1].strip()) if parts[1].strip() != "None" else 0.0
+                            vals.append(val)
+                        except ValueError:
+                            continue
+                rmsd_data.append(vals)
+
+        # Calcular media por residuo
+        if rmsd_data:
+            max_len = max(len(r) for r in rmsd_data)
+            for i in range(max_len):
+                vals = [r[i] for r in rmsd_data if i < len(r)]
+                mean_rmsd.append(sum(vals) / len(vals) if vals else 0.0)
+
+        # Guardar archivo mean_rmsd
+        mean_rmsd_file = os.path.join(output_path, f"mean_rmsd_{ref_file}.txt")
+        with open(mean_rmsd_file, 'w') as f:
+            for i, val in enumerate(mean_rmsd, start=1):
+                f.write(f"{i}: {val:.6f}\n")
+
+        print(f"Mean RMSD file created at {mean_rmsd_file}")
+        return mean_rmsd_file
+
     def final_models(self):
         output_path = os.path.join(self.getWorkingDir(), 'extra')
         final_output_path = os.path.join(output_path, 'FINAL-OUTPUTS')
@@ -495,13 +548,23 @@ class ChimeraProtDiscrepancies(EMProtocol):
                 new_path = os.path.join(final_output_path, new_file_name)
                 os.rename(old_path, new_path)
 
+        ref_name = os.path.basename(self.reference.get().getFileName())
+        ref_base = os.path.splitext(ref_name)[0].replace("_", "").lower().replace(".", "_")
 
         for file_name in os.listdir(final_output_path):
             file_path = os.path.join(final_output_path, file_name)
             if os.path.isfile(file_path):
                 output = AtomStruct(filename=file_path)
                 output_name = os.path.splitext(file_name)[0]
-                self._defineOutputs(**{output_name: output})
-                self._defineSourceRelation(self.structures, output)
+                file_base = os.path.splitext(file_name)[0].replace("out_", "").lower()
+                print(f'FILE BASE: {file_base}')
+                print(f'REF BASE: {ref_base}')
+                if file_base == ref_base:
+                    print(f'---reference: {file_name}')
+                    self._defineOutputs(
+                        **{f'ref_{output_name}': output})
+                else:
+                    self._defineOutputs(**{output_name: output})
+
 
 

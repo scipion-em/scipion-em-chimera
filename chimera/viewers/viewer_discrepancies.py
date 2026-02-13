@@ -10,18 +10,39 @@ class ChimeraProtDiscrepanciesViewer(Viewer):
     _targets = [ChimeraProtDiscrepancies]
 
     def visualize(self, obj, **args):
-        # Create Chimera command file
         fnCmd = self.protocol._getExtraPath("discrepancies_viewer_with_files.cxc")
         with open(fnCmd, 'w') as f:
-            # Process protocol outputs
-            for output in self.protocol._outputs:
-                # If the file is an atomic structure (.cif or .pdb), open it in Chimera
-                fileName = os.path.abspath(eval(f'self.protocol.{output}.getFileName()'))
-                if fileName.endswith(".cif") or fileName.endswith(".pdb"):
-                    f.write(f"open {fileName}\n")
-                    # Apply occupancy color palette to the structure
-                    f.write("color byattribute occupancy palette paegreen\n")
-                    f.write("key darkgreen:low green: lightgreen: white:high\n") # This palette means RMSD, high is worse
+            outputs = self.protocol._outputs
+            if not outputs:
+                return
 
-        # Run Chimera with the generated command file
+            # Reference model = first with 'ref_' or first file
+            ref_file = None
+            for output in outputs:
+                file_path = os.path.abspath(eval(f'self.protocol.{output}.getFileName()'))
+                if os.path.basename(file_path).startswith("ref_"):
+                    ref_file = file_path
+                    break
+            if not ref_file:
+                ref_file = os.path.abspath(eval(f'self.protocol.{outputs[0]}.getFileName()'))
+
+            # Abrir referencia
+            f.write(f"open {ref_file}\n")
+
+            # Abrir y alinear los demás modelos a #1
+            model_counter = 2  # #1 = referencia
+            for output in outputs:
+                file_path = os.path.abspath(eval(f'self.protocol.{output}.getFileName()'))
+                if file_path == ref_file:
+                    continue
+                f.write(f"open {file_path}\n")
+                # Solo alinear cadenas presentes en ambos modelos
+                f.write(f"matchmaker #{model_counter} to #1 showAlignment true\n")
+                model_counter += 1
+
+            # Aplicar colores **después de abrir y alinear todos**
+            f.write("color byattribute occupancy palette paegreen\n")
+            f.write("key darkgreen:low green: lightgreen: white:high\n")
+            f.write("view orient\n")
+
         Chimera.runProgram(Chimera.getProgram(), fnCmd + "&")

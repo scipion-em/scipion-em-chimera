@@ -30,7 +30,6 @@ import pwem
 import pyworkflow.utils as pwutils
 from glob import glob
 
-from pyworkflow import SPA, TOMO, MODELLING
 from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR,
                         V1_1, V1_2_5, V1_3, V1_4, chimeraTARs, V1_6_1)
 
@@ -46,7 +45,6 @@ class Plugin(pwem.Plugin):
     _supportedVersions = chimeraTARs.keys()
     _currentVersion = V1_6_1
     _fullVersion = 'chimerax-%s' % _currentVersion
-    _processingField = [SPA, TOMO, MODELLING]
 
     def __init__(self):
         super().__init__()
