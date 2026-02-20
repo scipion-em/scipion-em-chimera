@@ -19,12 +19,12 @@ class ChimeraProtDiscrepanciesViewer(Viewer):
             # Reference model = first with 'ref_' or first file
             ref_file = None
             for output in outputs:
-                file_path = os.path.abspath(eval(f'self.protocol.{output}.getFileName()'))
+                file_path = os.path.abspath(getattr(self.protocol, output).getFileName())
                 if os.path.basename(file_path).startswith("ref_"):
                     ref_file = file_path
                     break
             if not ref_file:
-                ref_file = os.path.abspath(eval(f'self.protocol.{outputs[0]}.getFileName()'))
+                ref_file = os.path.abspath(getattr(self.protocol, outputs[0]).getFileName())
 
             # Abrir referencia
             f.write(f"open {ref_file}\n")
@@ -32,12 +32,11 @@ class ChimeraProtDiscrepanciesViewer(Viewer):
             # Abrir y alinear los demás modelos a #1
             model_counter = 2  # #1 = referencia
             for output in outputs:
-                file_path = os.path.abspath(eval(f'self.protocol.{output}.getFileName()'))
+                file_path = os.path.abspath(getattr(self.protocol, output).getFileName())
                 if file_path == ref_file:
                     continue
                 f.write(f"open {file_path}\n")
-                # Solo alinear cadenas presentes en ambos modelos
-                f.write(f"matchmaker #{model_counter} to #1 showAlignment true\n")
+                f.write(f"match #{model_counter} to #1\n")
                 model_counter += 1
 
             # Aplicar colores **después de abrir y alinear todos**
