@@ -72,24 +72,40 @@ class ChimeraProtDiscrepancies(EMProtocol):
         self._insertFunctionStep(self.final_models)
 
     # --------------------------- STEPS functions -----------------------------
-    def convertStep(self): #todo optimize this
+    def convertStep(self):
         self.extra_files = []
+        self.model_map = {}
+
+        # --- reference first ---
         ref_file = self.reference.get().getFileName()
-        dest_file = os.path.basename(ref_file).replace("_", "")
-        dest_path = self._getExtraPath(dest_file)
-        pwutils.createLink(ref_file, dest_path)
-        if not os.path.exists(dest_path):
-            raise Exception(f"Failed to create link for {ref_file} to {dest_path}")
-        self.extra_files.append(dest_file)
-        for i, atomstruct in enumerate(self.structures):
+        ref_ext = os.path.splitext(ref_file)[1]
+        ref_internal = f"model_00{ref_ext}"
+        ref_dest = self._getExtraPath(ref_internal)
+
+        pwutils.createLink(ref_file, ref_dest)
+
+        if not os.path.exists(ref_dest):
+            raise Exception(f"Failed to create link for {ref_file}")
+
+        self.extra_files.append(ref_internal)
+        self.model_map[ref_internal] = os.path.basename(ref_file)
+
+        # --- other structures ---
+        for i, atomstruct in enumerate(self.structures, start=1):
             ori_file = atomstruct.get().getFileName()
-            dest_file = os.path.basename(ori_file).replace("_", "")
-            dest_path = self._getExtraPath(dest_file)
+            ext = os.path.splitext(ori_file)[1]
+            internal_name = f"model_{i:02d}{ext}"
+            dest_path = self._getExtraPath(internal_name)
+
             pwutils.createLink(ori_file, dest_path)
+
             if not os.path.exists(dest_path):
-                raise Exception(f"Failed to create link for {ori_file} to {dest_path}")
-            self.extra_files.append(dest_file)
-        print(f"Conversion step completed: {self.extra_files}")
+                raise Exception(f"Failed to create link for {ori_file}")
+
+            self.extra_files.append(internal_name)
+            self.model_map[internal_name] = os.path.basename(ori_file)
+
+        print(f"Conversion completed with unique names: {self.extra_files}")
 
     def create_chimerax_script(self):
         project_path = self.getProject().getPath()
@@ -108,7 +124,7 @@ class ChimeraProtDiscrepancies(EMProtocol):
         rmsd_counter = 1
         ref_index = 1
         for i in range(len(self.extra_files)):
-            model1 = os.path.splitext(os.path.basename(self.extra_files[0]))[0]
+            model1 = os.path.splitext(self.extra_files[0])[0]
             model2 = os.path.splitext(os.path.basename(self.extra_files[i]))[0]
             if model1 != model2:
                 chimerax_script += f"matchmaker #{ref_index} to #{i+1} showAlignment true\n"
@@ -171,7 +187,9 @@ class ChimeraProtDiscrepancies(EMProtocol):
         output_path = os.path.join(self.getWorkingDir(), 'extra')
         for fasta_file in os.listdir(output_path):
             if fasta_file.startswith('fasta_') and fasta_file.endswith('.fasta'):
-                model1, model2 = fasta_file[6:-6].split('_')
+                pair = fasta_file.replace("fasta_", "").replace(".fasta", "")
+                model1, model2 = pair.split("_model_")
+                model2 = "model_" + model2
                 folder_name = f"{model1}_{model2}"
                 folder_path = os.path.join(output_path, folder_name)
                 os.makedirs(folder_path, exist_ok=True)
@@ -202,7 +220,8 @@ class ChimeraProtDiscrepancies(EMProtocol):
         for folder in os.listdir(output_path):
             folder_path = os.path.join(output_path, folder)
             if os.path.isdir(folder_path) and "_" in folder:
-                model1, model2 = folder.split('_')
+                model1, model2 = folder.rsplit("_model_", 1)
+                model2 = "model_" + model2
                 out_model1_file = os.path.join(folder_path, f"out_{model1}.cif")
                 out_model2_file = os.path.join(folder_path, f"out_{model2}.cif")
 
@@ -221,7 +240,8 @@ class ChimeraProtDiscrepancies(EMProtocol):
         for folder in os.listdir(output_path):
             folder_path = os.path.join(output_path, folder)
             if os.path.isdir(folder_path) and "_" in folder:
-                model1, model2 = folder.split('_')
+                model1, model2 = folder.rsplit("_model_", 1)
+                model2 = "model_" + model2
                 fasta_file = os.path.join(folder_path, f"fasta_{model1}_{model2}.fasta")
 
                 mat1, mat2 = [], []
@@ -548,8 +568,7 @@ class ChimeraProtDiscrepancies(EMProtocol):
                 new_path = os.path.join(final_output_path, new_file_name)
                 os.rename(old_path, new_path)
 
-        ref_name = os.path.basename(self.reference.get().getFileName())
-        ref_base = os.path.splitext(ref_name)[0].replace("_", "").lower().replace(".", "_")
+        ref_base = os.path.splitext(self.extra_files[0])[0]
 
         for file_name in os.listdir(final_output_path):
             file_path = os.path.join(final_output_path, file_name)
