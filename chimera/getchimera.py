@@ -24,7 +24,9 @@ def getFile(version):
 def getLicenseURLwithFile(version):
     return LICENSE_URL + '?file=' + getFile(version)
 
-#http://www.rbvi.ucsf.edu/chimerax/cgi-bin/secure/chimerax-get.py?file=1.1/linux/ChimeraX-1.1.tar.gz
+# http://www.rbvi.ucsf.edu/chimerax/cgi-bin/secure/chimerax-get.py?file=1.1/linux/ChimeraX-1.1.tar.gz
+# https://www.cgl.ucsf.edu/chimerax/cgi-bin/secure/chimerax-get.py?file=1.11.1/flatpak/ChimeraX-1.11.1.flatpak
+
 def getChimeraX(version):
 
     print("Getting %s version" % version)
