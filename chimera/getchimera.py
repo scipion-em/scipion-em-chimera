@@ -9,22 +9,28 @@ import re
 DOMAIN = "https://www.cgl.ucsf.edu"
 LICENSE_URL = DOMAIN + "/chimerax/cgi-bin/secure/chimerax-get.py"
 
+
 def getTgz(version):
 
-    return 'ChimeraX-%s.tar.gz' %version
+    return 'ChimeraX-%s.flatpak' % version
+
 
 def getFile(version):
     # Examples:
     #    https://www.rbvi.ucsf.edu/chimerax/cgi-bin/secure/chimerax-get.py?file=1.1/linux/ChimeraX-1.1.tar.gz
     #    https://www.rbvi.ucsf.edu/chimerax/cgi-bin/secure/chimerax-get.py?file=1.2/linux/ChimeraX-1.2.5.tar.gz
 
-    file = ".".join(version.split(".")[:2])
-    return '%s/linux/' % file + getTgz(version)
+    file = ".".join(version.split(".")[:3])
+    return '%s/flatpak/' % file + getTgz(version)
+
 
 def getLicenseURLwithFile(version):
-    return LICENSE_URL + '?file=' + getFile(version)
+    license = LICENSE_URL + '?file=' + getFile(version)
+    return license
 
-#http://www.rbvi.ucsf.edu/chimerax/cgi-bin/secure/chimerax-get.py?file=1.1/linux/ChimeraX-1.1.tar.gz
+
+# http://www.rbvi.ucsf.edu/chimerax/cgi-bin/secure/chimerax-get.py?file=1.1/linux/ChimeraX-1.1.tar.gz
+# https://www.cgl.ucsf.edu/chimerax/cgi-bin/secure/chimerax-get.py?file=1.11.1/flatpak/ChimeraX-1.11.1.flatpak
 def getChimeraX(version):
 
     print("Getting %s version" % version)

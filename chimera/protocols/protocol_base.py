@@ -29,7 +29,8 @@ import os
 
 from pyworkflow import VERSION_3_0
 from ..utils import getEnvDictionary
-
+from .flatpak import is_installed
+# from ..constants import CHIMERA_FLATPAK_ID
 try:
     from pwem.objects import AtomStruct
 except ImportError:
@@ -246,11 +247,8 @@ class ChimeraProtBase(EMProtocol):
     def _validate(self):
         errors = []
         # Check that the program exists
-        program = Plugin.getProgram()
-        if program is None:
-            errors.append("Missing variable CHIMERA_HOME")
-        elif not os.path.exists(program):
-            errors.append("Binary '%s' does not exists.\n" % program)
+        #if is_installed(CHIMERA_FLATPAK_ID):
+        #    errors.append("Binary '%s' does not exists.\n" % CHIMERA_FLATPAK_ID)
 
         # If there is any error at this point it is related
         # to config variables

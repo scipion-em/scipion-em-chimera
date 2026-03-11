@@ -24,26 +24,19 @@
 # *
 # **************************************************************************
 
+CHIMERA_FLATPAK_ID = "edu.ucsf.rbvi.ChimeraX"
 CHIMERA_HOME = 'CHIMERA_HOME'
 ALPHAFOLD_HOME = 'ALPHAFOLD_HOME'
 ALPHAFOLD_DATABASE_DIR = 'ALPHAFOLD_DATABASE_DIR'
 CLUSTALO = 'clustalo'
 MUSCLE = 'muscle'
-CHIMERAX=True
+CHIMERAX = True
 
 # Supported Versions
-V1_1 = '1.1'
-V1_2_5 = '1.2.5'
-V1_3 = '1.3'
-V1_4 = '1.4'
-V1_6_1 = '1.6.1'
 
-chimeraTARs={V1_1: 'ChimeraX-1.1.tar.gz',
-             V1_2_5: "chimerax-1.2.5-rc-2021.05.24",
-             V1_3: "chimerax-1.3",
-             V1_4: "chimerax-1.4",
-             V1_6_1: 'chimerax-1.6.1'
-}
+V1_11_1 = '1.11.1'
+
+chimeraTARs = {V1_11_1: 'chimerax-1.11.1'}
 
 CHIMERA_TO_SCIPION = {}
 CHIMERA_CYCLIC = 0  # SYM_CYCLIC = 0
