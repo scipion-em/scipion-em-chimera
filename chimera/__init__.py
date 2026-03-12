@@ -179,13 +179,6 @@ class Plugin(pwem.Plugin):
                  mkdir -p chimerax-{version}/bin &&\
                  echo 'flatpak run edu.ucsf.rbvi.ChimeraX $*'> chimerax-{version}/bin/ChimeraX""", extractionDir)]
 
-        # if tarDir:
-        #    chimera_cmds.append(("mv ../%s/* ." % tarDir,  finalDir))
-        print("finalDir: %s" % finalDir)
-        print("tarDir: %s" % tarDir)
-        print("extractionDir: %s" % extractionDir)
-        print("ChimeraX installation commands: %s" % chimera_cmds)
-
         env.addPackage('chimerax', version=version,
                        tar=VOID_TGZ,
                        default=default,
