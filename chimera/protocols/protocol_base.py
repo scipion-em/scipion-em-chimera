@@ -29,7 +29,7 @@ import os
 
 from pyworkflow import VERSION_3_0
 from ..utils import getEnvDictionary
-from .flatpak import is_installed
+from ..flatpak import is_installed
 # from ..constants import CHIMERA_FLATPAK_ID
 try:
     from pwem.objects import AtomStruct
