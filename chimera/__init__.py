@@ -170,7 +170,7 @@ class Plugin(pwem.Plugin):
             extractionDir = os.path.join("..", tarDir, extractionDir)
 
         chimera_cmds = [
-            # ("pip install https://github.com/scipion-em/tk_html_widgets/archive/master.zip", []),
+            ("pip install https://github.com/scipion-em/tk_html_widgets/archive/master.zip", []),
             ("""cd .. && 
                 python %s %s""" % (getchimera_script, version),
                 "../ChimeraX-%s.flatpak" % version),
