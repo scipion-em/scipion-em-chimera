@@ -37,7 +37,7 @@ from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR,
 from .flatpak import is_installed
 from pyworkflow.utils import redStr
 
-__version__ = "3.5.0"
+__version__ = "4.0.0"
 _logo = "chimerax_logo.png"
 _references = ['Goddard2018']
 
