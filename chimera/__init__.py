@@ -170,14 +170,15 @@ class Plugin(pwem.Plugin):
             extractionDir = os.path.join("..", tarDir, extractionDir)
 
         chimera_cmds = [
-            # ("pip install https://github.com/scipion-em/tk_html_widgets/archive/master.zip", []),
-            ("""cd .. && 
+            ("pip install https://github.com/scipion-em/tk_html_widgets/archive/master.zip", []),
+            ("""cd .. &&\
                 python %s %s""" % (getchimera_script, version),
                 "../ChimeraX-%s.flatpak" % version),
             (f"""cd .. &&\
                  sudo flatpak install -y  ChimeraX-{version}.flatpak &&\
                  mkdir -p chimerax-{version}/bin &&\
-                 echo 'flatpak run edu.ucsf.rbvi.ChimeraX $*'> chimerax-{version}/bin/ChimeraX""", extractionDir)]
+                 echo 'flatpak run edu.ucsf.rbvi.ChimeraX $*'> chimerax-{version}/bin/ChimeraX &&\
+                chmod +x chimerax-{version}/bin/ChimeraX""", extractionDir)]
 
         env.addPackage('chimerax', version=version,
                        tar=VOID_TGZ,
