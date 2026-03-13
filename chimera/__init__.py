@@ -171,7 +171,7 @@ class Plugin(pwem.Plugin):
 
         chimera_cmds = [
             ("pip install https://github.com/scipion-em/tk_html_widgets/archive/master.zip", []),
-            ("""cd .. && 
+            ("""cd .. &&\
                 python %s %s""" % (getchimera_script, version),
                 "../ChimeraX-%s.flatpak" % version),
             (f"""cd .. &&\
