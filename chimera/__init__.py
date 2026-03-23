@@ -175,7 +175,7 @@ class Plugin(pwem.Plugin):
                 python %s %s""" % (getchimera_script, version),
                 "../ChimeraX-%s.flatpak" % version),
             (f"""cd .. &&\
-                 sudo flatpak install -y  ChimeraX-{version}.flatpak &&\
+                 flatpak install -y --user ChimeraX-{version}.flatpak &&\
                  mkdir -p chimerax-{version}/bin &&\
                  echo 'flatpak run edu.ucsf.rbvi.ChimeraX $*'> chimerax-{version}/bin/ChimeraX &&\
                  chmod +x chimerax-{version}/bin/ChimeraX""", extractionDir)]
