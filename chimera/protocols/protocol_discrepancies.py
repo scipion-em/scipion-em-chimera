@@ -78,8 +78,13 @@ class ChimeraProtDiscrepancies(EMProtocol):
 
         # --- reference first ---
         ref_file = self.reference.get().getFileName()
+        ref_origin = self.reference.get().getAttributeValue('origin')
         ref_ext = os.path.splitext(ref_file)[1]
-        ref_internal = f"model_00{ref_ext}"
+        if ref_origin is None:
+            ref_internal = f"model_00{ref_ext}"
+        else:
+            ref_internal = f"model_00_{ref_origin}{ref_ext}"
+        print(ref_internal)
         ref_dest = self._getExtraPath(ref_internal)
 
         pwutils.createLink(ref_file, ref_dest)
@@ -93,8 +98,13 @@ class ChimeraProtDiscrepancies(EMProtocol):
         # --- other structures ---
         for i, atomstruct in enumerate(self.structures, start=1):
             ori_file = atomstruct.get().getFileName()
+            origin = atomstruct.get().getAttributeValue('origin')
             ext = os.path.splitext(ori_file)[1]
-            internal_name = f"model_{i:02d}{ext}"
+            if origin is None:
+                internal_name = f"model_{i:02d}{ext}"
+            else:
+                internal_name = f"model_{i:02d}_{origin}{ext}"
+            print(internal_name)
             dest_path = self._getExtraPath(internal_name)
 
             pwutils.createLink(ori_file, dest_path)
