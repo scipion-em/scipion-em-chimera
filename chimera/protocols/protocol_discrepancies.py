@@ -163,16 +163,17 @@ class ChimeraProtDiscrepancies(EMProtocol):
         if not os.path.exists(script_path):
             raise Exception(f"ChimeraX script not found at {script_path}")
 
-        # Get the path for the Chimera executable - Version 1.6.1
+        # Get the path for the Chimera executable - Version 1.11.1
         self.scipion_path = os.environ.get('SCIPION_HOME', None)
         if self.scipion_path is None:
             raise Exception(
                 "SCIPION_HOME environment variable is not set. Please set it to the Scipion installation directory.")
-        self.chimerax_executable = os.path.join(self.scipion_path, 'software/em/chimerax-1.6.1/bin/ChimeraX')
+        self.chimerax_executable = f"flatpak run edu.ucsf.rbvi.ChimeraX"
 
         # Run the ChimeraX script and capture the output
         print(f"Chimera: {self.chimerax_executable}")
-        result = subprocess.run([self.chimerax_executable, '--nogui', script_path], capture_output=True, text=True)
+        result = subprocess.run(f"{self.chimerax_executable} --nogui {script_path}",
+                                shell=True, capture_output=True, text=True)
 
         # Save the output log to a file
         with open(output_log_path, 'w') as log_file:
