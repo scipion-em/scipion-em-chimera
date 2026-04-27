@@ -516,7 +516,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
             args = ''
             # cline is a biophythom object let us
             # convert it to a str before using it in scipion
-            self.runJob(srt(cline), args)
+            self.runJob(str(cline), args)
 
         else:
             aligmentFile = os.path.basename(yourAlignment)
