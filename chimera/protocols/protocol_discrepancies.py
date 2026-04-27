@@ -32,6 +32,7 @@ import pyworkflow.utils as pwutils
 from pyworkflow.protocol import MultiPointerParam, params
 from pyworkflow.utils import Message
 from pwem.protocols import EMProtocol
+from pwem.convert import AtomicStructHandler
 
 from pwem.objects import SetOfAtomStructs, AtomStruct
 from pyworkflow.protocol import String
@@ -84,7 +85,6 @@ class ChimeraProtDiscrepancies(EMProtocol):
             ref_internal = f"model_00{ref_ext}"
         else:
             ref_internal = f"model_00_{ref_origin}{ref_ext}"
-        print(ref_internal)
         ref_dest = self._getExtraPath(ref_internal)
 
         pwutils.createLink(ref_file, ref_dest)
@@ -104,7 +104,6 @@ class ChimeraProtDiscrepancies(EMProtocol):
                 internal_name = f"model_{i:02d}{ext}"
             else:
                 internal_name = f"model_{i:02d}_{origin}{ext}"
-            print(internal_name)
             dest_path = self._getExtraPath(internal_name)
 
             pwutils.createLink(ori_file, dest_path)
@@ -116,6 +115,36 @@ class ChimeraProtDiscrepancies(EMProtocol):
             self.model_map[internal_name] = os.path.basename(ori_file)
 
         print(f"Conversion completed with unique names: {self.extra_files}")
+
+    def getModelsChainsStep(self, fileName):
+        """ Returns (1) list with the information
+           {"model": %d, "chain": "%s", "residues": %d} (modelsLength)
+           (2) list with residues, position and chain (modelsFirstResidue)"""
+        structureHandler = AtomicStructHandler()
+        structureHandler.read(fileName)
+        structureHandler.getStructure()
+        return structureHandler.getModelsChains()
+
+    def detect_molecule_type(self, residues):
+        protein_aas = {
+            "ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", "HIS",
+            "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "SER", "THR", "TRP", "TYR", "VAL"
+        }
+
+        dna_rna = {
+            "A", "C", "G", "T", "U",
+            "DA", "DC", "DG", "DT", "DU"
+        }
+
+        res_set = set(residues)
+
+        if res_set.issubset(protein_aas):
+            return "protein"
+        if res_set.issubset(dna_rna):
+            return "nucleic"
+
+        # fallback (si es mixto o raro)
+        return "unknown"
 
     def create_chimerax_script(self):
         project_path = self.getProject().getPath()
@@ -133,15 +162,53 @@ class ChimeraProtDiscrepancies(EMProtocol):
         # Align every model with every other model and save RMSD values
         rmsd_counter = 1
         ref_index = 1
+        #todo get reference chains -- DONE
+        ref_models, ref_residues = self.getModelsChainsStep(
+            self.reference.get().getFileName()
+        )
+        chain_dict = list(ref_models.values())[0]
+        ref_chains = list(chain_dict.keys())
+
         for i in range(len(self.extra_files)):
             model1 = os.path.splitext(self.extra_files[0])[0]
             model2 = os.path.splitext(os.path.basename(self.extra_files[i]))[0]
+
             if model1 != model2:
-                chimerax_script += f"matchmaker #{ref_index} to #{i+1} showAlignment true\n"
-                chimerax_script += "setattr a occupancy 1111.11\n"  # Arbitrary number for later changes
-                chimerax_script += f"sequence header {rmsd_counter} rmsd save {save_path}/rmsd_{model1}_{model2}.txt\n"
-                chimerax_script += f"save {save_path}/fasta_{model1}_{model2}.fasta format fasta alignment {rmsd_counter}\n"
-                rmsd_counter += 1
+                ref_models, ref_residuesMod = self.getModelsChainsStep(self._getExtraPath(self.extra_files[i]))
+
+                chain_dict = list(ref_models.values())[0]
+                mod2_chains = list(chain_dict.keys())
+                if set(ref_chains) == set(mod2_chains):
+                    for ch in ref_chains:
+                        ref_chain_res = ref_residues[0].get(ch, [])
+                        ref_residue_names = [res[1] for res in ref_chain_res]
+
+                        ref_type = self.detect_molecule_type(ref_residue_names)
+
+                        if ref_type == "protein":
+                            chimerax_script += (
+                                f"matchmaker #{ref_index}/{ch} to #{i + 1}/{ch} showAlignment true\n"
+                            )
+                            chimerax_script += "setattr a occupancy 1111.11\n"
+                            chimerax_script += (f"sequence header {rmsd_counter} rmsd save "
+                                                f"{save_path}/rmsd_{model1}_{model2}_chain_{ch}.txt\n")
+                            chimerax_script += (f"save {save_path}/fasta_{model1}_{model2}_chain_{ch}.fasta "
+                                                f"format fasta alignment {rmsd_counter}\n")
+                            rmsd_counter += 1
+                        elif ref_type == "nucleic":
+                            chimerax_script += (
+                                f"matchmaker #{ref_index}/{ch} to #{i + 1}/{ch} showAlignment true\n"
+                            )
+                            chimerax_script += (f"save {save_path}/fasta_{model1}_{model2}_chain_{ch}.fasta "
+                                                f"format fasta alignment {rmsd_counter}\n")
+                            rmsd_counter += 1
+
+                else:
+                    chimerax_script += f"matchmaker #{ref_index} to #{i+1} showAlignment true\n"
+                    chimerax_script += "setattr a occupancy 1111.11\n"  # Arbitrary number for later changes
+                    chimerax_script += f"sequence header {rmsd_counter} rmsd save {save_path}/rmsd_{model1}_{model2}.txt\n"
+                    chimerax_script += f"save {save_path}/fasta_{model1}_{model2}.fasta format fasta alignment {rmsd_counter}\n"
+                    rmsd_counter += 1
 
         # Save all aligned models
         for i, model_file in enumerate(self.extra_files):
@@ -159,6 +226,40 @@ class ChimeraProtDiscrepancies(EMProtocol):
         print(f"ChimeraX script created at {script_path}")
         return script_path
 
+    def calculate_manual_rmsd(self, cif_ref, cif_mod, chain_id, mol_type):
+        import numpy as np
+
+        target_atom = 'P' if mol_type == "nucleic" else 'CA'
+
+        def get_coords(cif_file):
+            handler = AtomicStructHandler()
+            handler.read(cif_file)
+            structure = handler.getStructure()
+            coords = {}
+            model = structure[0]
+            if chain_id not in model:
+                raise ValueError(f"Chain {chain_id} not found in {cif_file}")
+            chain = model[chain_id]
+            for residue in chain:
+                res_id = residue.id[1]
+                if residue.id[0] != " ":
+                    continue
+                if target_atom in residue:
+                    atom = residue[target_atom]
+                    coords[res_id] = atom.get_coord()
+            return coords
+        ref_coords = get_coords(cif_ref)
+        mod_coords = get_coords(cif_mod)
+        results = {}
+        for res_num, c1 in ref_coords.items():
+            if res_num in mod_coords:
+                dist = np.linalg.norm(c1 - mod_coords[res_num])
+                results[res_num] = float(dist)
+            else:
+                results[res_num] = None
+
+        return results
+
     def run_chimerax_script(self, script_path, output_log_path):
         if not os.path.exists(script_path):
             raise Exception(f"ChimeraX script not found at {script_path}")
@@ -168,12 +269,14 @@ class ChimeraProtDiscrepancies(EMProtocol):
         if self.scipion_path is None:
             raise Exception(
                 "SCIPION_HOME environment variable is not set. Please set it to the Scipion installation directory.")
-        self.chimerax_executable = f"flatpak run edu.ucsf.rbvi.ChimeraX"
+        #self.chimerax_executable = f"flatpak run edu.ucsf.rbvi.ChimeraX"
+        self.chimerax_executable = os.path.join(self.scipion_path, 'software/em/chimerax-1.6.1/bin/ChimeraX')
 
         # Run the ChimeraX script and capture the output
         print(f"Chimera: {self.chimerax_executable}")
-        result = subprocess.run(f"{self.chimerax_executable} --nogui {script_path}",
-                                shell=True, capture_output=True, text=True)
+        #result = subprocess.run(f"{self.chimerax_executable} --nogui {script_path}",
+        #                        shell=True, capture_output=True, text=True)
+        result = subprocess.run([self.chimerax_executable, '--nogui', script_path], capture_output=True, text=True)
 
         # Save the output log to a file
         with open(output_log_path, 'w') as log_file:
@@ -199,8 +302,10 @@ class ChimeraProtDiscrepancies(EMProtocol):
         for fasta_file in os.listdir(output_path):
             if fasta_file.startswith('fasta_') and fasta_file.endswith('.fasta'):
                 pair = fasta_file.replace("fasta_", "").replace(".fasta", "")
-                model1, model2 = pair.split("_model_")
+                pair_no_chain = pair.split("_chain_")[0]
+                model1, model2 = pair_no_chain.split("_model_")
                 model2 = "model_" + model2
+
                 folder_name = f"{model1}_{model2}"
                 folder_path = os.path.join(output_path, folder_name)
                 os.makedirs(folder_path, exist_ok=True)
@@ -210,10 +315,14 @@ class ChimeraProtDiscrepancies(EMProtocol):
                 dest_fasta_file = os.path.join(folder_path, fasta_file)
                 pwutils.createLink(src_fasta_file, dest_fasta_file)
 
-                rmsd_file = f"rmsd_{model1}_{model2}.txt"
-                src_rmsd_file = os.path.join(output_path, rmsd_file)
-                dest_rmsd_file = os.path.join(folder_path, rmsd_file)
-                pwutils.createLink(src_rmsd_file, dest_rmsd_file)
+                rmsd_files = [
+                    f for f in os.listdir(output_path)
+                    if f.startswith(f"rmsd_{model1}_{model2}_chain_")
+                ]
+                for rmsd_file in rmsd_files:
+                    src_rmsd_file = os.path.join(output_path, rmsd_file)
+                    dest_rmsd_file = os.path.join(folder_path, rmsd_file)
+                    pwutils.createLink(src_rmsd_file, dest_rmsd_file)
 
                 cif_file = f"align_{model1}.cif"
                 src_cif_file = os.path.join(output_path, cif_file)
@@ -246,355 +355,308 @@ class ChimeraProtDiscrepancies(EMProtocol):
 
     def add_rmsd(self):
         output_path = os.path.join(self.getWorkingDir(), 'extra')
-        self.aa_rmsd = []  # Top-level array that stores every aminoacid rmsd
-        self.occ_position = [[], []]  # Stores the position of occupancy column in each model
+        self.aa_rmsd = []
+        self.occ_position = [[], []]
+
         for folder in os.listdir(output_path):
             folder_path = os.path.join(output_path, folder)
+
             if os.path.isdir(folder_path) and "_" in folder:
                 model1, model2 = folder.rsplit("_model_", 1)
                 model2 = "model_" + model2
-                fasta_file = os.path.join(folder_path, f"fasta_{model1}_{model2}.fasta")
 
-                mat1, mat2 = [], []
-                with open(fasta_file, 'r') as f:
-                    lines = f.readlines()
-                    reading_model1, reading_model2 = False, False
-                    for line in lines:
-                        if line.startswith(f">{model1}"):
-                            reading_model1 = True
-                            reading_model2 = False
-                            continue
-                        elif line.startswith(f">{model2}"):
-                            reading_model1 = False
-                            reading_model2 = True
-                            continue
-                        elif line.startswith(">"):
-                            reading_model1, reading_model2 = False, False
+                # ? CLAVE: iterar por cadena
+                fasta_files = [
+                    f for f in os.listdir(folder_path)
+                    if f.startswith(f"fasta_{model1}_{model2}_chain_")
+                ]
 
-                        if reading_model1:
-                            mat1.extend([0 if char == '.' else 1 for char in line.strip()])
-                        elif reading_model2:
-                            mat2.extend([0 if char == '.' else 1 for char in line.strip()])
+                for fasta_file in fasta_files:
 
-                rmsd_file = os.path.join(folder_path, f"rmsd_{model1}_{model2}.txt")
+                    chain = fasta_file.split("_chain_")[-1].replace(".fasta", "")
 
-                if not os.path.exists(rmsd_file):
-                    raise Exception(f"RMSD file not found: {rmsd_file}")
+                    fasta_path = os.path.join(folder_path, fasta_file)
+                    rmsd_path = os.path.join(
+                        folder_path,
+                        f"rmsd_{model1}_{model2}_chain_{chain}.txt"
+                    )
 
-                mat_rmsd = []
+                    if not os.path.exists(rmsd_path):
+                        cif_ref = os.path.join(folder_path, f"align_{model1}.cif")
+                        cif_mod = os.path.join(folder_path, f"align_{model2}.cif")
 
-                with open(rmsd_file, 'r') as f:
+                        manual_rmsd = self.calculate_manual_rmsd(
+                            cif_ref, cif_mod, chain, "nucleic"
+                        )
 
-                    lines = f.readlines()
+                        with open(rmsd_path, 'w') as f:
+                            f.write("residue:rmsd\n")
+                            for res, val in manual_rmsd.items():
+                                f.write(f"{res}:{val}\n")
 
-                    for line in lines[1:]:  # Skip the first line
+                        root_extra = self._getExtraPath()
+                        root_rmsd_path = os.path.join(root_extra, os.path.basename(rmsd_path))
 
-                        parts = line.split(":")
+                        if not os.path.exists(root_rmsd_path):
+                            pwutils.createLink(rmsd_path, root_rmsd_path)
 
-                        if len(parts) != 2:
-                            continue
+                    # ---------------- FASTA ----------------
+                    mat1, mat2 = [], []
+                    with open(fasta_path, 'r') as f:
+                        lines = f.readlines()
+                        reading_model1, reading_model2 = False, False
 
-                        try:
+                        for line in lines:
+                            if line.startswith(f">{model1}"):
+                                reading_model1 = True
+                                reading_model2 = False
+                                continue
+                            elif line.startswith(f">{model2}"):
+                                reading_model1 = False
+                                reading_model2 = True
+                                continue
+                            elif line.startswith(">"):
+                                reading_model1 = reading_model2 = False
 
-                            Aa = int(parts[0].strip())
+                            if reading_model1:
+                                mat1.extend([0 if c == '.' else 1 for c in line.strip()])
+                            elif reading_model2:
+                                mat2.extend([0 if c == '.' else 1 for c in line.strip()])
 
-                            rmsd_value = float(parts[1].strip()) if parts[1].strip() != "None" else 250.00
+                    mat_rmsd = []
+                    with open(rmsd_path, 'r') as f:
+                        lines = f.readlines()[1:]
 
-                            while len(mat_rmsd) <= Aa:
-                                mat_rmsd.append(0)
+                        for line in lines:
+                            parts = line.split(":")
+                            if len(parts) != 2:
+                                continue
 
-                            mat_rmsd[Aa] += rmsd_value
+                            try:
+                                Aa = int(parts[0].strip())
+                                rmsd_value = float(parts[1].strip()) if parts[1].strip() != "None" else 250.0
 
-                        except ValueError:
+                                while len(mat_rmsd) <= Aa:
+                                    mat_rmsd.append(0)
 
-                            continue
+                                mat_rmsd[Aa] += rmsd_value
+                            except ValueError:
+                                continue
 
-                # Build mapping from alignment position to model residue number
-                mat_pos1_align, mat_pos1_resnum = [], []
-                mat_pos2_align, mat_pos2_resnum = [], []
+                    def build_positions(mat):
+                        pos_align, pos_res = [], []
+                        pos = 0
+                        for i, v in enumerate(mat):
+                            if v != 0:
+                                pos_align.append(i)
+                                pos += 1
+                                pos_res.append(pos)
+                        return pos_align, pos_res
 
-                pos = 0
-                for i, value in enumerate(mat1):
-                    if value != 0:
-                        mat_pos1_align.append(i)
-                        pos += 1
-                        mat_pos1_resnum.append(pos)
-                pos = 0
-                for i, value in enumerate(mat2):
-                    if value != 0:
-                        mat_pos2_align.append(i)
-                        pos += 1
-                        mat_pos2_resnum.append(pos)
+                    mat_pos1_align, mat_pos1_resnum = build_positions(mat1)
+                    mat_pos2_align, mat_pos2_resnum = build_positions(mat2)
 
-                # Write RMSD residues at the end of each file
-                out_model1_file = os.path.join(folder_path, f"out_{model1}.cif")
-                out_model2_file = os.path.join(folder_path, f"out_{model2}.cif")
+                    def build_occ(pos_align, pos_res):
+                        occ_dict = {}
+                        aa_occ = [[], []]
 
-                # --- Use dict for safe mapping of residue number to RMSD ---
-                occupancy1_dict = {}
-                aa_occupancy1 = [[], []]
-                for i, resnum in enumerate(mat_pos1_resnum):
-                    align_idx = mat_pos1_align[i]
-                    rmsd_value = mat_rmsd[align_idx] if align_idx < len(mat_rmsd) else 250.0
-                    occupancy1_dict[resnum] = rmsd_value
-                    aa_occupancy1[0].append(resnum)
-                    aa_occupancy1[1].append(rmsd_value)
-                self.aa_rmsd.append({model1: aa_occupancy1})
+                        for i, resnum in enumerate(pos_res):
+                            align_idx = pos_align[i]
+                            rmsd_value = mat_rmsd[align_idx] if align_idx < len(mat_rmsd) else 250.0
 
-                occupancy2_dict = {}
-                aa_occupancy2 = [[], []]
-                for i, resnum in enumerate(mat_pos2_resnum):
-                    align_idx = mat_pos2_align[i]
-                    rmsd_value = mat_rmsd[align_idx] if align_idx < len(mat_rmsd) else 250.0
-                    occupancy2_dict[resnum] = rmsd_value
-                    aa_occupancy2[0].append(resnum)
-                    aa_occupancy2[1].append(rmsd_value)
-                self.aa_rmsd.append({model2: aa_occupancy2})
+                            occ_dict[resnum] = rmsd_value
+                            aa_occ[0].append(resnum)
+                            aa_occ[1].append(rmsd_value)
 
-                # Add occupancy to each model using dict to avoid index errors
-                with open(out_model1_file, 'r') as file1, open(out_model2_file, 'r') as file2:
-                    lines1 = file1.readlines()
-                    lines2 = file2.readlines()
+                        return occ_dict, aa_occ
 
-                subs = []
+                    occupancy1_dict, aa_occ1 = build_occ(mat_pos1_align, mat_pos1_resnum)
+                    occupancy2_dict, aa_occ2 = build_occ(mat_pos2_align, mat_pos2_resnum)
 
-                def process_lines(lines, occupancy_dict, mod_file):
-                    for line in lines:
-                        if line.startswith('ATOM'):
-                            atom_line = line
-                            clean_line = re.sub(r'\s+', ' ', atom_line).strip()
-                            columns = clean_line.split()
-                            if '1111.11' in columns:
-                                strip_position = columns.index('1111.11')
-                                subs.append(strip_position)
-                            resnum_str = columns[8]
-                            if resnum_str.isdigit():
-                                resnum = int(resnum_str)
-                                new_value = round(occupancy_dict.get(resnum, 0.0), 2)
-                                modified_line = re.sub(r'1111\.11', str(new_value), atom_line)
-                                mod_file.write(modified_line)
-                            else:
-                                mod_file.write(line)
-                        else:
-                            mod_file.write(line)
+                    self.aa_rmsd.append({f"{model1}_chain_{chain}": aa_occ1})
+                    self.aa_rmsd.append({f"{model2}_chain_{chain}": aa_occ2})
 
-                with open(out_model1_file, 'w') as mod_file1, open(out_model2_file, 'w') as mod_file2:
-                    process_lines(lines1, occupancy1_dict, mod_file1)
-                    process_lines(lines2, occupancy2_dict, mod_file2)
+                    out_model1_file = os.path.join(folder_path, f"out_{model1}.cif")
+                    out_model2_file = os.path.join(folder_path, f"out_{model2}.cif")
 
-                subs = list(set(subs))
-                self.occ_position[0].append(model1)
-                self.occ_position[0].append(model2)
-                if len(subs) > 1:
-                    self.occ_position[1].append(subs[0])
-                    self.occ_position[1].append(subs[1])
-                else:
-                    self.occ_position[1].append(subs[0])
-                    self.occ_position[1].append(subs[0])
+                    with open(out_model1_file, 'r') as f1, open(out_model2_file, 'r') as f2:
+                        lines1 = f1.readlines()
+                        lines2 = f2.readlines()
 
-                unique = {}
-                for k, v in zip(*self.occ_position):
-                    if k not in unique:
-                        unique[k] = v
-                self.occ_position = [list(unique.keys()), list(unique.values())]
+                    subs = []
+
+                    def process(lines, occ_dict, out):
+                        for line in lines:
+                            if line.startswith('ATOM'):
+                                clean = re.sub(r'\s+', ' ', line).strip()
+                                cols = clean.split()
+
+                                if '1111.11' in cols:
+                                    subs.append(cols.index('1111.11'))
+
+                                resnum = int(cols[8]) if cols[8].isdigit() else None
+
+                                if resnum:
+                                    val = round(occ_dict.get(resnum, 0.0), 2)
+                                    line = re.sub(r'1111\.11', str(val), line)
+
+                            out.write(line)
+
+                    with open(out_model1_file, 'w') as o1, open(out_model2_file, 'w') as o2:
+                        process(lines1, occupancy1_dict, o1)
+                        process(lines2, occupancy2_dict, o2)
+
+                    subs = list(set(subs))
+                    self.occ_position[0] += [model1, model2]
+
+                    if subs:
+                        self.occ_position[1] += [subs[0], subs[0]]
 
     def compute_mean_rmsd(self):
         output_path = os.path.join(self.getWorkingDir(), 'extra')
-        ref_file = os.path.splitext(os.path.basename(self.extra_files[0]))[0]  # reference is first
-        rmsd_files = [f for f in os.listdir(output_path) if f.startswith('rmsd_') and f.endswith('.txt')]
 
-        mean_rmsd = []
-        rmsd_data = []
+        rmsd_by_chain = {}
 
-        # Leer todos los rmsd y almacenarlos en una lista
+        rmsd_files = [
+            f for f in os.listdir(output_path)
+            if f.startswith('rmsd_') and '_chain_' in f
+        ]
+
         for rmsd_file in rmsd_files:
+            chain = rmsd_file.split("_chain_")[-1].replace(".txt", "")
+
             file_path = os.path.join(output_path, rmsd_file)
+
+            vals = []
             with open(file_path, 'r') as f:
-                lines = f.readlines()[1:]  # saltar header
-                vals = []
+                lines = f.readlines()[1:]
+
                 for line in lines:
                     parts = line.strip().split(":")
                     if len(parts) == 2:
                         try:
                             val = float(parts[1].strip()) if parts[1].strip() != "None" else 0.0
                             vals.append(val)
-                        except ValueError:
+                        except:
                             continue
-                rmsd_data.append(vals)
 
-        # Calcular media por residuo
-        if rmsd_data:
-            max_len = max(len(r) for r in rmsd_data)
+            if chain not in rmsd_by_chain:
+                rmsd_by_chain[chain] = []
+
+            rmsd_by_chain[chain].append(vals)
+
+        for chain, matrices in rmsd_by_chain.items():
+            mean_rmsd = []
+
+            max_len = max(len(m) for m in matrices)
+
             for i in range(max_len):
-                vals = [r[i] for r in rmsd_data if i < len(r)]
+                vals = [m[i] for m in matrices if i < len(m)]
                 mean_rmsd.append(sum(vals) / len(vals) if vals else 0.0)
 
-        # Guardar archivo mean_rmsd
-        mean_rmsd_file = os.path.join(output_path, f"mean_rmsd_{ref_file}.txt")
-        with open(mean_rmsd_file, 'w') as f:
-            for i, val in enumerate(mean_rmsd, start=1):
-                f.write(f"{i}: {val:.6f}\n")
+            out_file = os.path.join(output_path, f"mean_rmsd_chain_{chain}.txt")
 
-        print(f"Mean RMSD file created at {mean_rmsd_file}")
-        return mean_rmsd_file
+            with open(out_file, 'w') as f:
+                for i, val in enumerate(mean_rmsd, start=1):
+                    f.write(f"{i}: {val:.6f}\n")
+
+            print(f"Mean RMSD chain {chain}: {out_file}")
 
     def final_models(self):
+        import os, shutil, re
+        from pwem.objects import AtomStruct
+
         output_path = os.path.join(self.getWorkingDir(), 'extra')
         final_output_path = os.path.join(output_path, 'FINAL-OUTPUTS')
-        print(f"Position of occupancy:", self.occ_position)
         os.makedirs(final_output_path, exist_ok=True)
-
-        cif_counter = {}
-        rmsd_dict = {}
 
         for folder in os.listdir(output_path):
             folder_path = os.path.join(output_path, folder)
+
             if os.path.isdir(folder_path) and folder != 'FINAL-OUTPUTS':
                 for file_name in os.listdir(folder_path):
                     if file_name.startswith('out_') and file_name.endswith('.cif'):
-                        src_file = os.path.join(folder_path, file_name)
-                        base_name = os.path.basename(src_file)
-                        if base_name in cif_counter:
-                            cif_counter[base_name] += 1
-                            new_file_name = f"{os.path.splitext(base_name)[0]}_{cif_counter[base_name]}.cif"
-                        else:
-                            cif_counter[base_name] = 1
-                            new_file_name = base_name
-                        dest_file = os.path.join(final_output_path, new_file_name)
-                        shutil.copy(src_file, dest_file)
+                        shutil.copy(
+                            os.path.join(folder_path, file_name),
+                            os.path.join(final_output_path, file_name)
+                        )
 
-                for i, model in enumerate(self.occ_position[0]):
-                    occ = self.occ_position[1][i]
-                    rmsd_dict[model] = []
-                    model_files = [
-                        file_name for file_name in os.listdir(final_output_path)
-                        if file_name.startswith(f"out_{model}")
-                    ]
-                    for model_file in model_files:
-                        rmsd_matrix = []
-                        model_file_path = os.path.join(final_output_path, model_file)
-                        with open(model_file_path, 'r') as file:
-                            for line in file:
-                                if line.startswith('ATOM'):
-                                    clean_line = re.sub(r'\s+', ' ', line).strip()
-                                    columns = clean_line.split()
-                                    if len(columns) > occ:
-                                        rmsd_value = float(columns[occ])
-                                        rmsd_matrix.append(rmsd_value)
-                        rmsd_dict[model].append(rmsd_matrix)
+        grouped = {}
 
-            averaged_rmsd_dict = {}
-            for model, matrices in rmsd_dict.items():
-                if matrices:
-                    averaged_matrix = [
-                        sum(values) / len(values) for values in zip(*matrices)
-                    ]
-                    averaged_rmsd_dict[model] = averaged_matrix
-
-            for i, (model, averaged_matrix) in enumerate(averaged_rmsd_dict.items()):
-                occ = self.occ_position[1][i]
-                model_files = [
-                    file_name for file_name in os.listdir(final_output_path)
-                    if file_name.startswith(f"out_{model}_")
-                ]
-                for model_file in model_files:
-                    file_path = os.path.join(final_output_path, model_file)
-                    os.remove(file_path)
-
-                remaining_file = os.path.join(final_output_path, f"out_{model}.cif")
-                updated_lines = []
-                counter = 0
-                with open(remaining_file, 'r') as file:
-                    for line in file:
-                        if line.startswith('ATOM'):
-                            clean_line = re.sub(r'\s+', ' ', line).strip()
-                            columns = clean_line.split()
-                            if len(columns) > occ:
-                                columns[occ] = f"{averaged_matrix[counter]:.2f}"
-                                counter += 1
-                            updated_line = ' '.join(columns) + '\n'
-                            updated_lines.append(updated_line)
-                        else:
-                            updated_lines.append(line)
-                with open(remaining_file, 'w') as file:
-                    file.writelines(updated_lines)
-
-        # Modify amino acids RMSD:
-        final_aa_rmsd = []
-        grouped_rmsd = {}
         for entry in self.aa_rmsd:
-            for model_name, matrix in entry.items():
-                if model_name not in grouped_rmsd:
-                    grouped_rmsd[model_name] = []
-                grouped_rmsd[model_name].append(matrix)
+            for key, matrix in entry.items():
+                if key not in grouped:
+                    grouped[key] = []
+                grouped[key].append(matrix)
 
-        for model_name, matrices in grouped_rmsd.items():
-            mean_matrix = [[], []]
-            for line_index in range(2):
-                max_len = max(len(matrix[line_index]) for matrix in matrices for line_index in [0, 1])
-                summed_values = [0.0] * max_len
-                counts = [0] * max_len
-                for matrix in matrices:
-                    for line_index in [0, 1]:
-                        for i, value in enumerate(matrix[line_index]):
-                            summed_values[i] += value
-                            counts[i] += 1
-                mean_matrix = [summed_values[i] / counts[i] if counts[i] > 0 else 0.0
-                               for i in range(max_len)]
-            final_aa_rmsd.append({model_name: mean_matrix})
+        averaged = {}
+
+        for key, matrices in grouped.items():
+            max_len = max(len(m[1]) for m in matrices)
+
+            avg = []
+            for i in range(max_len):
+                vals = [m[1][i] for m in matrices if i < len(m[1])]
+                avg.append(sum(vals) / len(vals) if vals else 0.0)
+
+            averaged[key] = avg
 
         for file_name in os.listdir(final_output_path):
-            if file_name.startswith("out_") and file_name.endswith(".cif"):
-                model = file_name[4:-4]
-                file_path = os.path.join(final_output_path, file_name)
-                matching_entry = next((entry for entry in final_aa_rmsd if model in entry), None)
-                if not matching_entry:
-                    raise Exception(f"No matching RMSD matrix found for model {model} in final_aa_rmsd")
-                rmsd_matrix = matching_entry[model][1]
-                updated_lines = []
-                with open(file_path, 'r') as file:
-                    lines = file.readlines()
-                    modify_rmsd = False
-                    for line in lines:
-                        if line.startswith("_scipion_attributes.value"):
-                            modify_rmsd = True
-                            updated_lines.append(line)
-                        elif modify_rmsd and line.startswith("RMSD residues A:"):
-                            parts = line.split()
-                            position = int(parts[2].strip("A:"))
-                            rmsd_value = round(rmsd_matrix[position - 1], 6)
-                            updated_line = f"RMSD residues A:{position}   {rmsd_value}\n"
-                            updated_lines.append(updated_line)
-                        else:
-                            updated_lines.append(line)
-                with open(file_path, 'w') as file:
-                    file.writelines(updated_lines)
+            if not file_name.startswith("out_") or not file_name.endswith(".cif"):
+                continue
 
-        for file_name in os.listdir(final_output_path):
-            if file_name.endswith('.cif') and file_name.count('.') > 1:
-                old_path = os.path.join(final_output_path, file_name)
-                parts = file_name.split('.')
-                # Delete the first dot by joining with underscore
-                new_file_name = '_'.join(parts[:-1]) + '.' + parts[-1]
-                new_path = os.path.join(final_output_path, new_file_name)
-                os.rename(old_path, new_path)
+            model = file_name[4:-4]
+            file_path = os.path.join(final_output_path, file_name)
+
+            with open(file_path, 'r') as f:
+                lines = f.readlines()
+
+            updated_lines = []
+            counters = {}
+
+            for line in lines:
+                if line.startswith('ATOM'):
+                    clean = re.sub(r'\s+', ' ', line).strip()
+                    cols = clean.split()
+
+                    chain = cols[4] if len(cols) > 4 else None
+                    resnum = int(cols[8]) if len(cols) > 8 and cols[8].isdigit() else None
+
+                    if chain is not None and resnum is not None:
+                        key = f"{model}_chain_{chain}"
+
+                        if key in averaged:
+                            if key not in counters:
+                                counters[key] = 0
+
+                            idx = counters[key]
+
+                            if idx < len(averaged[key]):
+                                val = round(averaged[key][idx], 2)
+                                line = re.sub(r'1111\.11', str(val), line)
+
+                            counters[key] += 1
+
+                updated_lines.append(line)
+
+            with open(file_path, 'w') as f:
+                f.writelines(updated_lines)
 
         ref_base = os.path.splitext(self.extra_files[0])[0]
 
         for file_name in os.listdir(final_output_path):
             file_path = os.path.join(final_output_path, file_name)
-            if os.path.isfile(file_path):
+
+            if os.path.isfile(file_path) and file_name.startswith("out_"):
                 output = AtomStruct(filename=file_path)
+
                 output_name = os.path.splitext(file_name)[0]
-                file_base = os.path.splitext(file_name)[0].replace("out_", "").lower()
-                print(f'FILE BASE: {file_base}')
-                print(f'REF BASE: {ref_base}')
+                file_base = output_name.replace("out_", "").lower()
+
                 if file_base == ref_base:
-                    print(f'---reference: {file_name}')
-                    self._defineOutputs(
-                        **{f'ref_{output_name}': output})
+                    self._defineOutputs(**{f'ref_{output_name}': output})
                 else:
                     self._defineOutputs(**{output_name: output})
 
-
+        print("Final models with per-chain RMSD generated")
 
