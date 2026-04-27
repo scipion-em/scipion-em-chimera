@@ -51,9 +51,6 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
             if not outputs:
                 return []
 
-            # --------------------------
-            # REFERENCE
-            # --------------------------
             ref_file = None
 
             for output in outputs:
@@ -116,7 +113,7 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
 
         def get_model_name(fname):
             base = fname.replace("rmsd_", "").replace(".txt", "")
-            return base.split("_chain_")[0]  # TODO lo importante
+            return base.split("_chain_")[0]
 
         models = sorted({get_model_name(f) for f in files})
 
@@ -217,7 +214,7 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
 
         plt.xticks(all_positions[::step], all_labels[::step], rotation=90, fontsize=6)
 
-        plt.xlabel("Residue (chains concatenated)")
+        plt.xlabel("Residues")
         plt.ylabel("RMSD")
         plt.title("RMSD per residue grouped by chain (same color per model)")
         plt.legend(handles=handles, fontsize=8)
