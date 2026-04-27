@@ -22,5 +22,10 @@ may be useful the determine the cause of the error
 
 # 2) Can not install scipion bundle because help documentation cannot be created
 
+### solution 1
 copy /path_to_scipion3_plugins/scipion-em-chimera/chimera/Bundles/scipion to a directory in which you have write/read permissions and install the Bundle from there
+
+### alternative solution
+cd PATHTOPLUGINS/scipion-em-chimera/chimera/Bundles/scipion
+rm -rf build dist *.egg-info
 
