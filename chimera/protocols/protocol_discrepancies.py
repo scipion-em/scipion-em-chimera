@@ -162,7 +162,6 @@ class ChimeraProtDiscrepancies(EMProtocol):
         # Align every model with every other model and save RMSD values
         rmsd_counter = 1
         ref_index = 1
-        #todo get reference chains -- DONE
         ref_models, ref_residues = self.getModelsChainsStep(
             self.reference.get().getFileName()
         )
