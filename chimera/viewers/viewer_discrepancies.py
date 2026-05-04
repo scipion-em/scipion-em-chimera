@@ -28,6 +28,17 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
                        params.LabelParam,
                        label='Graph RMSD:',
                        help='Generate and display a graph')
+        group.addParam('filter',
+                       params.BooleanParam, default=False,
+                       label='Show specific residues:',
+                       help='Generate and display a graph of only selected residues')
+        group.addParam('residuesMin', params.IntParam,
+                       label='From:', default=0, condition='filter',
+                       help='From x residue')
+        group.addParam('residuesMax', params.IntParam,
+                       label='To:', default=0, condition='filter',
+                       help='To x residue')
+
 
     def _getVisualizeDict(self):
         visDic = super()._getVisualizeDict()
@@ -116,107 +127,75 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
             return base.split("_chain_")[0]
 
         models = sorted({get_model_name(f) for f in files})
-
         colors = cm.tab10.colors
         color_map = {m: colors[i % len(colors)] for i, m in enumerate(models)}
 
         plt.figure(figsize=(10, 6))
 
-        offset = 0
-        xticks = []
-        xtick_labels = []
+        current_x_offset = 0
+        all_positions = []
+        all_labels = []
+
+        is_filtered = self.filter.get()
+        min_r = self.residuesMin.get() if is_filtered else -float('inf')
+        max_r = self.residuesMax.get() if is_filtered else float('inf')
 
         for chain, chain_files in sorted(chains.items()):
-
-            max_len_chain = 0
+            chain_max_x = 0
+            chain_residues_plotted = set()
 
             for f in chain_files:
                 path = os.path.join(extra_path, f)
-
                 model = get_model_name(f)
                 color = color_map[model]
 
-                x, y = [], []
+                x_vals, y_vals = [], []
+                raw_res_ids = []
 
                 with open(path, 'r') as fh:
                     for line in fh:
-                        if ':' not in line:
-                            continue
+                        if ':' not in line: continue
                         try:
                             res_id = int(line.split(':')[0].strip())
                             rmsd_val = float(line.split(':')[1].strip())
 
-                            x.append(res_id + offset)
-                            y.append(rmsd_val)
+                            if is_filtered and (res_id < min_r or res_id > max_r):
+                                continue
+
+                            # Normalize x: subtract min_r so the plot starts at 0 for this segment
+                            plot_x = (res_id - min_r) if is_filtered else res_id
+
+                            x_vals.append(plot_x + current_x_offset)
+                            y_vals.append(rmsd_val)
+                            raw_res_ids.append(res_id)
+                            chain_residues_plotted.add((plot_x + current_x_offset, res_id))
                         except:
                             continue
 
-                if not x:
-                    continue
+                if x_vals:
+                    plt.plot(x_vals, y_vals, color=color, linewidth=1.2, alpha=0.9)
+                    chain_max_x = max(chain_max_x, max(x_vals) - current_x_offset)
 
-                plt.plot(
-                    x,
-                    y,
-                    color=color,
-                    linewidth=1.2,
-                    alpha=0.9
-                )
+            if not chain_residues_plotted:
+                continue
 
-                max_len_chain = max(max_len_chain, max(x) - offset)
+            plt.axvline(current_x_offset - 1, linestyle='--', color='gray', alpha=0.2)
 
-            plt.axvline(offset, linestyle='--', alpha=0.2)
+            chain_ticks = sorted(list(chain_residues_plotted))
+            all_positions.extend([t[0] for t in chain_ticks])
+            all_labels.extend([t[1] for t in chain_ticks])
 
-            xticks.append(offset + max_len_chain // 2)
-            xtick_labels.append(chain)
+            current_x_offset += chain_max_x + 5
 
-            offset += max_len_chain + 2
+        handles = [plt.Line2D([0], [0], color=color_map[m], lw=2, label=m) for m in models]
 
-        handles = [
-            plt.Line2D([0], [0], color=color_map[m], lw=2, label=m)
-            for m in models
-        ]
+        if all_positions:
+            step = max(1, len(all_labels) // 30)
+            plt.xticks(all_positions[::step], all_labels[::step], rotation=90, fontsize=6)
 
-        all_positions = []
-        all_labels = []
-
-        offset = 0
-
-        for chain, chain_files in sorted(chains.items()):
-
-            max_len_chain = 0
-
-            sample_file = chain_files[0]
-            path = os.path.join(extra_path, sample_file)
-
-            residues = []
-
-            with open(path, 'r') as fh:
-                for line in fh:
-                    if ':' not in line:
-                        continue
-                    try:
-                        res_id = int(line.split(':')[0].strip())
-                        residues.append(res_id)
-                    except:
-                        continue
-
-            if residues:
-                positions = [r + offset for r in residues]
-
-                all_positions.extend(positions)
-                all_labels.extend(residues)
-
-                max_len_chain = max(residues)
-
-            offset += max_len_chain + 2
-
-        step = max(1, len(all_labels) // 30)
-
-        plt.xticks(all_positions[::step], all_labels[::step], rotation=90, fontsize=6)
-
-        plt.xlabel("Residues")
+        plt.xlabel("Residue ID")
         plt.ylabel("RMSD")
-        plt.title("RMSD per residue grouped by chain (same color per model)")
+        plt.title("Filtered RMSD per residue (Grouped by Chain)")
         plt.legend(handles=handles, fontsize=8)
         plt.grid(True, alpha=0.3)
 
