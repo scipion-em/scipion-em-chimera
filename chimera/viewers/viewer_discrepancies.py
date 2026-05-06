@@ -4,7 +4,6 @@ from pwem.viewers.viewer_chimera import Chimera
 from ..protocols.protocol_discrepancies import ChimeraProtDiscrepancies
 import pyworkflow.protocol.params as params
 import matplotlib.pyplot as plt
-import re
 import matplotlib.cm as cm
 
 
@@ -28,6 +27,9 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
                        params.LabelParam,
                        label='Graph RMSD:',
                        help='Generate and display a graph')
+        group.addParam('showFiles', params.EnumParam, choices=['all']+self.getFileNames(),
+                       label='Plot:', default=0,
+                       help='Plot all files or specific one')
         group.addParam('filter',
                        params.BooleanParam, default=False,
                        label='Show specific residues:',
@@ -39,6 +41,18 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
                        label='To:', default=0, condition='filter',
                        help='To x residue')
 
+    def getFileNames(self):
+        outputs = self.protocol._outputs
+        cleanList = []
+        for out in outputs:
+            clean = self._normalizeOutputName(out)
+            if '00' not in clean:
+                cleanList.append(clean)
+        return cleanList
+
+    def _normalizeOutputName(self, output_name):
+        name = output_name.replace("out_", "").replace("ref_out_", "")
+        return name
 
     def _getVisualizeDict(self):
         visDic = super()._getVisualizeDict()
@@ -113,6 +127,12 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
             f for f in os.listdir(extra_path)
             if f.startswith("rmsd_") and "_chain_" in f and f.endswith(".txt")
         ])
+        selectedIdx = self.showFiles.get()
+        choices = ['all'] + self.getFileNames()
+        selectedValue = choices[selectedIdx]
+        if selectedValue != 'all':
+            normalized = self._normalizeOutputName(selectedValue)
+            files = [f for f in files if normalized in f]
 
         if not files:
             return []
