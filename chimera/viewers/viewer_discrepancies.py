@@ -71,7 +71,6 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
         with open(fnCmd, 'w') as f:
 
             outputs = self.protocol._outputs
-            print(outputs)
 
             if not outputs:
                 return []
@@ -125,7 +124,7 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
 
         files = sorted([
             f for f in os.listdir(extra_path)
-            if f.startswith("rmsd_") and "_chain_" in f and f.endswith(".txt")
+            if f.startswith("rmsd_") and f.endswith(".txt")
         ])
         selectedIdx = self.showFiles.get()
         choices = ['all'] + self.getFileNames()
