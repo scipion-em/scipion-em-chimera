@@ -1,6 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:   Javier Sanchez
+# *             Blanca Pueche (blanca.pueche@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
