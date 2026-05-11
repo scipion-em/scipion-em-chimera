@@ -149,7 +149,10 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
         colors = cm.tab10.colors
         color_map = {m: colors[i % len(colors)] for i, m in enumerate(models)}
 
-        plt.figure(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(10, 6))
+        fig.canvas.manager.set_window_title(
+            f"RMSD_Protocol_{self.protocol.getObjId()}"
+        )
 
         current_x_offset = 0
         all_positions = []
@@ -158,6 +161,8 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
         is_filtered = self.filter.get()
         min_r = self.residuesMin.get() if is_filtered else -float('inf')
         max_r = self.residuesMax.get() if is_filtered else float('inf')
+
+        from matplotlib.lines import Line2D
 
         for chain, chain_files in sorted(chains.items()):
             chain_max_x = 0
@@ -169,11 +174,12 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
                 color = color_map[model]
 
                 x_vals, y_vals = [], []
-                raw_res_ids = []
 
                 with open(path, 'r') as fh:
                     for line in fh:
-                        if ':' not in line: continue
+                        if ':' not in line:
+                            continue
+
                         try:
                             res_id = int(line.split(':')[0].strip())
                             rmsd_val = float(line.split(':')[1].strip())
@@ -181,45 +187,81 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
                             if is_filtered and (res_id < min_r or res_id > max_r):
                                 continue
 
-                            # Normalize x: subtract min_r so the plot starts at 0 for this segment
                             plot_x = (res_id - min_r) if is_filtered else res_id
 
-                            x_vals.append(plot_x + current_x_offset)
+                            x_coord = plot_x + current_x_offset
+
+                            x_vals.append(x_coord)
                             y_vals.append(rmsd_val)
-                            raw_res_ids.append(res_id)
-                            chain_residues_plotted.add((plot_x + current_x_offset, res_id))
-                        except:
+
+                            chain_residues_plotted.add((x_coord, res_id))
+
+                        except Exception:
                             continue
 
                 if x_vals:
-                    plt.plot(x_vals, y_vals, color=color, linewidth=1.2, alpha=0.9)
-                    chain_max_x = max(chain_max_x, max(x_vals) - current_x_offset)
+                    ax.plot(
+                        x_vals,
+                        y_vals,
+                        color=color,
+                        linewidth=1.2,
+                        alpha=0.9
+                    )
+
+                    chain_max_x = max(
+                        chain_max_x,
+                        max(x_vals) - current_x_offset
+                    )
 
             if not chain_residues_plotted:
                 continue
 
-            plt.axvline(current_x_offset - 1, linestyle='--', color='gray', alpha=0.2)
+            ax.axvline(
+                current_x_offset - 1,
+                linestyle='--',
+                color='gray',
+                alpha=0.2
+            )
 
             chain_ticks = sorted(list(chain_residues_plotted))
+
             all_positions.extend([t[0] for t in chain_ticks])
             all_labels.extend([t[1] for t in chain_ticks])
 
             current_x_offset += chain_max_x + 5
 
-        handles = [plt.Line2D([0], [0], color=color_map[m], lw=2, label=m) for m in models]
+        handles = [
+            Line2D(
+                [0],
+                [0],
+                color=color_map[m],
+                lw=2,
+                label=m
+            )
+            for m in models
+        ]
 
         if all_positions:
             step = max(1, len(all_labels) // 30)
-            plt.xticks(all_positions[::step], all_labels[::step], rotation=90, fontsize=6)
 
-        plt.xlabel("Residue ID")
-        plt.ylabel("RMSD")
-        plt.title("Filtered RMSD per residue (Grouped by Chain)")
-        plt.legend(handles=handles, fontsize=8)
-        plt.grid(True, alpha=0.3)
+            ax.set_xticks(all_positions[::step])
 
-        plt.tight_layout()
-        plt.show()
-        plt.close()
+            ax.set_xticklabels(
+                all_labels[::step],
+                rotation=90,
+                fontsize=6
+            )
+
+        ax.set_xlabel("Residue ID")
+        ax.set_ylabel("RMSD")
+        ax.set_title("Filtered RMSD per residue (Grouped by Chain)")
+
+        ax.legend(handles=handles, fontsize=8)
+
+        ax.grid(True, alpha=0.3)
+
+        fig.tight_layout()
+
+        plt.show(block=False)
 
         return []
