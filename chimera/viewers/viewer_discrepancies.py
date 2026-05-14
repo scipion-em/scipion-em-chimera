@@ -228,6 +228,23 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
             all_positions.extend([t[0] for t in chain_ticks])
             all_labels.extend([t[1] for t in chain_ticks])
 
+            chain_center = current_x_offset + chain_max_x / 2
+
+            y_top = ax.get_ylim()[1]
+            y_offset = (ax.get_ylim()[1] - ax.get_ylim()[0]) * 0.03  # small padding
+
+            ax.text(
+                chain_center,
+                y_top - y_offset,
+                f"Chain {chain}",
+                ha='center',
+                va='bottom',
+                fontsize=10,
+                fontweight='bold',
+                color='black',
+                alpha=0.9
+            )
+
             current_x_offset += chain_max_x + 5
 
         handles = [
