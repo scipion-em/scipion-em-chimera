@@ -148,77 +148,135 @@ class ChimeraProtDiscrepancies(EMProtocol):
         return "unknown"
 
     def create_chimerax_script(self):
+        import difflib
+
         project_path = self.getProject().getPath()
         output_path = os.path.join(self.getWorkingDir(), 'extra')
         os.makedirs(output_path, exist_ok=True)
         save_path = os.path.join(project_path, output_path)
 
-        # Generate the ChimeraX command script as a string
         chimerax_script = ""
 
-        # Open all models
         for i, model_file in enumerate(self.extra_files):
             chimerax_script += f"open {model_file}\n"
 
-        # Align every model with every other model and save RMSD values
         rmsd_counter = 1
-        ref_index = 1
+        ref_index = 1  # reference is always model 1
+
         ref_models, ref_residues = self.getModelsChainsStep(
             self.reference.get().getFileName()
         )
-        chain_dict = list(ref_models.values())[0]
-        ref_chains = list(chain_dict.keys())
+        ref_chain_dict = list(ref_models.values())[0]
+        ref_chains = list(ref_chain_dict.keys())
+
+        ref_seq_map = {}
+        for ch in ref_chains:
+            ref_chain_res = ref_residues[0].get(ch, [])
+            ref_seq_map[ch] = [res[1] for res in ref_chain_res]
 
         for i in range(len(self.extra_files)):
+
             model1 = os.path.splitext(self.extra_files[0])[0]
             model2 = os.path.splitext(os.path.basename(self.extra_files[i]))[0]
 
-            if model1 != model2:
-                ref_models, ref_residuesMod = self.getModelsChainsStep(self._getExtraPath(self.extra_files[i]))
+            if model1 == model2:
+                continue
 
-                chain_dict = list(ref_models.values())[0]
-                mod2_chains = list(chain_dict.keys())
-                if set(ref_chains) == set(mod2_chains):
-                    for ch in ref_chains:
-                        ref_chain_res = ref_residues[0].get(ch, [])
-                        ref_residue_names = [res[1] for res in ref_chain_res]
+            mod_path = self._getExtraPath(self.extra_files[i])
 
-                        ref_type = self.detect_molecule_type(ref_residue_names)
+            mod_models, mod_residues = self.getModelsChainsStep(mod_path)
+            mod_chain_dict = list(mod_models.values())[0]
+            mod_chains = list(mod_chain_dict.keys())
 
-                        if ref_type == "protein":
-                            chimerax_script += (
-                                f"matchmaker #{ref_index}/{ch} to #{i + 1}/{ch} showAlignment true\n"
-                            )
-                            chimerax_script += "setattr a occupancy 1111.11\n"
-                            chimerax_script += (f"sequence header {rmsd_counter} rmsd save "
-                                                f"{save_path}/rmsd_{model1}_{model2}_chain_{ch}.txt\n")
-                            chimerax_script += (f"save {save_path}/fasta_{model1}_{model2}_chain_{ch}.fasta "
-                                                f"format fasta alignment {rmsd_counter}\n")
-                            rmsd_counter += 1
-                        elif ref_type == "nucleic":
-                            chimerax_script += (
-                                f"matchmaker #{ref_index}/{ch} to #{i + 1}/{ch} showAlignment true\n"
-                            )
-                            chimerax_script += (f"save {save_path}/fasta_{model1}_{model2}_chain_{ch}.fasta "
-                                                f"format fasta alignment {rmsd_counter}\n")
-                            rmsd_counter += 1
+            mod_seq_map = {}
+            for ch in mod_chains:
+                mod_chain_res = mod_residues[0].get(ch, [])
+                mod_seq_map[ch] = [res[1] for res in mod_chain_res]
 
-                else:
-                    chimerax_script += f"matchmaker #{ref_index} to #{i+1} showAlignment true\n"
-                    chimerax_script += "setattr a occupancy 1111.11\n"  # Arbitrary number for later changes
-                    chimerax_script += f"sequence header {rmsd_counter} rmsd save {save_path}/rmsd_{model1}_{model2}.txt\n"
-                    chimerax_script += f"save {save_path}/fasta_{model1}_{model2}.fasta format fasta alignment {rmsd_counter}\n"
-                    rmsd_counter += 1
+            used_mod_chains = set()
+            chain_pairs = []
 
-        # Save all aligned models
+            for ref_ch, ref_seq in ref_seq_map.items():
+
+                best_score = 0.0
+                best_mod_ch = None
+
+                for mod_ch, mod_seq in mod_seq_map.items():
+
+                    if mod_ch in used_mod_chains:
+                        continue
+
+                    if len(ref_seq) == 0 or len(mod_seq) == 0:
+                        continue
+
+                    # sequence similarity (robust + simple)
+                    matcher = difflib.SequenceMatcher(None, ref_seq, mod_seq)
+                    score = matcher.ratio()
+
+                    if score > best_score:
+                        best_score = score
+                        best_mod_ch = mod_ch
+
+                # accept only meaningful biological matches
+                if best_mod_ch is not None and best_score >= 0.3:
+                    chain_pairs.append((ref_ch, best_mod_ch))
+                    used_mod_chains.add(best_mod_ch)
+
+            if chain_pairs:
+
+                for ch, ch2 in chain_pairs:
+
+                    ref_chain_res = ref_residues[0].get(ch, [])
+                    ref_residue_names = [res[1] for res in ref_chain_res]
+
+                    ref_type = self.detect_molecule_type(ref_residue_names)
+
+                    if ref_type == "protein":
+                        chimerax_script += (
+                            f"matchmaker #{ref_index}/{ch} to #{i + 1}/{ch2} showAlignment true\n"
+                        )
+                        chimerax_script += "setattr a occupancy 1111.11\n"
+                        chimerax_script += (
+                            f"sequence header {rmsd_counter} rmsd save "
+                            f"{save_path}/rmsd_{model1}_{model2}_chain_{ch}.txt\n"
+                        )
+                        chimerax_script += (
+                            f"save {save_path}/fasta_{model1}_{model2}_chain_{ch}.fasta "
+                            f"format fasta alignment {rmsd_counter}\n"
+                        )
+                        rmsd_counter += 1
+
+                    elif ref_type == "nucleic":
+                        chimerax_script += (
+                            f"matchmaker #{ref_index}/{ch} to #{i + 1}/{ch2} showAlignment true\n"
+                        )
+                        chimerax_script += (
+                            f"save {save_path}/fasta_{model1}_{model2}_chain_{ch}.fasta "
+                            f"format fasta alignment {rmsd_counter}\n"
+                        )
+                        rmsd_counter += 1
+
+            else:
+                # fallback: whole-structure alignment
+                chimerax_script += f"matchmaker #{ref_index} to #{i + 1} showAlignment true\n"
+                chimerax_script += "setattr a occupancy 1111.11\n"
+                chimerax_script += (
+                    f"sequence header {rmsd_counter} rmsd save "
+                    f"{save_path}/rmsd_{model1}_{model2}.txt\n"
+                )
+                chimerax_script += (
+                    f"save {save_path}/fasta_{model1}_{model2}.fasta "
+                    f"format fasta alignment {rmsd_counter}\n"
+                )
+                rmsd_counter += 1
+
         for i, model_file in enumerate(self.extra_files):
             original_name = os.path.splitext(os.path.basename(model_file))[0]
             chimerax_script += f"save {save_path}/align_{original_name}.cif models #{i + 1}\n"
 
-        # Exit ChimeraX
         chimerax_script += "exit\n"
 
-        # Save the script to a file for debugging purposes
+        # save script
         script_path = os.path.join(output_path, 'chimerax_script.cxc')
         with open(script_path, 'w') as script_file:
             script_file.write(chimerax_script)
@@ -229,36 +287,63 @@ class ChimeraProtDiscrepancies(EMProtocol):
     def calculate_manual_rmsd(self, cif_ref, cif_mod, chain_id, mol_type):
         import numpy as np
 
-        target_atom = 'P' if mol_type == "nucleic" else 'CA'
+        atom = "P" if mol_type == "nucleic" else "CA"
 
-        def get_coords(cif_file):
-            handler = AtomicStructHandler()
-            handler.read(cif_file)
-            structure = handler.getStructure()
-            coords = {}
-            model = structure[0]
-            if chain_id not in model:
-                raise ValueError(f"Chain {chain_id} not found in {cif_file}")
-            chain = model[chain_id]
-            for residue in chain:
-                res_id = residue.id[1]
-                if residue.id[0] != " ":
-                    continue
-                if target_atom in residue:
-                    atom = residue[target_atom]
-                    coords[res_id] = atom.get_coord()
-            return coords
-        ref_coords = get_coords(cif_ref)
-        mod_coords = get_coords(cif_mod)
-        results = {}
-        for res_num, c1 in ref_coords.items():
-            if res_num in mod_coords:
-                dist = np.linalg.norm(c1 - mod_coords[res_num])
-                results[res_num] = float(dist)
-            else:
-                results[res_num] = None
+        handler = AtomicStructHandler()
 
-        return results
+        handler.read(cif_ref)
+        ref_struct = handler.getStructure()[0]
+
+        handler.read(cif_mod)
+        mod_struct = handler.getStructure()[0]
+
+        if chain_id not in ref_struct or chain_id not in mod_struct:
+            return {}
+
+        ref_chain = list(ref_struct[chain_id])
+        mod_chain = list(mod_struct[chain_id])
+        ref_coords = []
+        mod_coords = []
+        residue_ids = []
+
+        n = min(len(ref_chain), len(mod_chain))
+
+        for i in range(n):
+            r1 = ref_chain[i]
+            r2 = mod_chain[i]
+
+            if atom in r1 and atom in r2:
+                ref_coords.append(r1[atom].get_coord())
+                mod_coords.append(r2[atom].get_coord())
+                residue_ids.append(r1.id[1])  # residue number
+
+        if len(ref_coords) < 3:
+            return {}
+
+        P = np.array(ref_coords)
+        Q = np.array(mod_coords)
+
+        Pc = P - P.mean(axis=0)
+        Qc = Q - Q.mean(axis=0)
+
+        C = Pc.T @ Qc
+        V, S, Wt = np.linalg.svd(C)
+
+        # correct reflection
+        if np.linalg.det(V @ Wt) < 0:
+            V[:, -1] *= -1
+
+        U = V @ Wt
+
+        P_aligned = Pc @ U
+        Q_centered = Qc
+
+        rmsd_per_res = {}
+
+        for res_id, p, q in zip(residue_ids, P_aligned, Q_centered):
+            rmsd_per_res[res_id] = float(np.linalg.norm(p - q))
+
+        return rmsd_per_res
 
     def run_chimerax_script(self, script_path, output_log_path):
         if not os.path.exists(script_path):
