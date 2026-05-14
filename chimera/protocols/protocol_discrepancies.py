@@ -43,6 +43,53 @@ class ChimeraProtDiscrepancies(EMProtocol):
     """
     Protocol to find atom discrepancies of all atomic models versus all of the rest.
     """
+    """
+        Compares multiple atomic structures using ChimeraX alignments and
+        computes residue-level RMSD discrepancies between models.
+
+        AI Generated:
+
+        Find Discrepancies (ChimeraProtDiscrepancies) — User Manual
+            Overview
+
+            The Find Discrepancies protocol analyzes structural differences
+            between several atomic models by performing pairwise alignments
+            and calculating residue RMSD values. Its purpose is to identify
+            conserved regions, flexible domains, and conformational changes
+            across related structures.
+
+            Inputs and Workflow
+
+            The protocol takes multiple atomic structures as input. Each
+            structure is aligned against all others using ChimeraX MatchMaker.
+            During execution, the protocol generates sequence alignments,
+            RMSD reports, and aligned CIF models.
+
+            Residue-level RMSD values are extracted from the alignments and
+            mapped back to the corresponding residues of each structure.
+            These values are written into the occupancy fields of the output
+            CIF files, allowing direct visualization of structural variability.
+
+            RMSD Averaging and Outputs
+
+            After all pairwise comparisons are completed, the protocol
+            averages RMSD values across all models to produce a final
+            discrepancy profile for each structure. Final annotated CIF
+            files are generated with embedded RMSD information compatible
+            with Scipion visualization workflows.
+
+            Biological Interpretation
+
+            Low RMSD values indicate structurally conserved regions, while
+            high RMSD values usually correspond to flexible segments,
+            conformational variability, or poorly aligned regions.
+
+            Final Perspective
+
+            This protocol provides an automated framework for comparative
+            structural analysis of atomic models, helping identify structural
+            conservation and biologically relevant conformational differences.
+        """
     _label = 'find discrepancies'
 
     # -------------------------- DEFINE param functions ----------------------

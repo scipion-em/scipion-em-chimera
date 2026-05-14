@@ -45,6 +45,53 @@ class ChimeraProtOperate(ChimeraProtBase):
             in Scipion framework.
             Execute command *scipionwrite #n [prefix stringAddedToFilename]
             model refers to the pdb file"""
+
+    """
+        Chimera Operate (ChimeraProtOperate) — User Manual
+
+        Overview
+
+        The Chimera Operate protocol provides a flexible interface between
+        Scipion and ChimeraX, allowing users to execute custom Chimera scripts
+        within a Scipion workflow. It is designed for advanced structural
+        visualization, manipulation, and automation tasks that require more
+        flexibility than predefined protocols.
+
+        Inputs and Workflow
+
+        The protocol accepts atomic structures and volume maps inherited from
+        the Chimera base protocol, together with an optional ChimeraX or Python
+        script. If no script is provided, the protocol executes the default
+        Chimera workflow. Otherwise, it loads the user script, replaces dynamic
+        placeholders with the corresponding input file paths, generates a
+        temporary execution script, and launches ChimeraX automatically.
+
+        Script Execution
+
+        The placeholders '{inputVolume}' and '{pdbFileToBeRefined}' are
+        automatically replaced by the input volume and atomic structure paths,
+        allowing reusable and dataset-independent scripts.
+
+        Python scripts ending in '.py' are executed using ChimeraX script mode,
+        while other files are interpreted as standard Chimera command scripts.
+        Python execution enables advanced automation, conditional logic, and
+        large-scale structural processing workflows.
+
+        Outputs and Applications
+
+        The protocol does not define fixed outputs because results depend on
+        the operations implemented in the provided script. Users may generate
+        modified atomic models, transformed density maps, Chimera sessions,
+        rendered images, or custom structural analyses.
+
+        Final Perspective
+
+        Chimera Operate acts as a programmable bridge between Scipion and
+        ChimeraX, enabling customized and reproducible structural biology
+        workflows. Its flexibility makes it especially useful for advanced
+        cryo-EM visualization, automated scripting, and specialized molecular
+        analysis tasks.
+        """
     _label = 'operate'
 
     def _defineParams(self, form):

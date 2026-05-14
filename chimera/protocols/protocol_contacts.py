@@ -51,6 +51,71 @@ from pyworkflow.utils import red
 class ChimeraProtContacts(EMProtocol):
     """Identifies interatomic clashes and contacts based on van der Waals radii
     """
+
+    """
+        Detects interatomic contacts and steric clashes in atomic structures
+        using ChimeraX. The protocol analyzes interactions between protein
+        chains, ligands, or symmetry-related subunits based on van der Waals
+        overlap calculations and interatomic distances.
+
+        AI Generated:
+
+        Chimera Contacts (ChimeraProtContacts) — User Manual
+            Overview
+
+            The Chimera Contacts protocol identifies biologically relevant
+            molecular interactions within macromolecular structures. It is
+            commonly used in cryo-EM and structural biology workflows to
+            validate interfaces, study oligomeric assemblies, and detect
+            clashes between fitted atomic models.
+
+            Inputs and Workflow
+
+            The protocol requires an atomic structure in PDB or mmCIF format
+            together with a chain-label dictionary that defines biologically
+            meaningful chain groups. Contacts are calculated only between
+            different groups, avoiding redundant intragroup interactions.
+
+            During execution, ChimeraX scripts are automatically generated to
+            open structures, apply optional symmetry operations, calculate
+            contacts, and export interaction files for further analysis.
+
+            Symmetry Handling
+
+            The protocol supports cyclic, dihedral, tetrahedral, octahedral,
+            and icosahedral symmetries. When symmetry is enabled, neighboring
+            symmetry-related units are generated and analyzed to identify
+            intermolecular contacts across biological assemblies.
+
+            Duplicate interactions introduced by symmetry are automatically
+            removed during postprocessing to ensure clean and biologically
+            meaningful results.
+
+            Contact Analysis
+
+            Contact detection is based on overlap calculations using van der
+            Waals radii. Negative overlap values indicate favorable contacts,
+            while positive values correspond to steric clashes.
+
+            The protocol also identifies potential salt bridges between
+            positively charged residues such as lysine or arginine and
+            negatively charged residues such as glutamate or aspartate.
+
+            Outputs
+
+            Results are stored in a SQLite database containing detailed
+            interaction information, including chains, residues, atoms,
+            overlap values, distances, and salt-bridge annotations.
+            Symmetry-expanded models may also be generated when required.
+
+            Final Perspective
+
+            ChimeraProtContacts provides an automated framework for studying
+            intermolecular interfaces and validating structural assemblies.
+            Proper symmetry handling and biologically meaningful chain
+            grouping are essential for obtaining reliable contact analysis
+            results in structural biology workflows.
+        """
     _label = 'contacts'
     _program = ""
     commandDropView = """DROP view IF EXISTS {viewName}"""

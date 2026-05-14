@@ -60,6 +60,52 @@ class ChimeraImportAtomStructAlphafold(EMProtocol):
     a local alphafold NO docker instalation as
     described here: https://github.com/kalininalab/alphafold_non_docker
     """
+    """
+    ChimeraImportAtomStructAlphafold — User Manual
+
+    Overview
+
+    The ``ChimeraImportAtomStructAlphafold`` protocol provides an integrated
+    framework for retrieving, generating, and importing AlphaFold atomic structure
+    predictions into Scipion workflows. The protocol supports multiple prediction
+    sources, including the AlphaFold EBI database, homologous sequence searches,
+    Google Colab notebooks, and fully local AlphaFold installations.
+
+    Inputs and Workflow
+
+    Users can retrieve structures directly from the AlphaFold database using a
+    UniProt identifier, search homologous proteins through BLAST-based workflows,
+    or execute AlphaFold predictions remotely or locally. The protocol supports
+    both monomeric and multimeric predictions by handling single or multiple input
+    sequences.
+
+    Remote execution integrates ChimeraX and Phenix Google Colab notebooks,
+    automating sequence submission, prediction execution, result downloading, and
+    model extraction. Local execution generates FASTA files and shell scripts,
+    configures GPU usage, and launches AlphaFold jobs within a Conda environment.
+
+    Prediction and Visualization
+
+    The protocol automates AlphaFold execution and optionally opens the resulting
+    models in ChimeraX for visualization. Structures are colored using AlphaFold
+    confidence scores, allowing users to identify reliable and uncertain regions.
+    When available, Predicted Aligned Error (PAE) files are also imported for
+    structural confidence analysis.
+
+    Outputs
+
+    The protocol generates atomic structure outputs in PDB or CIF format together
+    with optional PAE confidence files. All generated models are automatically
+    registered within the Scipion project for downstream cryo-EM and structural
+    biology workflows.
+
+    Final Perspective
+
+    The ``ChimeraImportAtomStructAlphafold`` protocol simplifies the integration of
+    AlphaFold predictions into Scipion by combining database retrieval, homology
+    searching, remote notebook execution, and local prediction workflows into a
+    single unified interface.
+    """
 
     # To include this method in the Scipion model building menu as
     # chimerax - alphafold prediction

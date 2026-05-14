@@ -39,6 +39,67 @@ class ChimeraProtRestore(ChimeraProtBase):
       by using `scipionwrite` or `scipionss` commad.
       Execute command *scipionwrite #n [prefix stringAddedToFilename]
       model refers to the pdb file"""
+
+    """
+        Chimera Restore Session (ChimeraProtRestore) — User Manual
+
+        Overview
+
+        The Chimera Restore Session protocol allows users to reopen and
+        continue previously saved ChimeraX sessions directly inside the
+        Scipion framework. Its main purpose is to recover visualization,
+        structural analysis, and modeling environments that were stored
+        during earlier Chimera-based workflows using the `scipionwrite`
+        or `scipionss` commands.
+
+        In cryo-EM and structural biology workflows, this protocol is
+        especially useful for continuing interactive analysis sessions,
+        recovering molecular visualization states, or revisiting complex
+        fitting and modeling procedures without rebuilding the workspace
+        manually.
+
+        Inputs and Workflow
+
+        The protocol requires a previous Chimera-related protocol as input,
+        including rigid fitting, operate, modeling, subtraction, or previous
+        restore sessions. During execution, the protocol retrieves the saved
+        Chimera session associated with the selected protocol and restores
+        the corresponding molecular and volumetric environment.
+
+        The workflow automatically inherits relevant inputs such as atomic
+        structures, reference maps, and additional PDB files from the parent
+        protocol. This ensures consistency between the original session and
+        the restored environment.
+
+        Session Restoration
+
+        The protocol locates the Chimera session file generated during the
+        original execution and launches ChimeraX using that stored session.
+        As a result, visualization parameters, loaded models, map positions,
+        orientations, and user modifications are recovered automatically.
+
+        This functionality is particularly valuable in long or interactive
+        structural biology workflows where manual reconstruction of the
+        analysis environment would be time-consuming or error-prone.
+
+        Validation and Consistency Checks
+
+        Before execution, the protocol verifies that a valid session file
+        exists in the selected parent protocol directory. If no session has
+        been previously saved, execution is stopped and an error is reported.
+
+        This validation step prevents invalid restoration attempts and helps
+        maintain workflow reproducibility within Scipion projects.
+
+        Final Perspective
+
+        Chimera Restore Session acts as a session recovery and continuity
+        mechanism between ChimeraX and Scipion workflows. Rather than
+        performing new structural calculations, it provides a reproducible
+        way to reopen and continue previous molecular visualization and
+        analysis environments, making it especially useful in iterative
+        cryo-EM interpretation and structural modeling workflows.
+        """
         # Execute command *scipionwrite [model #n] [refmodel #p]
         # [saverefmodel 0|1]* from command line in order to transfer fitted
         # pdb to scipion. Default values are model=#0,

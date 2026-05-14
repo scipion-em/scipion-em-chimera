@@ -39,6 +39,29 @@ class ChimeraProtRigidFit(ChimeraProtBase):
     """Protocol to perform rigid fit using Chimera.
             Execute command *scipionwrite #n [prefix stringAddedToFilename]
             model refers to the pdb file"""
+
+    """
+        Performs rigid fitting of atomic structures into cryo-EM density maps
+        using Chimera-based fitting tools. The protocol allows a PDBx/mmCIF
+        model to be positioned inside a reference 3D volume while preserving
+        its overall geometry, enabling structural interpretation and comparison
+        within a common spatial framework.
+
+        The protocol accepts an atomic structure to be fitted together with
+        optional reference atomic models. If no external input volume is
+        provided, the associated volume linked to the atomic structure is
+        automatically used as the fitting reference. Validation steps ensure
+        that a valid volume is available before execution, preventing invalid
+        fitting workflows.
+
+        In cryo-EM analysis, rigid fitting is commonly used to place known
+        atomic models into experimental density maps, compare structural states,
+        and prepare models for visualization or downstream refinement. Since
+        the protocol preserves the global conformation of the structure, it is
+        particularly suitable for systems where major conformational changes or
+        flexibility are not expected.
+        """
+
     _label = 'rigid fit'
 
     def _defineParams(self, form):
