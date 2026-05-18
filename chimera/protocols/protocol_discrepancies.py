@@ -134,7 +134,7 @@ class ChimeraProtDiscrepancies(EMProtocol):
 
         dna_rna = {
             "A", "C", "G", "T", "U",
-            "DA", "DC", "DG", "DT", "DU"
+            "DA", "DC", "DG", "DT", "DU", "DN"
         }
 
         res_set = set(residues)
@@ -223,9 +223,7 @@ class ChimeraProtDiscrepancies(EMProtocol):
                     used_mod_chains.add(best_mod_ch)
 
             if chain_pairs:
-
                 for ch, ch2 in chain_pairs:
-
                     ref_chain_res = ref_residues[0].get(ch, [])
                     ref_residue_names = [res[1] for res in ref_chain_res]
 
