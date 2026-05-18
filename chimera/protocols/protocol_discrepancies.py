@@ -134,7 +134,7 @@ class ChimeraProtDiscrepancies(EMProtocol):
 
         dna_rna = {
             "A", "C", "G", "T", "U",
-            "DA", "DC", "DG", "DT", "DU", "DN"
+            "DA", "DC", "DG", "DT", "DU", "DN", "DX"
         }
 
         res_set = set(residues)
