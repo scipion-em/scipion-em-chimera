@@ -30,15 +30,19 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
         group.addParam('showFiles', params.EnumParam, choices=['all']+self.getFileNames(),
                        label='Plot:', default=0,
                        help='Plot all files or specific one')
+        group.addParam(
+                        'selectedChain', params.EnumParam, choices=['all'] + self._getAvailableChains(),
+                        default=0, label='Chain:',
+                        help='Select chain to display')
         group.addParam('filter',
                        params.BooleanParam, default=False,
-                       label='Show specific residues:',
+                       label='Filter residues:',
                        help='Generate and display a graph of only selected residues')
         group.addParam('residuesMin', params.IntParam,
                        label='From:', default=0, condition='filter',
                        help='From x residue')
         group.addParam('residuesMax', params.IntParam,
-                       label='To:', default=0, condition='filter',
+                       label='To:', default=1000, condition='filter',
                        help='To x residue')
 
     def getFileNames(self):
@@ -49,6 +53,25 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
             if '00' not in clean:
                 cleanList.append(clean)
         return cleanList
+
+    def _getAvailableChains(self):
+        extra_path = self.protocol._getExtraPath()
+
+        files = [
+            f for f in os.listdir(extra_path)
+            if f.startswith("rmsd_") and f.endswith(".txt")
+        ]
+
+        chains = set()
+
+        for f in files:
+            try:
+                chain = f.split("_chain_")[-1].replace(".txt", "")
+                chains.add(chain)
+            except Exception:
+                continue
+
+        return sorted(list(chains))
 
     def _normalizeOutputName(self, output_name):
         name = output_name.replace("out_", "").replace("ref_out_", "")
@@ -126,6 +149,10 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
             f for f in os.listdir(extra_path)
             if f.startswith("rmsd_") and f.endswith(".txt")
         ])
+
+        choices = ['all'] + self._getAvailableChains()
+        selected_chain = choices[self.selectedChain.get()]
+
         selectedIdx = self.showFiles.get()
         choices = ['all'] + self.getFileNames()
         selectedValue = choices[selectedIdx]
@@ -139,6 +166,9 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
         chains = {}
         for f in files:
             chain = f.split("_chain_")[-1].replace(".txt", "")
+            if selected_chain != 'all' and chain != selected_chain:
+                continue
+
             chains.setdefault(chain, []).append(f)
 
         def get_model_name(fname):
