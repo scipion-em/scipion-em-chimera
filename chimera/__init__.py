@@ -33,7 +33,7 @@ from glob import glob
 from pyworkflow import SPA, TOMO, MODELLING
 
 from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR,
-                        chimeraTARs, V1_11_1, CHIMERA_FLATPAK_ID)
+                        chimeraTARs, V1_6_1, CHIMERA_FLATPAK_ID)
 from .flatpak import is_installed
 from pyworkflow.utils import redStr
 
@@ -46,7 +46,7 @@ class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
     _supportedVersions = chimeraTARs.keys()
-    _currentVersion = V1_11_1
+    _currentVersion = V1_6_1
     _fullVersion = 'chimerax-%s' % _currentVersion
     _processingField = [SPA, TOMO, MODELLING]
 
@@ -175,7 +175,7 @@ class Plugin(pwem.Plugin):
                 python %s %s""" % (getchimera_script, version),
                 "../ChimeraX-%s.flatpak" % version),
             (f"""cd .. &&\
-                 sudo flatpak install -y  ChimeraX-{version}.flatpak &&\
+                 flatpak install -y --user ChimeraX-{version}.flatpak &&\
                  mkdir -p chimerax-{version}/bin &&\
                  echo 'flatpak run edu.ucsf.rbvi.ChimeraX $*'> chimerax-{version}/bin/ChimeraX &&\
                  chmod +x chimerax-{version}/bin/ChimeraX""", extractionDir)]
@@ -185,3 +185,4 @@ class Plugin(pwem.Plugin):
                        default=default,
                        commands=chimera_cmds,
                        )
+
