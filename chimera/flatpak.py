@@ -16,3 +16,19 @@ def install_flatpak(package):
         ["flatpak", "install", "--user", "-y", "--noninteractive", package],
         check=True
     )
+
+def ask_install_scope():
+    while True:
+        answer = input(
+            "Installation type:\n"
+            "  1) User (--user)\n"
+            "  2) System-wide (all users, needs sudo)\n"
+            "Choose [1/2]: "
+        ).strip()
+
+        if answer == "1":
+            return "user"
+        elif answer == "2":
+            return "system"
+
+        print("Invalid choice. Please enter 1 or 2.\n")
