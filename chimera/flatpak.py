@@ -21,7 +21,7 @@ def ask_install_scope():
     while True:
         answer = input(
             "Installation type:\n"
-            "  1) User (--user)\n"
+            "  1) User (--user, only for current user)\n"
             "  2) System-wide (all users, needs sudo)\n"
             "Choose [1/2]: "
         ).strip()
