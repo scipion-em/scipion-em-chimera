@@ -34,7 +34,7 @@ from pyworkflow import SPA, TOMO, MODELLING
 
 from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR,
                         chimeraTARs, V1_11_1, CHIMERA_FLATPAK_ID)
-from .flatpak import is_installed
+from .flatpak import is_installed, ask_install_scope
 from pyworkflow.utils import redStr
 
 __version__ = "4.0.0"
@@ -49,6 +49,7 @@ class Plugin(pwem.Plugin):
     _currentVersion = V1_11_1
     _fullVersion = 'chimerax-%s' % _currentVersion
     _processingField = [SPA, TOMO, MODELLING]
+    answer = None
 
     def __init__(self):
         super().__init__()
@@ -87,9 +88,9 @@ class Plugin(pwem.Plugin):
     @classmethod
     def getProgram(cls, progName="ChimeraX"):
         """ Return the program binary that will be used. """
-        return f"flatpak run {CHIMERA_FLATPAK_ID}"
-        # cmd = cls.getHome('bin', progName)
-        # return str(cmd)
+        # return f"flatpak run {CHIMERA_FLATPAK_ID}"
+        cmd = cls.getHome('bin', progName)
+        return str(cmd)
 
     @classmethod
     def getPython(cls, progName="python*"):
@@ -133,6 +134,8 @@ class Plugin(pwem.Plugin):
         env.addPackage('scipionchimera', version='1.3',
                        tar=VOID_TGZ,
                        default=True,
+                       # needsProgs=["flatpak"],  # error message is not clear when flatpak is not installed, 
+                       # so we check it in the installation function and exit with a clear message.
                        commands=installPluginsCommand)
 
     @classmethod
@@ -146,6 +149,7 @@ class Plugin(pwem.Plugin):
         import shutil
         import sys
 
+
         if shutil.which("flatpak") is None:
             print(redStr("Flatpak is not installed"))
             print(redStr("Please install Flatpak (sudo apt install flatpak) "
@@ -158,6 +162,17 @@ class Plugin(pwem.Plugin):
             print(
                 f"{CHIMERA_FLATPAK_ID} already installed. No Binary installed")
             return
+
+        if cls.answer is None:
+            cls.answer = ask_install_scope()
+        if cls.answer == "user":
+            print("Installing ChimeraX for the current user.")
+            flatpak_cmd = f"flatpak install --user ChimeraX-{version}.flatpak"
+        elif cls.answer == "system":
+            flatpak_cmd = f"sudo flatpak install -y ChimeraX-{version}.flatpak"
+        else:
+            print("Installation cancelled.")
+            sys.exit(0)
 
         from scipion.install.funcs import \
             VOID_TGZ  # Local import to avoid having scipion-app installed when building the package.
@@ -175,11 +190,11 @@ class Plugin(pwem.Plugin):
                 python %s %s""" % (getchimera_script, version),
                 "../ChimeraX-%s.flatpak" % version),
             (f"""cd .. &&\
-                 sudo flatpak install -y  ChimeraX-{version}.flatpak &&\
+                 {flatpak_cmd} &&\
                  mkdir -p chimerax-{version}/bin &&\
-                 echo 'flatpak run edu.ucsf.rbvi.ChimeraX $*'> chimerax-{version}/bin/ChimeraX &&\
+                 echo 'flatpak run {CHIMERA_FLATPAK_ID} $*'> chimerax-{version}/bin/ChimeraX &&\
                  chmod +x chimerax-{version}/bin/ChimeraX""", extractionDir)]
-
+        print("ChimeraX installation commands: %s" % chimera_cmds)
         env.addPackage('chimerax', version=version,
                        tar=VOID_TGZ,
                        default=default,
