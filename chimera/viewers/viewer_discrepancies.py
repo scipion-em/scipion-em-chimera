@@ -59,11 +59,10 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
         files = [f for f in os.listdir(extra_path) if f.startswith("rmsd_") and f.endswith(".txt")]
         chains = set()
         for f in files:
-            if "_chain_" in f:
+            # Only count actual chains, ignore the ones labeled _Whole
+            if "_chain_" in f and "_Whole" not in f:
                 chain = f.split("_chain_")[-1].replace(".txt", "")
-            else:
-                chain = "WholeModel"
-            chains.add(chain)
+                chains.add(chain)
         return sorted(list(chains))
 
     def _normalizeOutputName(self, output_name):

@@ -137,14 +137,15 @@ class ChimeraProtDiscrepancies(EMProtocol):
             "DA", "DC", "DG", "DT", "DU", "DN", "DX"
         }
 
-        res_set = set(residues)
+        ignored_residues = {"CL", "HOH", "NA", "MG", "K"}
+        filtered_res = [r for r in residues if r not in ignored_residues]
+        res_set = set(filtered_res)
 
         if res_set.issubset(protein_aas):
             return "protein"
         if res_set.issubset(dna_rna):
             return "nucleic"
 
-        # fallback (si es mixto o raro)
         return "unknown"
 
     def create_chimerax_script(self):
@@ -175,10 +176,8 @@ class ChimeraProtDiscrepancies(EMProtocol):
             ref_seq_map[ch] = [res[1] for res in ref_chain_res]
 
         for i in range(len(self.extra_files)):
-
             model1 = os.path.splitext(self.extra_files[0])[0]
             model2 = os.path.splitext(os.path.basename(self.extra_files[i]))[0]
-
             if model1 == model2:
                 continue
 
@@ -260,7 +259,7 @@ class ChimeraProtDiscrepancies(EMProtocol):
                 chimerax_script += "setattr a occupancy 1111.11\n"
                 chimerax_script += (
                     f"sequence header {rmsd_counter} rmsd save "
-                    f"{save_path}/rmsd_{model1}_{model2}.txt\n"
+                    f"{save_path}/rmsd_{model1}_{model2}_chain_Whole.txt\n"
                 )
                 chimerax_script += (
                     f"save {save_path}/fasta_{model1}_{model2}.fasta "
@@ -448,7 +447,6 @@ class ChimeraProtDiscrepancies(EMProtocol):
                 model1, model2 = folder.rsplit("_model_", 1)
                 model2 = "model_" + model2
 
-                # ? CLAVE: iterar por cadena
                 fasta_files = [
                     f for f in os.listdir(folder_path)
                     if f.startswith(f"fasta_{model1}_{model2}_chain_")
