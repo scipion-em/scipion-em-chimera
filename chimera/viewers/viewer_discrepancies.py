@@ -56,21 +56,14 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
 
     def _getAvailableChains(self):
         extra_path = self.protocol._getExtraPath()
-
-        files = [
-            f for f in os.listdir(extra_path)
-            if f.startswith("rmsd_") and f.endswith(".txt")
-        ]
-
+        files = [f for f in os.listdir(extra_path) if f.startswith("rmsd_") and f.endswith(".txt")]
         chains = set()
-
         for f in files:
-            try:
+            if "_chain_" in f:
                 chain = f.split("_chain_")[-1].replace(".txt", "")
-                chains.add(chain)
-            except Exception:
-                continue
-
+            else:
+                chain = "WholeModel"
+            chains.add(chain)
         return sorted(list(chains))
 
     def _normalizeOutputName(self, output_name):
@@ -165,7 +158,10 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
 
         chains = {}
         for f in files:
-            chain = f.split("_chain_")[-1].replace(".txt", "")
+            if "_chain_" in f:
+                chain = f.split("_chain_")[-1].replace(".txt", "")
+            else:
+                chain = "WholeModel"
             if selected_chain != 'all' and chain != selected_chain:
                 continue
 
@@ -173,7 +169,10 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
 
         def get_model_name(fname):
             base = fname.replace("rmsd_", "").replace(".txt", "")
-            return base.split("_chain_")[0]
+            if "_chain_" in base:
+                return base.split("_chain_")[0]
+            return base
+
 
         models = sorted({get_model_name(f) for f in files})
         colors = cm.tab10.colors
