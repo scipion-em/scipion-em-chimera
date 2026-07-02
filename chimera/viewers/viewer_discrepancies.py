@@ -301,9 +301,33 @@ class ChimeraProtDiscrepanciesViewer(pwviewer.ProtocolViewer):
         ax.set_ylabel("RMSD")
         ax.set_title("Filtered RMSD per residue (Grouped by Chain)")
 
-        ax.legend(handles=handles, fontsize=8)
 
         ax.grid(True, alpha=0.3)
+
+        # Excellent agreement
+        ax.axhline(
+            y=2.0,
+            color='green',
+            linestyle='--',
+            linewidth=0.5,
+            alpha=0.8
+        )
+        # Good agreement
+        ax.axhline(
+            y=4.0,
+            color='red',
+            linestyle='--',
+            linewidth=0.5,
+            alpha=0.8
+        )
+
+        handles.extend([
+            Line2D([0], [0], color='green', linestyle='--', lw=1.2,
+                   label='Excellent (<2 Å)'),
+            Line2D([0], [0], color='red', linestyle='--', lw=1.5,
+                   label='Good (<4 Å)')
+        ])
+        ax.legend(handles=handles, fontsize=8)
 
         fig.tight_layout()
 
