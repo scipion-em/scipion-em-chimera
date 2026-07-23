@@ -26,6 +26,8 @@
 import os
 import tempfile
 
+from pathlib import Path
+
 import pwem
 import pyworkflow.utils as pwutils
 from glob import glob
@@ -37,7 +39,7 @@ from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR,
 from .flatpak import is_installed, ask_install_scope
 from pyworkflow.utils import redStr
 
-__version__ = "4.0.0"
+__version__ = "4.0.1"
 _logo = "chimerax_logo.png"
 _references = ['Goddard2018']
 
@@ -120,18 +122,22 @@ class Plugin(pwem.Plugin):
         print("Path to ChimeraX binary: %s" % pathToBinary)
         activeVersion = cls.getActiveVersion()
         installationFlagFile = "installed-%s" % activeVersion
-
-        with tempfile.NamedTemporaryFile(mode="w",
+        # flatpack can not access the /tmp directory, 
+        # so we create the temporary file in the home directory.
+        with tempfile.NamedTemporaryFile(dir=Path.home(),
+                                         mode="w",
                                          delete=False,
                                          suffix=".cxc") as tmpFile:
-            tmpFile.write(f"devel install {pathToPlugin}")
+            tmpFile.write("toolshed install QScore\n")
+            tmpFile.write(f"devel install {pathToPlugin}\n")
             tmpFn = tmpFile.name
-        installPluginsCommand = [(f"""{pathToBinary} --nogui --exit {tmpFn} &&
-                                  touch {installationFlagFile}""",
-                                  [installationFlagFile])]
-        print("ChimeraX plugin installation command: %s" %
-              installPluginsCommand)
-        env.addPackage('scipionchimera', version='1.3',
+
+        installPluginsCommand = [(f"{pathToBinary} --nogui --exit {tmpFn} && "
+                                  f"touch {installationFlagFile}",
+                                  installationFlagFile)]
+        import inspect
+
+        env.addPackage('scipionchimera', version=__version__,
                        tar=VOID_TGZ,
                        default=True,
                        # needsProgs=["flatpak"],  # error message is not clear when flatpak is not installed, 
