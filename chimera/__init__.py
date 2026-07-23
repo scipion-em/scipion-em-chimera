@@ -137,7 +137,7 @@ class Plugin(pwem.Plugin):
                                   installationFlagFile)]
         import inspect
 
-        env.addPackage('scipionchimera', version=__version__,
+        env.addPackage('chimera', version=__version__,
                        tar=VOID_TGZ,
                        default=True,
                        # needsProgs=["flatpak"],  # error message is not clear when flatpak is not installed, 
