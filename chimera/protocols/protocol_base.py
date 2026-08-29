@@ -55,6 +55,59 @@ from .. import Plugin
 
 class ChimeraProtBase(EMProtocol):
     """Base class  for chimera protocol"""
+    """
+    The ChimeraProtBase class is a base protocol designed to integrate
+    ChimeraX within the Scipion framework for visualization and manipulation
+    of cryo-EM volumes and atomic structures. The protocol manages the
+    loading of input volumes, additional volumes, and atomic models in PDB
+    or mmCIF format, allowing users to process structural data within a
+    unified ChimeraX session. Its main purpose is to simplify visualization
+    workflows while preserving spatial information such as sampling rates
+    and origin coordinates.
+
+    The protocol defines several input parameters, including a main volume,
+    optional additional volumes, a principal atomic structure to refine,
+    and extra atomic structures. It also supports custom ChimeraX commands
+    through an additional command field intended for testing or advanced
+    usage. A help section is included to provide users with common
+    ChimeraX-related commands integrated into the Scipion environment.
+
+    The execution workflow is divided into three stages. The first stage
+    initializes prerequisite operations, although it currently acts as a
+    placeholder. The second stage creates and executes a ChimeraX script
+    that loads coordinate axes, input volumes, and atomic structures while
+    preserving voxel size, spatial origins, and positional shifts. Volumes
+    are displayed as surfaces, and atomic structures can be repositioned
+    according to their stored origins. The protocol automatically handles
+    multiple inputs and launches the ChimeraX process in graphical or
+    non-graphical mode depending on the provided commands.
+
+    During execution, coordinate reference axes are generated to facilitate
+    spatial orientation inside ChimeraX. If no explicit input volume is
+    provided, the protocol attempts to recover the associated volume from
+    the selected atomic structure. Default dimensions and sampling values
+    are used when no volume information is available. The generated script
+    ensures that all loaded models share a common coordinate reference
+    system, which is essential for structural comparison and visualization
+    consistency in cryo-EM workflows.
+
+    After execution, the protocol scans the output directory and registers
+    generated files as Scipion objects. Volume files in MRC format are
+    converted into Volume objects while preserving metadata such as
+    sampling rate and origin extracted from CCP4 headers. Atomic structures
+    stored in PDB or CIF format are converted into AtomStruct objects and
+    registered as protocol outputs. Temporary files are ignored to avoid
+    importing intermediate execution data.
+
+    The protocol also includes validation and reporting utilities. The
+    validation stage checks whether ChimeraX-related configuration
+    variables are correctly defined in the Scipion environment. The summary
+    function reports generated output files, including produced volumes and
+    atomic structures, while additional methods provide placeholders for
+    future workflow descriptions. Finally, the protocol includes a utility
+    function that verifies whether external executables are available in
+    the system path, ensuring compatibility with ChimeraX dependencies.
+    """
     _version = VERSION_3_0
 
     @classmethod

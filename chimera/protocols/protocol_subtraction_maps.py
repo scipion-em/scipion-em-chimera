@@ -68,6 +68,38 @@ class ChimeraSubtractionMaps(EMProtocol):
         from command line in order to transfer the generated maps and models to scipion.
         In addition to maps and models that the protocol saves by default,
         the user can generate and save some others"""
+
+    """
+        ChimeraSubtractionMaps subtracts or masks 3D cryo EM maps using either a second map
+        or a density generated from an atomic structure inside ChimeraX. The protocol is
+        designed for structural comparison, density interpretation, and analysis of flexible
+        or missing regions in biological macromolecules.
+
+        The workflow starts from an input reference map that acts as the minuend. The user
+        can then choose between subtracting another experimental map or generating a map
+        from an atomic structure at a selected resolution. This flexibility allows direct
+        comparison between experimental reconstructions and fitted atomic models.
+
+        When atomic structures are used, the protocol supports chain selection, residue
+        deletion, symmetry expansion, and localized masking around atoms. These operations
+        are especially useful for studying conformational variability, validating flexible
+        domains, or isolating specific structural regions. Symmetry operations can recreate
+        complete assemblies from asymmetric units before map generation.
+
+        The protocol automatically generates ChimeraX scripts that open maps and structures,
+        configure coordinate systems, apply masks or subtraction operations, generate
+        simulated density maps, and optionally filter the resulting differential map using
+        Gaussian or Laplacian filters to reduce noise and improve visualization.
+
+        After execution, the protocol exports generated maps and atomic structures back into
+        Scipion, preserving sampling rate and origin information. It also stores the full
+        ChimeraX session to facilitate reproducibility and later inspection of the analysis.
+
+        From a biological perspective, this protocol is particularly useful for detecting
+        structural differences between states, validating fitted models against experimental
+        densities, identifying flexible or missing regions, and improving interpretation of
+        cryo EM reconstructions through focused subtraction and masking strategies.
+        """
     _label = 'map subtraction'
     _program = ""
     _version = VERSION_3_0

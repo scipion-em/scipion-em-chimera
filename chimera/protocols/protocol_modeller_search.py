@@ -62,6 +62,182 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
         to transfer the selected
         pdb to scipion. Default value is model=#0,
         model refers to the pdb file."""
+
+    """
+        Models three-dimensional protein structures using ChimeraX and Modeller
+        through comparative or template-based modeling workflows. The protocol
+        allows users to generate structural models from one or more amino acid
+        sequences using an experimentally determined template structure or by
+        searching external databases for homologous templates.
+
+        AI Generated:
+
+        Model From Template (ChimeraModelFromTemplate) — User Manual
+
+            Overview
+
+            The Model From Template protocol generates protein structural models
+            by combining sequence alignment strategies with comparative modeling
+            tools available in ChimeraX and Modeller. Its main objective is to
+            predict biologically meaningful three-dimensional structures for
+            target protein sequences using experimentally resolved structures as
+            templates.
+
+            In structural biology and cryo-EM workflows, this protocol is commonly
+            used to build missing atomic models, model homologous proteins,
+            reconstruct interacting complexes, or generate initial structures for
+            further refinement and fitting into density maps. The protocol supports
+            both single-chain and multi-chain modeling scenarios and integrates
+            several alignment strategies depending on sequence similarity and
+            biological complexity.
+
+            Inputs and General Workflow
+
+            The protocol can operate in two different modes. In the first mode,
+            users provide an existing atomic structure as template together with
+            one or more target protein sequences. In the second mode, the protocol
+            searches external sequence databases such as PDB or NR to identify
+            potential structural templates automatically.
+
+            When a template structure is available, the user selects a specific
+            chain from the atomic structure and associates it with a target
+            sequence. The protocol extracts the structural sequence directly from
+            the selected chain and performs sequence alignment against the user
+            sequence. The resulting alignment is later used by ChimeraX and
+            Modeller to generate comparative models.
+
+            The workflow also supports the simultaneous modeling of multiple target
+            sequences associated with different chains of the same structure. This
+            functionality is especially useful when modeling interacting protein
+            complexes, heterodimers, or multimeric assemblies.
+
+            Sequence Alignment Strategies
+
+            Sequence alignment is one of the central components of the protocol
+            because model quality strongly depends on the biological accuracy of
+            the alignment. The protocol provides several alignment strategies
+            depending on the similarity between template and target sequences.
+
+            For closely related proteins, direct pairwise alignment using the
+            Bio.pairwise2 implementation is usually sufficient and computationally
+            efficient. The protocol internally applies global alignment strategies
+            with predefined scoring schemes and gap penalties suitable for protein
+            comparison.
+
+            For more divergent sequences or biologically complex systems, the
+            protocol supports multiple sequence alignment using Clustal Omega or
+            MUSCLE. Additional homologous sequences can be incorporated into the
+            alignment process to improve conservation analysis and increase the
+            biological reliability of residue matching.
+
+            Advanced users may also provide their own custom sequence alignment
+            files. This option is particularly valuable when curated alignments,
+            experimentally validated motifs, or domain-specific corrections must
+            be preserved during model generation.
+
+            Template Search and Database Integration
+
+            When no template structure is available, the protocol can perform
+            sequence-based searches against external protein databases. The user
+            may choose between experimentally resolved structures from the Protein
+            Data Bank or broader sequence collections such as the NR database.
+
+            Similarity searches are controlled through configurable scoring
+            matrices, expectation value cutoffs, and maximum sequence retrieval
+            limits. These parameters determine the sensitivity and specificity of
+            template detection and influence the biological quality of the selected
+            homologous structures.
+
+            In practical workflows, experimentally resolved templates from PDB are
+            generally preferred because they provide direct structural information,
+            while broader databases are useful when searching for distant
+            homologs or poorly characterized proteins.
+
+            Sequence and Structure Association
+
+            After sequence alignment is completed, the protocol automatically
+            associates aligned sequences with the corresponding structural chains
+            inside ChimeraX. The workflow opens both the atomic structure and the
+            generated alignment files, establishes chain-sequence relationships,
+            and prepares the environment required for comparative modeling.
+
+            The protocol carefully handles model identifiers, chain selection,
+            coordinate systems, and sequence disassociation or reassociation
+            commands to ensure compatibility between ChimeraX and Modeller.
+
+            In multi-chain modeling workflows, separate alignments may be created
+            for each target-template pair, allowing independent refinement of
+            interacting chains while preserving structural consistency across the
+            complete assembly.
+
+            ChimeraX and Modeller Integration
+
+            Once all prerequisites are prepared, the protocol generates a ChimeraX
+            command script that automates the modeling session. The script opens
+            coordinate axes, loads atomic structures, imports alignments, and
+            configures sequence associations before launching comparative modeling
+            procedures.
+
+            The protocol is designed to integrate directly with Modeller through
+            the ChimeraX graphical interface or web service. During execution,
+            several candidate structural models are generated and superimposed onto
+            the template structure for visual inspection and biological evaluation.
+
+            Users can manually inspect the generated models, evaluate structural
+            quality, compare scores, and export selected models back into Scipion
+            using ChimeraX commands such as scipionwrite.
+
+            Outputs and Biological Interpretation
+
+            The main outputs of the protocol are predicted atomic models generated
+            from the target sequences. These models preserve the overall topology
+            of the template structure while adapting residue composition and local
+            conformations according to the target alignment.
+
+            In biological applications, these models can be used for rigid fitting,
+            flexible refinement, structural interpretation of cryo-EM maps,
+            interaction analysis, mutational studies, or hypothesis generation.
+
+            Multi-chain modeling outputs are especially useful for studying protein
+            interfaces, transient complexes, and conformational organization within
+            larger assemblies.
+
+            Validation and Dependency Checks
+
+            The protocol validates the availability of external alignment tools
+            such as Clustal Omega and MUSCLE before execution. At least one
+            multiple sequence alignment program must be installed to support
+            advanced alignment workflows.
+
+            Additional validation steps ensure that input sequences, template
+            structures, alignment files, and selected chains are correctly defined
+            before launching the modeling session.
+
+            Practical Recommendations
+
+            In routine biological workflows, pairwise alignment is usually
+            sufficient for highly conserved proteins or closely related homologs.
+            However, when sequence similarity decreases, incorporating additional
+            homologous sequences through multiple sequence alignment significantly
+            improves biological accuracy and model reliability.
+
+            For multimeric systems, users should carefully select biologically
+            relevant template chains and verify that chain associations remain
+            consistent throughout the alignment process.
+
+            When possible, experimentally validated alignments or manually curated
+            sequence regions should be preferred over fully automatic alignments,
+            especially for flexible loops, insertions, or poorly conserved domains.
+
+            Final Perspective
+
+            Comparative modeling is not simply a computational prediction task but
+            a biologically informed reconstruction process where template quality,
+            sequence alignment accuracy, and structural interpretation strongly
+            influence the final model. Careful selection of templates, rigorous
+            alignment strategies, and thoughtful biological validation are the key
+            elements for obtaining reliable and interpretable structural models.
+        """
     _label = 'model from template'
     _program = ""
     _version = VERSION_1_2
