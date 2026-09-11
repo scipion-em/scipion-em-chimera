@@ -148,6 +148,41 @@ class ChimeraProtDiscrepancies(EMProtocol):
 
         return "unknown"
 
+    THREE_TO_ONE = {
+        # Protein
+        "ALA": "A",
+        "ARG": "R",
+        "ASN": "N",
+        "ASP": "D",
+        "CYS": "C",
+        "GLN": "Q",
+        "GLU": "E",
+        "GLY": "G",
+        "HIS": "H",
+        "ILE": "I",
+        "LEU": "L",
+        "LYS": "K",
+        "MET": "M",
+        "PHE": "F",
+        "PRO": "P",
+        "SER": "S",
+        "THR": "T",
+        "TRP": "W",
+        "TYR": "Y",
+        "VAL": "V",
+
+        # Nucleic acids
+        "DA": "A",
+        "DC": "C",
+        "DG": "G",
+        "DT": "T",
+        "DU": "U",
+        "A": "A",
+        "C": "C",
+        "G": "G",
+        "T": "T",
+        "U": "U",
+    }
     def create_chimerax_script(self):
         import difflib
 
@@ -175,6 +210,7 @@ class ChimeraProtDiscrepancies(EMProtocol):
             ref_chain_res = ref_residues[0].get(ch, [])
             ref_seq_map[ch] = [res[1] for res in ref_chain_res]
 
+        self.chain_pairs = {}
         for i in range(len(self.extra_files)):
             model1 = os.path.splitext(self.extra_files[0])[0]
             model2 = os.path.splitext(os.path.basename(self.extra_files[i]))[0]
@@ -208,21 +244,85 @@ class ChimeraProtDiscrepancies(EMProtocol):
                     if len(ref_seq) == 0 or len(mod_seq) == 0:
                         continue
 
+                    from Bio import pairwise2
                     # sequence similarity (robust + simple)
-                    matcher = difflib.SequenceMatcher(None, ref_seq, mod_seq)
-                    score = matcher.ratio()
+                    # Convert residue names to one-letter sequences
+                    three_to_one = {
+                        "ALA": "A", "ARG": "R", "ASN": "N", "ASP": "D",
+                        "CYS": "C", "GLN": "Q", "GLU": "E", "GLY": "G",
+                        "HIS": "H", "ILE": "I", "LEU": "L", "LYS": "K",
+                        "MET": "M", "PHE": "F", "PRO": "P", "SER": "S",
+                        "THR": "T", "TRP": "W", "TYR": "Y", "VAL": "V",
 
+                        # DNA/RNA
+                        "A": "A", "C": "C", "G": "G", "T": "T", "U": "U",
+                        "DA": "A", "DC": "C", "DG": "G", "DT": "T", "DU": "U"
+                    }
+
+                    ref_seq_1letter = ''.join(
+                        three_to_one.get(res, res) for res in ref_seq
+                    )
+
+                    mod_seq_1letter = ''.join(
+                        three_to_one.get(res, res) for res in mod_seq
+                    )
+
+                    # Global sequence alignment
+                    alignment = pairwise2.align.globalxx(
+                        ref_seq_1letter,
+                        mod_seq_1letter,
+                        one_alignment_only=True
+                    )[0]
+
+                    aligned_ref = alignment.seqA
+                    aligned_mod = alignment.seqB
+
+                    matches = sum(
+                        a == b
+                        for a, b in zip(aligned_ref, aligned_mod)
+                        if a != "-" and b != "-"
+                    )
+
+                    aligned_positions = sum(
+                        a != "-" and b != "-"
+                        for a, b in zip(aligned_ref, aligned_mod)
+                    )
+
+                    score = matches / max(len(ref_seq_1letter), len(mod_seq_1letter))
+
+                    print(
+                        f"DEBUG SEQ MATCH: {model1} {ref_ch} ({len(ref_seq)}) "
+                        f"vs {model2} {mod_ch} ({len(mod_seq)}) = {score:.4f}"
+                    )
+
+                    print(f"DEBUG 1LETTER: {ref_seq_1letter[:30]} vs {mod_seq_1letter[:30]}")
+
+                    print(
+                        f"DEBUG 1LETTER: {ref_seq_1letter[:30]} "
+                        f"vs {mod_seq_1letter[:30]}"
+                    )
                     if score > best_score:
                         best_score = score
                         best_mod_ch = mod_ch
+                    print(f"DEBUG {model1} chain {ref_ch} FIRST 30:")
+                    print(ref_seq[:30])
+
+                    print(f"DEBUG {model2} chain {mod_ch} FIRST 30:")
+                    print(mod_seq[:30])
 
                 # accept only meaningful biological matches
+                print(
+                    f"DEBUG BEST MATCH: {model1} {ref_ch} -> "
+                    f"{best_mod_ch} score={best_score:.4f}"
+                )
+
                 if best_mod_ch is not None and best_score >= 0.3:
                     chain_pairs.append((ref_ch, best_mod_ch))
                     used_mod_chains.add(best_mod_ch)
 
             if chain_pairs:
                 for ch, ch2 in chain_pairs:
+                    self.chain_pairs[(model1, model2, ch)] = ch2
                     ref_chain_res = ref_residues[0].get(ch, [])
                     ref_residue_names = [res[1] for res in ref_chain_res]
 
@@ -281,7 +381,8 @@ class ChimeraProtDiscrepancies(EMProtocol):
         print(f"ChimeraX script created at {script_path}")
         return script_path
 
-    def calculate_manual_rmsd(self, cif_ref, cif_mod, chain_id, mol_type):
+    def calculate_manual_rmsd(self, cif_ref, cif_mod,
+                              ref_chain_id, mod_chain_id, mol_type):
         import numpy as np
 
         atom = "P" if mol_type == "nucleic" else "CA"
@@ -293,12 +394,35 @@ class ChimeraProtDiscrepancies(EMProtocol):
 
         handler.read(cif_mod)
         mod_struct = handler.getStructure()[0]
+        print("DEBUG REFERENCE CHAINS:")
+        for chain in ref_struct:
+            print(f"  chain {chain.id}: {len(list(chain))} residues")
 
-        if chain_id not in ref_struct or chain_id not in mod_struct:
+        print("DEBUG MODEL CHAINS:")
+        for chain in mod_struct:
+            print(f"  chain {chain.id}: {len(list(chain))} residues")
+
+        print(
+            f"DEBUG MANUAL RMSD: "
+            f"{ref_chain_id} -> {mod_chain_id} "
+            f"({mol_type})"
+        )
+
+        if ref_chain_id not in ref_struct:
+            print(f"Reference chain {ref_chain_id} not found")
             return {}
 
-        ref_chain = list(ref_struct[chain_id])
-        mod_chain = list(mod_struct[chain_id])
+        if mod_chain_id not in mod_struct:
+            print(f"Model chain {mod_chain_id} not found")
+            return {}
+
+        ref_chain = list(ref_struct[ref_chain_id])
+        mod_chain = list(mod_struct[mod_chain_id])
+        print(f"DEBUG {cif_ref}: chain {ref_chain_id} -> {len(ref_chain)} residues")
+        print(f"DEBUG {cif_mod}: chain {mod_chain_id} -> {len(mod_chain)} residues")
+        print(f"DEBUG first ref residues: {[r.id for r in ref_chain[:10]]}")
+        print(f"DEBUG last ref residues: {[r.id for r in ref_chain[-10:]]}")
+
         ref_coords = []
         mod_coords = []
         residue_ids = []
@@ -312,7 +436,7 @@ class ChimeraProtDiscrepancies(EMProtocol):
             if atom in r1 and atom in r2:
                 ref_coords.append(r1[atom].get_coord())
                 mod_coords.append(r2[atom].get_coord())
-                residue_ids.append(r1.id[1])  # residue number
+                residue_ids.append(r1.id[1])
 
         if len(ref_coords) < 3:
             return {}
@@ -326,18 +450,16 @@ class ChimeraProtDiscrepancies(EMProtocol):
         C = Pc.T @ Qc
         V, S, Wt = np.linalg.svd(C)
 
-        # correct reflection
         if np.linalg.det(V @ Wt) < 0:
             V[:, -1] *= -1
 
         U = V @ Wt
 
         P_aligned = Pc @ U
-        Q_centered = Qc
 
         rmsd_per_res = {}
 
-        for res_id, p, q in zip(residue_ids, P_aligned, Q_centered):
+        for res_id, p, q in zip(residue_ids, P_aligned, Qc):
             rmsd_per_res[res_id] = float(np.linalg.norm(p - q))
 
         return rmsd_per_res
@@ -462,13 +584,50 @@ class ChimeraProtDiscrepancies(EMProtocol):
                         f"rmsd_{model1}_{model2}_chain_{chain}.txt"
                     )
 
-                    if not os.path.exists(rmsd_path):
+                    rmsd_valid = False
+
+                    if os.path.exists(rmsd_path):
+                        with open(rmsd_path, 'r') as f:
+                            rmsd_lines = [line.strip() for line in f if line.strip()]
+
+                        # Header + at least one RMSD value
+                        rmsd_valid = len(rmsd_lines) > 1
+
+                    if not rmsd_valid:
                         cif_ref = os.path.join(folder_path, f"align_{model1}.cif")
                         cif_mod = os.path.join(folder_path, f"align_{model2}.cif")
 
-                        manual_rmsd = self.calculate_manual_rmsd(
-                            cif_ref, cif_mod, chain, "nucleic"
+                        # Get the chain corresponding to the reference chain
+                        mod_chain = self.chain_pairs.get(
+                            (model1, model2, chain)
                         )
+
+                        if mod_chain is None:
+                            print(
+                                f"WARNING: No chain mapping found for "
+                                f"{model1} chain {chain} -> {model2}"
+                            )
+                            manual_rmsd = {}
+                        else:
+                            # Determine whether this chain is protein or nucleic acid
+                            ref_residues = self.getModelsChainsStep(cif_ref)[1][0]
+                            ref_chain_res = ref_residues.get(chain, [])
+                            ref_residue_names = [res[1] for res in ref_chain_res]
+
+                            mol_type = self.detect_molecule_type(ref_residue_names)
+
+                            print(
+                                f"DEBUG FALLBACK: {model1} chain {chain} "
+                                f"-> {model2} chain {mod_chain} | type={mol_type}"
+                            )
+
+                            manual_rmsd = self.calculate_manual_rmsd(
+                                cif_ref,
+                                cif_mod,
+                                chain,
+                                mod_chain,
+                                mol_type
+                            )
 
                         with open(rmsd_path, 'w') as f:
                             f.write("residue:rmsd\n")
@@ -476,7 +635,10 @@ class ChimeraProtDiscrepancies(EMProtocol):
                                 f.write(f"{res}:{val}\n")
 
                         root_extra = self._getExtraPath()
-                        root_rmsd_path = os.path.join(root_extra, os.path.basename(rmsd_path))
+                        root_rmsd_path = os.path.join(
+                            root_extra,
+                            os.path.basename(rmsd_path)
+                        )
 
                         if not os.path.exists(root_rmsd_path):
                             pwutils.createLink(rmsd_path, root_rmsd_path)
