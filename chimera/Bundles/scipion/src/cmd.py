@@ -3,6 +3,8 @@
 from .constants import *
 
 # devel install /home/roberto/Software/Plugins3/scipion-em-chimera/chimera/Bundles/scipion
+# before make directory /home/ubuntu/scipion_model_building/Plugins/scipion-em-chimera/chimera/Bundles/scipion/build/lib/chimerax/scipionExtensions/docs/user/commands/ writable
+# and delete fies in there
 from chimerax.core.commands import CmdDesc      # Command description
 from chimerax.core.commands import TopModelsArg, ModelsArg
 from chimerax.core.commands import StringArg, FloatArg, IntArg

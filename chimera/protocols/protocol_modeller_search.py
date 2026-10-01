@@ -488,7 +488,7 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
                 else:
                     cline = alignMuscleSequences(inFile, outFile)
                 args = ''
-                self.runJob(cline, args)
+                self.runJob(str(cline), args)
         elif addSeq == 1:
             # if there are additional sequences imported by the user
             if inputSeqAlign is not None:
@@ -514,7 +514,9 @@ class ChimeraModelFromTemplate(ChimeraProtBase):
             else:
                 cline = alignMuscleSequences(inFile, outFile)
             args = ''
-            self.runJob(cline, args)
+            # cline is a biophythom object let us
+            # convert it to a str before using it in scipion
+            self.runJob(str(cline), args)
 
         else:
             aligmentFile = os.path.basename(yourAlignment)

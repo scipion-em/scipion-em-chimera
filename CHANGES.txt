@@ -1,6 +1,6 @@
 04-July-2024     - 3.4.1:
                     - Fix Plugin.getActiveVersion
-05-December-2023 - 3.4.0: Update the defaul binaries to chimerax-1.6.1
+05-December-2023 - 3.4.0: Update the default binaries to chimerax-1.6.1
 14-February-2019 - Prepare beta for release
 20-August-2018 - New version of plugin version
 23-August-2018 - Validate installation, use Plugin.getHome()
@@ -9,10 +9,10 @@
                - implement model, from template protocol (model building by homology)
 This file has not been update for a while
 Sep 18, 2020   - update to chimerax (from chimera)
-10-Nov-2020    - add scipioncpmbine
+10-Nov-2020    - add scipioncombine
 11-Jan-2021    - change tml dir by extra since tmp is deleted as soon as the protocol ends
 27-April-2021  - add sonarcloud to github actions
- 8-June-2021   - update tests with dinamic names that include the id of the protocol
-28-July-2021   - upddate to chimerax 1.2.5 (from chimera 1.1)
-               - add command scipionshell that allow to visualice a virus shell by shell
+ 8-June-2021   - update tests with dynamic names that include the id of the protocol
+28-July-2021   - update to chimerax 1.2.5 (from chimera 1.1)
+               - add command scipionshell that allow to visualize a virus shell by shell
 17-July-2023   - 3.3.6. Hot fix of tk-html-widgets package installation.

@@ -42,12 +42,12 @@ SelectChainWizard().addTarget(protocol=ChimeraSubtractionMaps,
                               inputs=['pdbFileToBeRefined'],
                               outputs=['inputStructureChain'])
 
-SelectChainWizard().addTarget(protocol=ChimeraModelFromTemplate,
+SelectResidueWizard().addTarget(protocol=ChimeraModelFromTemplate,
                               targets=['selectStructureChain'],
                               inputs=['pdbFileToBeRefined'],
                               outputs=['selectStructureChain'])
 
-SelectChainWizard().addTarget(protocol=ChimeraSubtractionMaps,
+SelectResidueWizard().addTarget(protocol=ChimeraSubtractionMaps,
                               targets=['selectStructureChain'],
                               inputs=['pdbFileToBeRefined'],
                               outputs=['selectStructureChain'])

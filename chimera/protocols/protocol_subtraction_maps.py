@@ -606,25 +606,25 @@ class ChimeraSubtractionMaps(EMProtocol):
 
     def symMethod(self, f, modelId, sym, order=None, range=None):
         if sym == "Cn" and order != 1:
-            f.write("run(session,'sym #%d C%d copies t')\n"
-                    % (modelId, order))
+            f.write("run(session,'sym #%d C%d copies t range %d')\n"
+                    % (modelId, order, self.rangeDist))
         elif sym == "Dn" and order != 1:
-            f.write("run(session,'sym #%d d%d copies t')\n"
-                    % (modelId, order))
+            f.write("run(session,'sym #%d d%d copies t range %d')\n"
+                    % (modelId, order, self.rangeDist))
         elif sym == "T222" or sym == "TZ3":
-            f.write("v=run(session,'sym #%d t,%s copies t')\n"
-                    % (modelId, sym[1:]))
+            f.write("v=run(session,'sym #%d t,%s copies t range %d')\n"
+                    % (modelId, sym[1:], self.rangeDist))
         elif sym == "O":
-            f.write("run(session,'sym #%d O copies t')\n"
-                    % modelId)
+            f.write("run(session,'sym #%d O copies t range %d')\n"
+                    % (modelId, self.rangeDist))
         elif sym == "I222" or sym == "I222r" or sym == "In25" or \
                 sym == "In25r" or sym == "I2n3" or sym == "I2n3r" or \
                 sym == "I2n5" or sym == "I2n5r":
-            f.write("run(session,'sym #%d i,%s copies t')\n"
-                    % (modelId, sym[1:]))
+            f.write("run(session,'sym #%d i,%s copies t range %d')\n"
+                    % (modelId, sym[1:], self.rangeDist))
 
-        f.write("run(session,'delete #%d & #%d #>%d')\n"
-                    % (int(modelId) + 1, modelId, self.rangeDist))
+        # f.write("run(session,'delete #%d & #%d #>%d')\n"
+        #            % (int(modelId) + 1, modelId, self.rangeDist))
 
     def getIdxRemoveResidues(self):
         resJson = getattr(self, 'residuesToRemove').get()

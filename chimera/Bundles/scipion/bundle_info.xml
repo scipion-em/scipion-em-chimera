@@ -51,7 +51,7 @@ will be displayed without the ChimeraX- prefix.
   <Classifiers>
     <!-- Development Status should be compatible with bundle version number -->
     <PythonClassifier>Development Status :: 3 - Alpha</PythonClassifier>
-    <PythonClassifier>License :: Freeware</PythonClassifier>
+    <License>MIT</License>
     <!-- ChimeraX classifiers describe supplied functionality -->
     <ChimeraXClassifier>ChimeraX :: Command :: scipionwrite :: General ::
         Save a model file (3dmap or atomic model) so Scipion may import it

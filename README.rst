@@ -39,10 +39,8 @@ OR
 
 - **Binary files**
 
-Chimera binaries could be installed automatically with the plugin after accepting ChimeraX licence terms,
-but you can also link an existing installation. Default installation path assumed is *software/em/chimerax-1.0,
-if you want to change it, set *CHIMERA_HOME* in *scipion.conf* file to the folder where ChimeraX is installed
-or link your chimerax folder to *software/em/chimerax-1.0*.
+This plugin assumes that you are using chimerax-1.11 or higher installed with flatpak
+
 
 - **Tests**
 
