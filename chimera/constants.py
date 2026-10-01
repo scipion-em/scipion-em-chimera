@@ -35,8 +35,10 @@ CHIMERAX = True
 # Supported Versions
 
 V1_11_1 = '1.11.1'
+V1_12 = '1.12'
 
-chimeraTARs = {V1_11_1: 'chimerax-1.11.1'}
+chimeraTARs = {V1_11_1: 'chimerax-1.11.1',
+               V1_12: 'chimerax-1.12'}
 
 CHIMERA_TO_SCIPION = {}
 CHIMERA_CYCLIC = 0  # SYM_CYCLIC = 0

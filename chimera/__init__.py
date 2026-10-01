@@ -35,7 +35,7 @@ from glob import glob
 from pyworkflow import SPA, TOMO, MODELLING
 
 from .constants import (CHIMERA_HOME, ALPHAFOLD_HOME, ALPHAFOLD_DATABASE_DIR,
-                        chimeraTARs, V1_11_1, CHIMERA_FLATPAK_ID)
+                        chimeraTARs, V1_11_1, V1_12, CHIMERA_FLATPAK_ID)
 from .flatpak import is_installed, ask_install_scope
 from pyworkflow.utils import redStr
 
@@ -48,7 +48,7 @@ class Plugin(pwem.Plugin):
     _homeVar = CHIMERA_HOME
     _pathVars = [CHIMERA_HOME]
     _supportedVersions = chimeraTARs.keys()
-    _currentVersion = V1_11_1
+    _currentVersion = V1_12
     _fullVersion = 'chimerax-%s' % _currentVersion
     _processingField = [SPA, TOMO, MODELLING]
     answer = None
